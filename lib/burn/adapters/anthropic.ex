@@ -1,0 +1,119 @@
+defmodule Burn.Adapters.Anthropic do
+  @moduledoc """
+  Customised [Anthropic](https://docs.anthropic.com/en/home) adapter.
+
+  Based on the default `InstructorLite.Adapters.Anthropic` implmentation
+  revised to support multiple `tools`.
+  """
+  @default_model :sonnet
+
+  @doc """
+  Builds the `params` for the initial prompt.
+
+  Requires an array of `tools` in the params. The model is told to respond
+  with a tool call using one of these tools.
+  """
+  def initial_prompt(messages, system, tools, model \\ @default_model, max_tokens \\ 1024) do
+    %{
+      max_tokens: max_tokens,
+      messages: messages,
+      model: full_model_name(model),
+      system: system,
+      tool_choice: %{
+        type: "any",
+        disable_parallel_tool_use: true
+      },
+      tools: Enum.map(tools, fn mod -> mod.tool_param() end)
+    }
+  end
+
+  @doc """
+  Updates `params` with prompt for retrying a request.
+
+  The error is represented as an erroneous `tool_result`.
+  """
+  def retry_prompt(params, errors, response) do
+    %{"content" => [%{"id" => tool_use_id}]} =
+      assistant_reply = Map.take(response, ["content", "role"])
+
+    do_better = [
+      assistant_reply,
+      %{
+        role: "user",
+        content: [
+          %{
+            type: "tool_result",
+            tool_use_id: tool_use_id,
+            is_error: true,
+            content: """
+            Validation failed. Please try again and fix following validation errors
+
+            #{errors}
+            """
+          }
+        ]
+      }
+    ]
+
+    Map.update(params, :messages, do_better, fn msgs -> msgs ++ do_better end)
+  end
+
+  @doc """
+  Make request to Anthropic API
+  """
+  def send_request(params) do
+    [
+      {:api_key, api_key},
+      {:api_url, api_url},
+      {:api_version, api_version}
+      | _rest
+    ] = config()
+
+    headers = [
+      {"x-api-key", api_key},
+      {"anthropic-version", api_version}
+    ]
+
+    # IO.inspect {:send_request, params}
+
+    case Req.post(api_url, json: params, headers: headers, receive_timeout: 60_000) do
+      {:ok, %{status: 200, body: body}} ->
+        {:ok, body}
+
+      {:ok, response} ->
+        {:error, response}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  @doc """
+  Parse API response.
+
+  Can return:
+    * `{:ok, response}` on success.
+    * `{:error, :unexpected_response, payload}` if payload is of unexpected shape.
+  """
+  def parse_response(payload) do
+    # IO.inspect({:adapter, :response, payload})
+
+    case payload do
+      %{"stop_reason" => "tool_use", "content" => [response]} ->
+        {:ok, response}
+
+      other ->
+        {:error, :unexpected_response, other}
+    end
+  end
+
+  defp config do
+    Application.fetch_env!(:burn, __MODULE__)
+  end
+
+  defp full_model_name(key) when is_atom(key) do
+    config()
+    |> Keyword.fetch!(:models)
+    |> Keyword.fetch!(key)
+  end
+end
