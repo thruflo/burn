@@ -10,13 +10,62 @@ defmodule Burn.Context do
   @spec to_messages([Threads.Event.t()]) :: [Burn.Message.t()]
   def to_messages([]), do: []
   def to_messages([%Threads.Event{} | _] = events) do
-    Logger.warning("TODO: format events into messages as per the 12-factor guide.")
+    summary = """
+    Here's everything that happened so far:
 
-    events
-    |> Enum.map(&to_message/1)
+    #{summarize(events)}
+
+    What's the next step?
+    """
+
+    IO.puts(summary)
+
+    [%{role: :user, content: summary}]
   end
 
-  def to_message(%Threads.Event{data: data, role: role, type: type}) do
-    %{role: role, content: [Map.put(data, :type, type)]}
+  @spec summarize([Threads.Event.t()]) :: binary()
+  def summarize(events) when is_list(events) do
+    events
+    |> Enum.map(&format_event/1)
+    |> Enum.join("\n")
+    |> String.trim_trailing()
+  end
+
+  @spec format_event(Threads.Event.t()) :: binary()
+  def format_event(%Threads.Event{type: :text, role: :user, data: data} = event) do
+    content = Map.put(data, "from", author(event))
+
+    """
+    <user_message>
+    #{to_yaml(content)}
+    </user_message>
+    """
+  end
+  def format_event(%Threads.Event{type: :tool_use, data: %{"name" => name} = data} = event) do
+    content = Map.put(data, "from", author(event))
+
+    """
+    <#{name}>
+    #{to_yaml(content)}
+    </#{name}>
+    """
+  end
+  def format_event(%Threads.Event{type: :tool_result, data: data}) do
+    {tool_name, content} = Map.pop(data, "tool_name")
+
+    """
+    <#{tool_name}_result>
+    #{to_yaml(content)}
+    </#{tool_name}_result>
+    """
+  end
+
+  defp author(%Threads.Event{role: :user, user_id: user_id}), do: user_id
+  defp author(%Threads.Event{role: :assistant, assistant: assistant}), do: assistant
+
+  defp to_yaml(data) when is_map(data) do
+    data
+    |> Yamel.encode!(empty_value: :blank, node_level: 1)
+    |> String.trim_trailing()
   end
 end

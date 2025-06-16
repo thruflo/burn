@@ -1,5 +1,5 @@
 defmodule Burn.Tools.DoNothing do
-  use Burn.ToolSchema
+  use Burn.Tool
 
   @name "do_nothing"
   @description "Do nothing."
@@ -8,7 +8,7 @@ defmodule Burn.Tools.DoNothing do
   embedded_schema do
   end
 
-  def changeset(tool, attrs) do
+  def validate(_response, tool, attrs) do
     tool
     |> cast(attrs, [])
   end

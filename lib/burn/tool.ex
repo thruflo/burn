@@ -1,11 +1,11 @@
-defmodule Burn.ToolSchema do
+defmodule Burn.Tool do
   @moduledoc """
   Use Ecto schemas to describe LLM tools.
 
   ## Example
 
     defmodule MyApp.Tools.Calculator do
-      use Burn.ToolSchema
+      use Burn.Tool
 
       @name "calculator"
       @description "Performs basic math operations"
@@ -21,7 +21,7 @@ defmodule Burn.ToolSchema do
   The name and description are important -- they're passed to the LLM to use
   when deciding what tool to use.
 
-  Define a `c:json_schema/0` callback to pre-cache and optimise the schema,
+  Define a `c:schema/0` callback to pre-cache and optimise the tool schema,
   including field descriptions and hints.
   """
 
@@ -36,34 +36,24 @@ defmodule Burn.ToolSchema do
   @callback description() :: String.t()
 
   @doc """
-  Defines JSON schema for the instruction.
-
-  By default, `InstructorLite.JSONSchema.from_ecto_schema/1` is called at runtime
-  every time InstructorLite needs to convert an Ecto schema to JSON schema.
-
-  However, you can bake your own JSON schema into the `c:json_schema/0` callback
-  to eliminate the need to do it on every call.
-
-  > #### Tip {: .tip}
-  >
-  > Take advantage of this callback! Most JSON schemas are known ahead of time,
-  > so there is no need to constantly build them at runtime. In addition, the
-  > `InstructorLite.JSONSchema` module aims to generate one-size-fits-all schema,
-  > so it's very unlikely to take full advantage of the capabilities of your LLM.
+  JSON schema for the tool use.
   """
-  @callback json_schema() :: map()
+  @callback schema() :: map()
 
   @doc """
-  Represent as a map for use in the tools array sent in the params to the LLM.
+  Represent as a map to send in the tools parameter sent to the LLM.
   """
-  @callback tool_param() :: map()
+  @callback param() :: map()
 
   @doc """
-  Called by `InstructorLite.consume_response/3` when validating the LLM response.
+  Validate the LLM response.
   """
-  @callback validate_changeset(Ecto.Changeset.t(), InstructorLite.opts()) :: Ecto.Changeset.t()
+  @callback validate(Burn.Threads.Thread.t(), Ecto.Schema.t(), map()) :: Ecto.Changeset.t()
 
-  @optional_callbacks validate_changeset: 2
+  @doc """
+  Perform the tool call.
+  """
+  @callback perform(Ecto.Multi.t(), Burn.ToolCall.t()) :: Ecto.Multi.t()
 
   defmacro __before_compile__(%Macro.Env{module: module} = env) do
     name_func =
@@ -71,7 +61,7 @@ defmodule Burn.ToolSchema do
         case Module.has_attribute?(module, :name) do
           true ->
             quote do
-              @impl Burn.ToolSchema
+              @impl Burn.Tool
               def name(), do: @name
             end
 
@@ -79,7 +69,7 @@ defmodule Burn.ToolSchema do
             raise CompileError,
               description: """
                 Module `#{module}` must define a `@name` module attribute or
-                a `c:name/0` callback when using `Burn.ToolSchema`.
+                a `c:name/0` callback when using `Burn.Tool`.
               """,
               file: env.file,
               line: env.line
@@ -91,7 +81,7 @@ defmodule Burn.ToolSchema do
         case Module.has_attribute?(module, :description) do
           true ->
             quote do
-              @impl Burn.ToolSchema
+              @impl Burn.Tool
               def description(), do: @description
             end
 
@@ -99,7 +89,7 @@ defmodule Burn.ToolSchema do
             raise CompileError,
               description: """
                 Module `#{module}` must define a `@description` module attribute or
-                a `c:description/0` callback when using `Burn.ToolSchema`.
+                a `c:description/0` callback when using `Burn.Tool`.
               """,
               file: env.file,
               line: env.line
@@ -114,24 +104,34 @@ defmodule Burn.ToolSchema do
       use Ecto.Schema
       import Ecto.Changeset
 
-      @behaviour Burn.ToolSchema
-      @before_compile Burn.ToolSchema
+      alias Burn.{
+        Memory,
+        ToolCall
+      }
 
-      @impl Burn.ToolSchema
-      def json_schema do
+      @behaviour Burn.Tool
+      @before_compile Burn.Tool
+
+      @impl Burn.Tool
+      def schema do
         InstructorLite.JSONSchema.from_ecto_schema(__MODULE__)
       end
 
-      @impl Burn.ToolSchema
-      def tool_param do
+      @impl Burn.Tool
+      def param do
         %{
           name: __MODULE__.name(),
           description: __MODULE__.description(),
-          input_schema: json_schema()
+          input_schema: schema()
         }
       end
 
-      defoverridable json_schema: 0, tool_param: 0
+      @impl Burn.Tool
+      def perform(multi, _tool_call) do
+        multi
+      end
+
+      defoverridable schema: 0, param: 0, perform: 2
     end
   end
 end

@@ -1,38 +1,56 @@
 defmodule Burn.Agents do
-  alias Burn.Context
-  alias Burn.ToolResponse
+  @moduledoc """
+  Core agent logic to instruct and perform tool calls.
+  """
 
-  alias Ecto.Changeset
+  alias Burn.{
+    Context,
+    Repo,
+    Threads,
+    ToolCall
+  }
+
+  alias Ecto.{
+    Changeset,
+    Multi
+  }
 
   alias InstructorLite.ErrorFormatter
 
   @default_adapter Burn.Adapters.Anthropic
   @max_retries 3
 
-  @doc """
-  Perform instruction session.
+  def shared_system_rules, do: """
+  IDs are always expressed as binary ids in UUID v4 format.
+
+  If you're writing the ID of a resource like a user or an event, that user or
+  event MUST be in the current thread. Never invent or generate an ID that is
+  not in the context data.
   """
-  @spec instruct([Context.message()], binary(), [atom()], atom(), keyword()) ::
-          {:ok, ToolResponse.t() | nil}
+
+  @doc """
+  Prompt the agent to determine the next tool use.
+  """
+  @spec instruct(Threads.Thread.t(), [Context.message()], binary(), [atom()], atom(), keyword()) ::
+          {:ok, ToolCall.t()}
           | {:error, Changeset.t()}
           | {:error, any()}
           | {:error, atom(), any()}
-  def instruct(messages, system, tools, model, opts \\ [])
-  def instruct([], _system, _tools, _model, _opts), do: {:ok, nil}
-  def instruct(messages, system, tools, model, opts) do
+  def instruct(thread, messages, system, tools, model, opts \\ [])
+  def instruct(_thread, [], _system, _tools, _model, _opts), do: {:ok, nil}
+  def instruct(thread, messages, system, tools, model, opts) do
     adapter = Keyword.get(opts, :adapter, @default_adapter)
     max_retries = Keyword.get(opts, :max_retries, @max_retries)
 
-    messages
-    |> adapter.initial_prompt(system, tools, model)
-    |> do_instruct(adapter, tools, max_retries)
+    params = adapter.initial_prompt(messages, system, tools, model) # |> IO.inspect()
+    do_instruct(thread, params, adapter, tools, max_retries)
   end
 
-  defp do_instruct(params, adapter, tools, retries) do
+  defp do_instruct(thread, params, adapter, tools, retries) do
     {:ok, payload} = adapter.send_request(params)
     {:ok, response} = adapter.parse_response(payload)
 
-    case ToolResponse.validate(response, tools) do
+    case ToolCall.validate(thread, response, tools) do
       %Changeset{valid?: true} = changeset ->
         {:ok, Changeset.apply_changes(changeset)}
 
@@ -41,7 +59,7 @@ defmodule Burn.Agents do
           errors = ErrorFormatter.format_errors(changeset)
           new_params = adapter.retry_prompt(params, errors, response)
 
-          do_instruct(new_params, adapter, tools, retries - 1)
+          do_instruct(thread, new_params, adapter, tools, retries - 1)
         else
           {:error, changeset}
         end
@@ -49,5 +67,22 @@ defmodule Burn.Agents do
       error ->
         error
     end
+  end
+
+  @doc """
+  Perform the agent's chosen tool use.
+  """
+  @spec perform(Threads.Thread.t(), ToolCall.t() | nil, atom()) :: {:ok, map()} | Multi.failure()
+  def perform(_thread, nil, _agent_name), do: {:ok, %{}}
+  def perform(thread, %{tool_module: tool_module} = tool_call, agent_name) do
+    Multi.new()
+    |> Multi.insert(:event, Threads.init_event(thread, %{
+        role: :assistant,
+        assistant: agent_name,
+        type: :tool_use,
+        data: ToolCall.to_event_data(tool_call)
+    }))
+    |> tool_module.perform(tool_call)
+    |> Repo.transaction()
   end
 end

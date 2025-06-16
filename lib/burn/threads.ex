@@ -136,6 +136,17 @@ defmodule Burn.Threads do
   """
   def get_event!(id), do: Repo.get!(Event, id)
 
+  def event_in_thread?(thread_id, event_id) do
+    query =
+      from(
+        e in Event,
+        where: (e.thread_id == ^thread_id) and
+               (e.id == ^event_id)
+      )
+
+    Repo.exists?(query)
+  end
+
   @doc """
   Creates a event.
 
@@ -248,6 +259,17 @@ defmodule Burn.Threads do
 
   """
   def get_membership!(id), do: Repo.get!(Membership, id)
+
+  def is_member?(thread_id, user_id) do
+    query =
+      from(
+        m in Membership,
+        where: (m.thread_id == ^thread_id) and
+               (m.user_id == ^user_id)
+      )
+
+    Repo.exists?(query)
+  end
 
   @doc """
   Creates a membership.

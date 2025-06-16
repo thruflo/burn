@@ -6,7 +6,7 @@ defmodule Burn.Agents.SarahTest do
 
   alias Burn.Agents
   alias Burn.Threads
-  alias Burn.ToolResponse
+  alias Burn.ToolCall
 
   describe "sarah" do
     alias Agents.Sarah
@@ -15,10 +15,11 @@ defmodule Burn.Agents.SarahTest do
     setup do
       thread = thread_fixture()
       user = user_fixture()
+      membership = membership_fixture(thread, user)
 
       {:ok, _pid} = Sarah.start_link(thread, :manual)
 
-      %{thread: thread, user: user}
+      %{thread: thread, user: user, membership: membership}
     end
 
     test "initializes state", %{thread: %{id: thread_id} = thread} do
@@ -57,17 +58,17 @@ defmodule Burn.Agents.SarahTest do
     end
 
     test "defaults to doing nothing", %{thread: thread} do
-      nil = Sarah.instruct(thread)
+      {nil, %{}} = Sarah.instruct(thread)
     end
 
-    test "asks the user for information", %{thread: thread, user: %{email: email} = user} do
+    test "asks the user for information", %{thread: thread, user: %{id: user_id}} do
       {:ok, %{id: event_id}} =
         Threads.create_event(thread, %{
           role: :user,
-          user: user,
+          user_id: user_id,
           type: :text,
           data: %{
-            "text" => "User #{email} joined the thread!"
+            "text" => "User joined the thread!"
           }
         })
 
@@ -75,7 +76,7 @@ defmodule Burn.Agents.SarahTest do
         assert %State{events: [%{id: ^event_id}]} = Sarah.get_state(thread)
       end)
 
-      %ToolResponse{id: tool_use_id, input: %{"user" => ^email}} = Sarah.instruct(thread)
+      %ToolCall{id: tool_use_id, input: %{"user" => ^user_id}} = Sarah.instruct(thread)
 
       assert_eventually(fn ->
         %State{events: events} = Sarah.get_state(thread)

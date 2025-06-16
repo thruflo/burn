@@ -10,8 +10,7 @@ defmodule Burn.Agents.Sarah do
     Repo,
     Shapes,
     Threads,
-    Tools,
-    ToolResponse
+    Tools
   }
 
   @type next_step ::
@@ -22,42 +21,44 @@ defmodule Burn.Agents.Sarah do
 
   @default_model :sonnet
   @system_prompt """
-    As a genius, expert BBC research / production assistant, you must collect
-    facts about the users that you're talking to.
+  As a genius, expert BBC research / production assistant, you must collect
+  facts about the users that you're talking to.
 
-    Assume a neutral, professional tone and personality.
-    Your job is only to collect and extract facts when appropriate.
+  Assume a neutral, professional tone and personality.
+  Your job is only to collect and extract facts when appropriate.
 
-    NEVER comment on the facts that you receive.
-    NEVER make any jokes or observations.
+  NEVER comment on the facts that you receive.
+  NEVER make any jokes or observations.
 
-    If there are no users
-    => do nothing
+  If there are no users
+  => do nothing
 
-    If a user asks to be burned
-    => do nothing
+  If a user asks to be burned
+  => do nothing
 
-    If a user asks for another user to be burned
-    => do nothing
+  If a user asks for another user to be burned
+  => do nothing
 
-    If a user provides information about themselves
-    => extract out the facts
+  If a user provides information about themselves
+  => extract out the facts
 
-    If a user provides information about another user
-    => ask the other user whether the information about them is true
+  If a user provides information about another user
+  => ask the other user whether the information about them is true
 
-    If a user confirms, denies or revises information about themselves
-    => extract out the facts
+  If a user confirms, denies or revises information about themselves
+  => extract out the facts
 
-    Otherwise collect facts:
-    => either ask a user for information about themselves
-    => or ask a user what they know about another user
+  Otherwise collect facts:
+  => either ask a user for information about themselves
+  => or ask a user what they know about another user
 
+  #{Agents.shared_system_rules()}
   """
 
   @tools [
     Tools.AskUserAboutThemselves,
-    Tools.DoNothing
+    Tools.DoNothing,
+    Tools.ExtractFacts
   ]
 
   def agent_name, do: :sarah
@@ -189,14 +190,14 @@ defmodule Burn.Agents.Sarah do
 
   @impl true
   def handle_info(:instruct, state) do
-    {:ok, _result, state} = determine_next_step(state)
+    {:ok, _result, state} = handle_instruct(state)
 
     {:noreply, state}
   end
 
   @impl true
   def handle_call(:instruct, _from, state) do
-    {:ok, result, state} = determine_next_step(state)
+    {:ok, result, state} = handle_instruct(state)
 
     {:reply, result, state}
   end
@@ -206,38 +207,12 @@ defmodule Burn.Agents.Sarah do
     {:reply, state, state}
   end
 
-  defp determine_next_step(%{events: events, thread: thread} = state) do
-    # IO.inspect({:determine_next_step, events})
+  defp handle_instruct(%{events: events, thread: thread} = state) do
+    messages = Context.to_messages(events)
 
-    {:ok, tool_response} =
-      Context.to_messages(events)
-      |> Agents.instruct(@system_prompt, @tools, @default_model)
+    {:ok, tool_call} = Agents.instruct(thread, messages, @system_prompt, @tools, @default_model)
+    {:ok, events} = Agents.perform(thread, tool_call, agent_name())
 
-    # IO.inspect({:tool_response, tool_response})
-
-    case tool_response do
-      nil ->
-        {:ok, tool_response, state}
-
-      %ToolResponse{name: "do_nothing"} ->
-        {:ok, tool_response, state}
-
-      %ToolResponse{} ->
-        # Record the event in the DB before returning the result.
-        {:ok, _event} = Threads.create_event(thread, %{
-          role: :assistant,
-          assistant: agent_name(),
-          type: :tool_use,
-          data: Map.from_struct(tool_response)
-        })
-
-        # No need to update the state because the state is subcribed to the
-        # Electric stream and automatically picks up on all new events.
-        #
-        # XXX we can short-cut this and make sure the event is in the state.
-        # But this requires a bit of merge faffery, so need to experiment
-        # with the control flow first.
-        {:ok, tool_response, state}
-    end
+    {:ok, {tool_call, events}, state}
   end
 end

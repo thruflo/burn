@@ -23,7 +23,7 @@ defmodule Burn.Adapters.Anthropic do
         type: "any",
         disable_parallel_tool_use: true
       },
-      tools: Enum.map(tools, fn mod -> mod.tool_param() end)
+      tools: Enum.map(tools, fn tool -> tool.param() end)
     }
   end
 
@@ -74,8 +74,6 @@ defmodule Burn.Adapters.Anthropic do
       {"anthropic-version", api_version}
     ]
 
-    # IO.inspect {:send_request, params}
-
     case Req.post(api_url, json: params, headers: headers, receive_timeout: 60_000) do
       {:ok, %{status: 200, body: body}} ->
         {:ok, body}
@@ -96,8 +94,6 @@ defmodule Burn.Adapters.Anthropic do
     * `{:error, :unexpected_response, payload}` if payload is of unexpected shape.
   """
   def parse_response(payload) do
-    # IO.inspect({:adapter, :response, payload})
-
     case payload do
       %{"stop_reason" => "tool_use", "content" => [response]} ->
         {:ok, response}

@@ -58,13 +58,15 @@ defmodule Burn.Threads.Event do
     embedded_schema do
       field :content, :string
       field :is_error, :boolean
+      field :tool_name, :string
       field :tool_use_id, :string
     end
 
     def changeset(text_data, attrs) do
       text_data
-      |> cast(attrs, [:content, :is_error, :tool_use_id])
-      |> validate_required([:content, :is_error, :tool_use_id])
+      |> cast(attrs, [:content, :is_error, :tool_name, :tool_use_id])
+      |> validate_required([:content, :is_error, :tool_name, :tool_use_id])
+      |> validate_length(:tool_name, min: 1, max: 200)
     end
   end
 

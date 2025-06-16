@@ -5,6 +5,37 @@ defmodule Burn.Memory.Fact do
   alias Burn.Accounts
   alias Burn.Threads
 
+  def fact_field_names, do: [
+    :predicate,
+    :object,
+    :category,
+    :confidence,
+    :disputed
+  ]
+
+  def required_fact_field_names, do: [
+    :predicate,
+    :object,
+    :category
+  ]
+
+  # Used by `Burn.Tools.ExtractFacts`.
+  defmodule Embedded do
+    use Ecto.Schema
+
+    @primary_key false
+    embedded_schema do
+      field :source_event, :binary_id
+      field :subject, :binary_id
+
+      field :predicate, :string
+      field :object, :string
+      field :category, :string
+      field :confidence, :decimal
+      field :disputed, :boolean
+    end
+  end
+
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "facts" do
@@ -24,24 +55,21 @@ defmodule Burn.Memory.Fact do
   @doc false
   def changeset(fact, attrs) do
     fact
-    |> cast(attrs, [
-      :id,
-      :thread_id,
-      :source_event_id,
-      :subject_id,
-      :predicate,
-      :object,
-      :category,
-      :confidence,
-      :disputed
-    ])
-    |> validate_required([:predicate, :object, :category])
+    |> cast(attrs, [:id, :source_event_id, :subject_id, :thread_id])
+    |> validate_required([:source_event_id, :subject_id, :thread_id])
+    |> validate_fact_fields(attrs)
+    |> assoc_constraint(:thread)
+    |> assoc_constraint(:source_event)
+    |> assoc_constraint(:subject)
+  end
+
+  def validate_fact_fields(changeset, attrs) do
+    changeset
+    |> cast(attrs, fact_field_names())
+    |> validate_required(required_fact_field_names())
     |> validate_number(:confidence,
       greater_than: Decimal.new("0.0"),
       less_than_or_equal_to: Decimal.new("1.0")
     )
-    |> assoc_constraint(:thread)
-    |> assoc_constraint(:source_event)
-    |> assoc_constraint(:subject)
   end
 end
