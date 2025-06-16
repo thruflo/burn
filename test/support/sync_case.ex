@@ -14,15 +14,23 @@ defmodule Burn.SyncCase do
   """
   use ExUnit.CaseTemplate, async: false
 
-  alias Burn.Threads
   alias Ecto.Adapters.SQL
   alias Electric.Connection.Manager
   alias Electric.Postgres.ReplicationClient
 
+  alias Burn.{
+    Accounts,
+    Memory,
+    Threads
+  }
+
   @schemas [
+    Memory.Fact,
     Threads.Event,
-    Threads.Thread
+    Threads.Thread,
+    Accounts.User
   ]
+
   @slot_name "electric_slot_default"
   @stack_id "electric-embedded"
   @storage_dir "persistent"
