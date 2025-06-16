@@ -47,11 +47,7 @@ defmodule Burn.Agents.SarahTest do
       end)
     end
 
-    test "subscribes to memberships", %{thread: thread, user: %{id: user_id} = user} do
-      assert %State{users: []} = Sarah.get_state(thread)
-
-      {:ok, _membership} = Threads.create_membership(thread, user)
-
+    test "subscribes to memberships", %{thread: thread, user: %{id: user_id}} do
       assert_eventually(fn ->
         assert %State{users: [%{id: ^user_id}]} = Sarah.get_state(thread)
       end)
@@ -76,10 +72,11 @@ defmodule Burn.Agents.SarahTest do
         assert %State{events: [%{id: ^event_id}]} = Sarah.get_state(thread)
       end)
 
-      %ToolCall{id: tool_use_id, input: %{"user" => ^user_id}} = Sarah.instruct(thread)
+      {%ToolCall{id: tool_use_id, input: %{"subject" => ^user_id}}, _} = Sarah.instruct(thread)
 
       assert_eventually(fn ->
         %State{events: events} = Sarah.get_state(thread)
+
         assert %{
           role: :assistant,
           assistant: :sarah,
@@ -89,6 +86,21 @@ defmodule Burn.Agents.SarahTest do
           }
         } = Enum.at(events, -1)
       end)
+    end
+
+    test "extracts facts", %{thread: _thread, user: %{id: _user_id}} do
+
+      # add a user reply
+      # verify that sarah extracts the facts
+
+      assert true = "NotImplemented"
+    end
+
+    test "facts are stored", %{thread: _thread, user: %{id: _user_id}} do
+
+      # and test that the facts are stored
+
+      assert true = "NotImplemented"
     end
   end
 end

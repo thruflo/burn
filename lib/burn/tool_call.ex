@@ -53,7 +53,7 @@ defmodule Burn.ToolCall do
     case tool_module.validate(tool_call, tool, input) do
       %{valid?: true} ->
         changeset
-        |> cast(%{tool_module: tool_module}, :tool_module)
+        |> cast(%{tool_module: tool_module}, [:tool_module])
 
       %{errors: errors} ->
         error_message =

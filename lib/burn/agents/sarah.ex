@@ -110,7 +110,7 @@ defmodule Burn.Agents.Sarah do
   defp call_thread(%Threads.Thread{} = thread, request) do
     thread
     |> process_name()
-    |> GenServer.call(request)
+    |> GenServer.call(request, 10_000)
   end
 
   # Server
