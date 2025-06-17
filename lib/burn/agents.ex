@@ -42,7 +42,7 @@ defmodule Burn.Agents do
     adapter = Keyword.get(opts, :adapter, @default_adapter)
     max_retries = Keyword.get(opts, :max_retries, @max_retries)
 
-    params = adapter.initial_prompt(messages, system, tools, model) # |> IO.inspect()
+    params = adapter.initial_prompt(messages, system, tools, model)
     do_instruct(thread, params, adapter, tools, max_retries)
   end
 

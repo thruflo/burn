@@ -1,5 +1,11 @@
 import Config
 
+config :burn, Burn.Adapters.Anthropic,
+  models: [
+    opus: "claude-3-5-haiku-20241022",
+    sonnet: "claude-3-5-haiku-20241022"
+  ]
+
 # Only in tests, remove the complexity from the password hashing algorithm
 config :argon2_elixir, t_cost: 1, m_cost: 8
 

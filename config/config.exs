@@ -11,6 +11,14 @@ config :burn,
   ecto_repos: [Burn.Repo],
   generators: [timestamp_type: :utc_datetime, binary_id: true]
 
+config :burn, Burn.Adapters.Anthropic,
+  api_url: "https://api.anthropic.com/v1/messages",
+  api_version: "2023-06-01",
+  models: [
+    opus: "claude-opus-4-20250514",
+    sonnet: "claude-sonnet-4-20250514"
+  ]
+
 # Configures the endpoint
 config :burn, BurnWeb.Endpoint,
   url: [host: "localhost"],

@@ -31,13 +31,7 @@ if env!("PHX_SERVER", :string?, nil) do
 end
 
 config :burn, Burn.Adapters.Anthropic,
-  api_key: env!("ANTHROPIC_KEY"),
-  api_url: "https://api.anthropic.com/v1/messages",
-  api_version: "2023-06-01",
-  models: [
-    opus: "claude-opus-4-20250514",
-    sonnet: "claude-sonnet-4-20250514"
-  ]
+  api_key: env!("ANTHROPIC_KEY")
 
 if config_env() == :prod do
   database_url = env!("DATABASE_URL")

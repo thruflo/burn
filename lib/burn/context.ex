@@ -32,8 +32,11 @@ defmodule Burn.Context do
   end
 
   @spec format_event(Threads.Event.t()) :: binary()
-  def format_event(%Threads.Event{type: :text, role: :user, data: data} = event) do
-    content = Map.put(data, "from", author(event))
+  def format_event(%Threads.Event{type: :text, role: :user, data: data, id: id} = event) do
+    content =
+      data
+      |> Map.put("id", id)
+      |> Map.put("from", author(event))
 
     """
     <user_message>

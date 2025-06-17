@@ -1,12 +1,17 @@
 defmodule Burn.Agents.SarahTest do
   use Burn.SyncCase
 
-  import Burn.AccountsFixtures
-  import Burn.ThreadsFixtures
+  import Burn.{
+    AccountsFixtures,
+    ThreadsFixtures
+  }
 
-  alias Burn.Agents
-  alias Burn.Threads
-  alias Burn.ToolCall
+  alias Burn.{
+    Agents,
+    Memory,
+    Threads,
+    ToolCall
+  }
 
   describe "sarah" do
     alias Agents.Sarah
@@ -57,16 +62,8 @@ defmodule Burn.Agents.SarahTest do
       {nil, %{}} = Sarah.instruct(thread)
     end
 
-    test "asks the user for information", %{thread: thread, user: %{id: user_id}} do
-      {:ok, %{id: event_id}} =
-        Threads.create_event(thread, %{
-          role: :user,
-          user_id: user_id,
-          type: :text,
-          data: %{
-            "text" => "User joined the thread!"
-          }
-        })
+    test "asks the user for information", %{thread: thread, user: %{id: user_id} = user} do
+      %Threads.Event{id: event_id} = user_joined_event_fixture(thread, user)
 
       assert_eventually(fn ->
         assert %State{events: [%{id: ^event_id}]} = Sarah.get_state(thread)
@@ -88,19 +85,42 @@ defmodule Burn.Agents.SarahTest do
       end)
     end
 
-    test "extracts facts", %{thread: _thread, user: %{id: _user_id}} do
+    test "extracts facts to be stored", %{thread: thread, user: %{id: user_id} = user} do
+      %Threads.Event{} =
+        user_joined_event_fixture(thread, user)
 
-      # add a user reply
-      # verify that sarah extracts the facts
+      %Threads.Event{} =
+        ask_user_about_themselves_fixture(thread, user)
 
-      assert true = "NotImplemented"
-    end
+      %Threads.Event{id: event_id} =
+        user_provides_information_fixture(thread, user)
 
-    test "facts are stored", %{thread: _thread, user: %{id: _user_id}} do
+      assert_eventually(fn ->
+        %State{events: events} = Sarah.get_state(thread)
+        assert %{id: ^event_id} = Enum.at(events, -1)
+      end)
 
-      # and test that the facts are stored
+      {%ToolCall{id: tool_use_id, name: "extract_facts"}, _} = Sarah.instruct(thread)
 
-      assert true = "NotImplemented"
+      assert_eventually(fn ->
+        %State{events: events} = Sarah.get_state(thread)
+        assert %{type: :tool_use, data: %{"id" => ^tool_use_id}} = Enum.at(events, -1)
+      end)
+
+      assert [
+        %Burn.Memory.Fact{
+          source_event_id: ^event_id,
+          subject_id: ^user_id,
+          object: "horse riding",
+          disputed: false
+        },
+        %Burn.Memory.Fact{
+          source_event_id: ^event_id,
+          subject_id: ^user_id,
+          object: "biscuits",
+          disputed: false
+        }
+      ] = Memory.list_facts()
     end
   end
 end

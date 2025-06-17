@@ -66,12 +66,16 @@ defmodule Burn.Memory do
       source_event_id: source_event_id,
       subject_id: subject_id
     }
-    assoc_fields = Map.keys(assoc_attrs)
 
-    %Fact{}
-    |> Changeset.cast(assoc_attrs, assoc_fields)
-    |> Fact.changeset(attrs)
+    assoc_attrs
+    |> init_fact(attrs)
     |> Repo.insert()
+  end
+
+  def init_fact(assoc_attrs, attrs) do
+    %Fact{}
+    |> Changeset.cast(assoc_attrs, Map.keys(assoc_attrs))
+    |> Fact.changeset(attrs)
   end
 
   @doc """

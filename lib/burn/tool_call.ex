@@ -55,7 +55,7 @@ defmodule Burn.ToolCall do
         changeset
         |> cast(%{tool_module: tool_module}, [:tool_module])
 
-      %{errors: errors} ->
+      %{errors: errors} = changeset ->
         error_message =
           errors
           |> Enum.map(fn {field, {msg, _}} -> "#{field}: #{msg}" end)

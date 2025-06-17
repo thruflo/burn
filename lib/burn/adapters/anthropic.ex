@@ -13,7 +13,7 @@ defmodule Burn.Adapters.Anthropic do
   Requires an array of `tools` in the params. The model is told to respond
   with a tool call using one of these tools.
   """
-  def initial_prompt(messages, system, tools, model \\ @default_model, max_tokens \\ 1024) do
+  def initial_prompt(messages, system, tools, model \\ @default_model, max_tokens \\ 512) do
     %{
       max_tokens: max_tokens,
       messages: messages,
@@ -62,12 +62,10 @@ defmodule Burn.Adapters.Anthropic do
   Make request to Anthropic API
   """
   def send_request(params) do
-    [
-      {:api_key, api_key},
-      {:api_url, api_url},
-      {:api_version, api_version}
-      | _rest
-    ] = config()
+    env = config()
+    {:ok, api_key} = Keyword.fetch(env, :api_key)
+    {:ok, api_url} = Keyword.fetch(env, :api_url)
+    {:ok, api_version} = Keyword.fetch(env, :api_version)
 
     headers = [
       {"x-api-key", api_key},
