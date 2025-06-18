@@ -55,11 +55,12 @@ const useClasses = makeStyles({
     display: `flex`,
     alignItems: `center`,
     justifyContent: `center`,
-    fontWeight: `600`,
+    fontWeight: `bold`,
     textTransform: `uppercase`,
     letterSpacing: `0.5px`,
     position: `relative`,
     boxSizing: `border-box`,
+    fontSize: `var(--font-size-2)`,
   },
   small: {
     width: `20px`,
@@ -67,8 +68,8 @@ const useClasses = makeStyles({
     fontSize: `8px`,
   },
   medium: {
-    width: `32px`,
-    height: `32px`,
+    width: `30px`,
+    height: `30px`,
     fontSize: `12px`,
   },
   large: {
@@ -80,7 +81,7 @@ const useClasses = makeStyles({
     marginLeft: `-${Math.floor(parseInt(`20px`) * 0.35)}px`,
   },
   'medium.overlap': {
-    marginLeft: `-${Math.floor(parseInt(`32px`) * 0.35)}px`,
+    marginLeft: `-${Math.floor(parseInt(`30px`) * 0.25)}px`,
   },
   'large.overlap': {
     marginLeft: `-${Math.floor(parseInt(`40px`) * 0.35)}px`,

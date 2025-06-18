@@ -11,12 +11,14 @@ export const Route = createFileRoute(`/`)({
 function Index() {
   // Sample users in the chat
   const activeUsers = ['alice', 'bob', 'carol', 'dave']
+  // Sample agents in the chat
+  const activeAgents = ['claude', 'gpt4']
 
   return (
     <ScreenWithHeader title={<ThreadHeading title="This is a conversation" />}>
       <Flex direction="column">
         <Box>
-          <UserTopBar users={activeUsers} />
+          <UserTopBar users={activeUsers} agents={activeAgents} />
         </Box>
         {/* Main content area */}
       </Flex>
