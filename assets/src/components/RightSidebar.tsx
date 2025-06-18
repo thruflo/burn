@@ -9,7 +9,6 @@ import {
 } from '@radix-ui/themes'
 import { makeStyles, mergeClasses } from '@griffel/react'
 import { useSidebar } from './SidebarProvider'
-import { useResponsive } from '../hooks/useResponsive'
 
 const useHeaderClasses = makeStyles({
   header: {
@@ -32,24 +31,21 @@ const useHeaderClasses = makeStyles({
 
 // Header Component
 type HeaderProps = {
-  isMobile: boolean
   setRightSidebarOpen: (value: boolean) => void
 }
 
-function RightSidebarHeader({ isMobile, setRightSidebarOpen }: HeaderProps) {
+function RightSidebarHeader({ setRightSidebarOpen }: HeaderProps) {
   const classes = useHeaderClasses()
   return (
     <Flex p="3" align="center" justify="between" className={classes.header}>
-      {isMobile && (
-        <IconButton
-          size="1"
-          variant="ghost"
-          className={classes.closeButton}
-          onClick={() => setRightSidebarOpen(false)}
-        >
-          ✕
-        </IconButton>
-      )}
+      <IconButton
+        size="1"
+        variant="ghost"
+        className={mergeClasses(classes.closeButton, 'closeButton')}
+        onClick={() => setRightSidebarOpen(false)}
+      >
+        ✕
+      </IconButton>
       <Text size="3" weight="bold" className={classes.title}>
         Computer
       </Text>
@@ -67,7 +63,7 @@ const useRightSidebarClasses = makeStyles({
     zIndex: 100,
     '--sidebar-width': '280px',
     width: 'var(--sidebar-width)',
-    '@media (max-width: 1024px)': {
+    '@media (max-width: 699px)': {
       position: 'fixed',
       top: 0,
       right: 0,
@@ -76,13 +72,13 @@ const useRightSidebarClasses = makeStyles({
       transition: 'transform 0.3s ease-in-out',
       height: '100dvh',
     },
-    '@media (min-width: 1025px)': {
+    '@media (min-width: 700px)': {
       position: 'relative',
       transform: 'none',
     },
   },
   sidebarOpen: {
-    '@media (max-width: 1024px)': {
+    '@media (max-width: 699px)': {
       transform: 'translateX(0)',
     },
   },
@@ -93,7 +89,7 @@ const useRightSidebarClasses = makeStyles({
 
 const useRightSidebarOverlayClasses = makeStyles({
   overlay: {
-    '@media (max-width: 768px)': {
+    '@media (max-width: 699px)': {
       position: 'fixed',
       top: 0,
       left: 0,
@@ -107,7 +103,7 @@ const useRightSidebarOverlayClasses = makeStyles({
     },
   },
   overlayOpen: {
-    '@media (max-width: 768px)': {
+    '@media (max-width: 699px)': {
       opacity: 1,
       pointerEvents: 'auto',
     },
@@ -115,49 +111,32 @@ const useRightSidebarOverlayClasses = makeStyles({
 })
 
 export default function RightSidebar() {
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const { isRightSidebarOpen, setRightSidebarOpen } = useSidebar()
   const classes = useRightSidebarClasses()
   const overlayClasses = useRightSidebarOverlayClasses()
 
-  // Set up window resize handler
-  useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 768
-      setIsMobile(mobile)
-      if (!mobile) {
-        setRightSidebarOpen(false)
-      }
-    }
-
-    handleResize() // Call immediately
-    window.addEventListener(`resize`, handleResize)
-    return () => window.removeEventListener(`resize`, handleResize)
-  }, [setRightSidebarOpen])
-
   return (
     <>
-      {/* Sidebar overlay (mobile only) */}
-      {isMobile && (
-        <Box
-          className={mergeClasses(
-            overlayClasses.overlay,
-            isRightSidebarOpen && overlayClasses.overlayOpen
-          )}
-          onClick={() => setRightSidebarOpen(false)}
-        />
-      )}
+      {/* Sidebar overlay */}
+      <Box
+        className={mergeClasses(
+          overlayClasses.overlay,
+          isRightSidebarOpen && overlayClasses.overlayOpen
+        )}
+        onClick={() => setRightSidebarOpen(false)}
+      />
 
       {/* Right Sidebar */}
       <Box
         className={mergeClasses(
           classes.sidebar,
-          isRightSidebarOpen && classes.sidebarOpen
+          isRightSidebarOpen && classes.sidebarOpen,
+          'right-sidebar',
+          isRightSidebarOpen && 'sidebarOpen'
         )}
       >
         {/* Header */}
         <RightSidebarHeader
-          isMobile={isMobile}
           setRightSidebarOpen={setRightSidebarOpen}
         />
 

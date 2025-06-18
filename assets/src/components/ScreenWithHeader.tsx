@@ -21,13 +21,13 @@ const useClasses = makeStyles({
   },
   leftSidebarToggle: {
     display: 'inline-flex' /* Make sure it's visible by default */,
-    '@media (min-width: 1025px)': {
+    '@media (min-width: 970px)': {
       display: 'none',
     },
   },
   rightSidebarToggle: {
     display: 'inline-flex' /* Make sure it's visible by default */,
-    '@media (min-width: 769px)': {
+    '@media (min-width: 700px)': {
       display: 'none',
     },
   },

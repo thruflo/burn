@@ -220,6 +220,26 @@ pre:has(.syntax-highlighter) {
   }
 }
 
+/* Sidebar responsive behavior */
+/* Hide close buttons on desktop */
+@media (min-width: 970px) {
+  .sidebar .closeButton {
+    display: none !important;
+  }
+}
+
+@media (min-width: 700px) {
+  .right-sidebar .closeButton {
+    display: none !important;
+  }
+}
+
+/* Hide close buttons when sidebars are closed */
+.sidebar:not(.sidebarOpen) .closeButton,
+.right-sidebar:not(.sidebarOpen) .closeButton {
+  display: none !important;
+}
+
 /* Typing indicator animation */
 @keyframes bounce {
   0%,

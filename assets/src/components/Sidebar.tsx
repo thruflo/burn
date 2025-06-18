@@ -37,28 +37,25 @@ const useHeaderClasses = makeStyles({
 
 // Header Component
 type HeaderProps = {
-  isMobile: boolean
-  handleNewChat: () => void
+  handleNewChat?: () => void
   setSidebarOpen: (value: boolean) => void
 }
 
-function SidebarHeader({ isMobile, setSidebarOpen }: HeaderProps) {
+function SidebarHeader({ setSidebarOpen }: HeaderProps) {
   const classes = useHeaderClasses()
   return (
     <Flex p="3" align="center" justify="between" className={classes.header}>
       <Text size="3" weight="bold" className={classes.title}>
         🔥 Burn
       </Text>
-      {isMobile && (
-        <IconButton
-          size="1"
-          variant="ghost"
-          className={classes.closeButton}
-          onClick={() => setSidebarOpen(false)}
-        >
-          ✕
-        </IconButton>
-      )}
+      <IconButton
+        size="1"
+        variant="ghost"
+        className={mergeClasses(classes.closeButton, 'closeButton')}
+        onClick={() => setSidebarOpen(false)}
+      >
+        ✕
+      </IconButton>
     </Flex>
   )
 }
@@ -146,7 +143,7 @@ const useSidebarClasses = makeStyles({
     zIndex: 100,
     '--sidebar-width': '280px',
     width: 'var(--sidebar-width)',
-    '@media (max-width: 1024px)': {
+    '@media (max-width: 969px)': {
       position: 'fixed',
       top: 0,
       left: 0,
@@ -155,13 +152,13 @@ const useSidebarClasses = makeStyles({
       transition: 'transform 0.3s ease-in-out',
       height: '100dvh',
     },
-    '@media (min-width: 1025px)': {
+    '@media (min-width: 970px)': {
       position: 'relative',
       transform: 'none',
     },
   },
   sidebarOpen: {
-    '@media (max-width: 1024px)': {
+    '@media (max-width: 969px)': {
       transform: 'translateX(0)',
     },
   },
@@ -172,7 +169,7 @@ const useSidebarClasses = makeStyles({
 
 const useSidebarOverlayClasses = makeStyles({
   overlay: {
-    '@media (max-width: 1024px)': {
+    '@media (max-width: 969px)': {
       position: 'fixed',
       top: 0,
       left: 0,
@@ -186,7 +183,7 @@ const useSidebarOverlayClasses = makeStyles({
     },
   },
   overlayOpen: {
-    '@media (max-width: 1024px)': {
+    '@media (max-width: 969px)': {
       opacity: 1,
       pointerEvents: 'auto',
     },
@@ -194,7 +191,6 @@ const useSidebarOverlayClasses = makeStyles({
 })
 
 export default function Sidebar() {
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const navigate = useNavigate()
   const { theme, setTheme } = useTheme()
   const { username, signOut } = useAuth()
@@ -205,51 +201,33 @@ export default function Sidebar() {
   const classes = useSidebarClasses()
   const overlayClasses = useSidebarOverlayClasses()
 
-  // Set up window resize handler
-  useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 1024
-      setIsMobile(mobile)
-      if (!mobile) {
-        setSidebarOpen(false)
-      }
-    }
-
-    handleResize() // Call immediately
-    window.addEventListener(`resize`, handleResize)
-    return () => window.removeEventListener(`resize`, handleResize)
-  }, [setSidebarOpen])
-
   const handleNewChat = () => {
     navigate({ to: `/` })
-    if (isMobile) {
-      setSidebarOpen(false)
-    }
+    setSidebarOpen(false)
   }
 
   return (
     <>
-      {/* Sidebar overlay (mobile only) */}
-      {isMobile && (
-        <Box
-          className={mergeClasses(
-            overlayClasses.overlay,
-            isSidebarOpen && overlayClasses.overlayOpen
-          )}
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      {/* Sidebar overlay */}
+      <Box
+        className={mergeClasses(
+          overlayClasses.overlay,
+          isSidebarOpen && overlayClasses.overlayOpen
+        )}
+        onClick={() => setSidebarOpen(false)}
+      />
 
       {/* Sidebar */}
       <Box
         className={mergeClasses(
           classes.sidebar,
-          isSidebarOpen && classes.sidebarOpen
+          isSidebarOpen && classes.sidebarOpen,
+          'sidebar',
+          isSidebarOpen && 'sidebarOpen'
         )}
       >
         {/* Header */}
         <SidebarHeader
-          isMobile={isMobile}
           handleNewChat={handleNewChat}
           setSidebarOpen={setSidebarOpen}
         />
