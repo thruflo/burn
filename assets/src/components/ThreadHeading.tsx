@@ -23,7 +23,7 @@ type ThreadHeadingProps = {
 
 export default function ThreadHeading({ title }: ThreadHeadingProps) {
   const classes = useThreadHeadingStyles()
-  
+
   return (
     <div className={classes.container}>
       <span className={classes.icon}>

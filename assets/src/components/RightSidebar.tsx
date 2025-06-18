@@ -145,9 +145,7 @@ export default function RightSidebar() {
         )}
       >
         {/* Header */}
-        <RightSidebarHeader
-          setRightSidebarOpen={setRightSidebarOpen}
-        />
+        <RightSidebarHeader setRightSidebarOpen={setRightSidebarOpen} />
 
         {/* Content Area */}
         <ScrollArea className={classes.scrollArea}>
