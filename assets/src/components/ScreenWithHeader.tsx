@@ -1,7 +1,7 @@
 import { Box, Flex, Text, IconButton, ScrollArea } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
 import { useSidebar } from './SidebarProvider'
-import { Menu, PanelRight } from 'lucide-react'
+import { Menu, Cpu } from 'lucide-react'
 
 const useClasses = makeStyles({
   scrollArea: {
@@ -57,9 +57,13 @@ export default function ScreenWithHeader({
           >
             <Menu size={18} />
           </IconButton>
-          <Text size="1" weight="medium">
-            {title}
-          </Text>
+          {typeof title === 'string' ? (
+            <Text size="1" weight="medium">
+              {title}
+            </Text>
+          ) : (
+            title
+          )}
           <Flex ml="auto" align="center">
             {toolbarItems}
             <IconButton
@@ -69,7 +73,7 @@ export default function ScreenWithHeader({
               ml="3"
               className={classes.rightSidebarToggle}
             >
-              <PanelRight size={18} />
+              <Cpu size={18} />
             </IconButton>
           </Flex>
         </Flex>

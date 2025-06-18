@@ -9,6 +9,7 @@ import {
 } from '@radix-ui/themes'
 import { makeStyles, mergeClasses } from '@griffel/react'
 import { useSidebar } from './SidebarProvider'
+import { Cpu } from 'lucide-react'
 
 const useHeaderClasses = makeStyles({
   header: {
@@ -19,6 +20,9 @@ const useHeaderClasses = makeStyles({
   },
   title: {
     paddingLeft: `4px`,
+  },
+  icon: {
+    marginRight: 'var(--space-2)',
   },
   closeButton: {
     position: `absolute`,
@@ -46,9 +50,14 @@ function RightSidebarHeader({ setRightSidebarOpen }: HeaderProps) {
       >
         ✕
       </IconButton>
-      <Text size="3" weight="bold" className={classes.title}>
-        Computer
-      </Text>
+      <Flex align="center" className={classes.title}>
+        <span className={classes.icon}>
+          <Cpu size={14} />
+        </span>
+        <Text size="2" weight="medium">
+          Computer
+        </Text>
+      </Flex>
     </Flex>
   )
 }
