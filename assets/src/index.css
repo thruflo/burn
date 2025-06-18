@@ -94,6 +94,22 @@ body {
   color: var(--text-primary);
 }
 
+/* Make all buttons and links use pointer cursor */
+button,
+a,
+[role='button'],
+.rt-Button,
+.rt-IconButton,
+.rt-Link,
+.rt-SelectTrigger,
+.rt-DropdownMenuTrigger,
+.rt-SelectItem,
+.rt-DropdownMenuItem,
+.rt-TooltipTrigger,
+.clickable {
+  cursor: pointer !important;
+}
+
 .content-area {
   flex: 1;
   height: 100%;
@@ -135,11 +151,11 @@ body {
 
 .dark a,
 .dark button {
-  color: var(--purple-9);
+  color: var(--purple-3);
 }
 
 .dark :focus-visible {
-  outline-color: var(--purple-9);
+  outline-color: var(--purple-3);
 }
 
 /* Scrollbar styling for dark mode */

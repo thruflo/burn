@@ -1,6 +1,14 @@
 import { createContext, useContext, useState } from 'react'
 
 type SidebarContextType = {
+  isLeftSidebarOpen: boolean
+  toggleLeftSidebar: () => void
+  setLeftSidebarOpen: (value: boolean) => void
+  isRightSidebarOpen: boolean
+  toggleRightSidebar: () => void
+  setRightSidebarOpen: (value: boolean) => void
+
+  // Legacy support for old naming
   isSidebarOpen: boolean
   toggleSidebar: () => void
   setSidebarOpen: (value: boolean) => void
@@ -9,18 +17,31 @@ type SidebarContextType = {
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined)
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
-  const [isSidebarOpen, setSidebarOpen] = useState(false)
+  const [isLeftSidebarOpen, setLeftSidebarOpen] = useState(false)
+  const [isRightSidebarOpen, setRightSidebarOpen] = useState(false)
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!isSidebarOpen)
+  const toggleLeftSidebar = () => {
+    setLeftSidebarOpen(!isLeftSidebarOpen)
+  }
+
+  const toggleRightSidebar = () => {
+    setRightSidebarOpen(!isRightSidebarOpen)
   }
 
   return (
     <SidebarContext.Provider
       value={{
-        isSidebarOpen,
-        toggleSidebar,
-        setSidebarOpen,
+        isLeftSidebarOpen,
+        toggleLeftSidebar,
+        setLeftSidebarOpen,
+        isRightSidebarOpen,
+        toggleRightSidebar,
+        setRightSidebarOpen,
+
+        // Legacy support for old naming
+        isSidebarOpen: isLeftSidebarOpen,
+        toggleSidebar: toggleLeftSidebar,
+        setSidebarOpen: setLeftSidebarOpen,
       }}
     >
       {children}

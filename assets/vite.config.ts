@@ -17,18 +17,18 @@ export default defineConfig(({ command, mode }) => {
         output: {
           assetFileNames: 'assets/[name][extname]',
           chunkFileNames: 'assets/chunk/[name].js',
-          entryFileNames: 'assets/[name].js'
-        }
-      }
+          entryFileNames: 'assets/[name].js',
+        },
+      },
     },
     define: {
-      __APP_ENV__: env.APP_ENV
+      __APP_ENV__: env.APP_ENV,
     },
     plugins: [
       TanStackRouterVite({ target: 'react', autoCodeSplitting: true }),
       react(),
-      command === 'build' && griffel()
+      command === 'build' && griffel(),
     ],
-    publicDir: false
+    publicDir: false,
   }
 })

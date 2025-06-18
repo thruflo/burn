@@ -7,6 +7,7 @@ import { useNavigate } from '@tanstack/react-router'
 const useIssueLineClasses = makeStyles({
   issueLine: {
     borderBottom: '1px solid var(--gray-2)',
+    cursor: 'pointer',
     '&:hover': {
       backgroundColor: 'var(--gray-2)',
     },

@@ -1,8 +1,7 @@
 import { Box, Flex, Text, IconButton, ScrollArea } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
-import { useMobile } from '../hooks/useMobile'
 import { useSidebar } from './SidebarProvider'
-import { Menu } from 'lucide-react'
+import { Menu, PanelRight } from 'lucide-react'
 
 const useClasses = makeStyles({
   scrollArea: {
@@ -20,6 +19,18 @@ const useClasses = makeStyles({
     top: 0,
     zIndex: 10,
   },
+  leftSidebarToggle: {
+    display: 'inline-flex' /* Make sure it's visible by default */,
+    '@media (min-width: 1025px)': {
+      display: 'none',
+    },
+  },
+  rightSidebarToggle: {
+    display: 'inline-flex' /* Make sure it's visible by default */,
+    '@media (min-width: 769px)': {
+      display: 'none',
+    },
+  },
 })
 
 export default function ScreenWithHeader({
@@ -31,24 +42,35 @@ export default function ScreenWithHeader({
   children: React.ReactNode
   toolbarItems?: React.ReactNode
 }) {
-  const { isMobile } = useMobile()
-  const { toggleSidebar } = useSidebar()
+  const { toggleLeftSidebar, toggleRightSidebar } = useSidebar()
   const classes = useClasses()
   return (
     <Flex direction="column" width="100%" height="100%">
       {/* Header with menu button */}
       <Box className={classes.header}>
         <Flex align="center" gap="2" width="100%">
-          {isMobile && (
-            <IconButton variant="ghost" size="1" onClick={toggleSidebar}>
-              <Menu size={18} />
-            </IconButton>
-          )}
+          <IconButton
+            variant="ghost"
+            size="1"
+            onClick={toggleLeftSidebar}
+            className={classes.leftSidebarToggle}
+          >
+            <Menu size={18} />
+          </IconButton>
           <Text size="1" weight="medium">
             {title}
           </Text>
           <Flex ml="auto" align="center">
             {toolbarItems}
+            <IconButton
+              variant="ghost"
+              size="1"
+              onClick={toggleRightSidebar}
+              ml="3"
+              className={classes.rightSidebarToggle}
+            >
+              <PanelRight size={18} />
+            </IconButton>
           </Flex>
         </Flex>
       </Box>

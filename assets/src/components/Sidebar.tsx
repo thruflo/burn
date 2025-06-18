@@ -9,18 +9,7 @@ import {
   Tooltip,
   Button,
 } from '@radix-ui/themes'
-import {
-  LogOut,
-  Moon,
-  Sun,
-  Monitor,
-  Layers,
-  CircleDashed,
-  SquareKanban,
-  ChevronDown,
-  ChevronRight,
-  Plus,
-} from 'lucide-react'
+import { LogOut, Moon, Sun, Monitor, Plus, MessagesSquare } from 'lucide-react'
 import { makeStyles, mergeClasses } from '@griffel/react'
 import { useTheme } from './ThemeProvider'
 import { useSidebar } from './SidebarProvider'
@@ -58,7 +47,7 @@ function SidebarHeader({ isMobile, setSidebarOpen }: HeaderProps) {
   return (
     <Flex p="3" align="center" justify="between" className={classes.header}>
       <Text size="3" weight="bold" className={classes.title}>
-        Burn
+        🔥 Burn
       </Text>
       {isMobile && (
         <IconButton
@@ -157,7 +146,7 @@ const useSidebarClasses = makeStyles({
     zIndex: 100,
     '--sidebar-width': '280px',
     width: 'var(--sidebar-width)',
-    '@media (max-width: 768px)': {
+    '@media (max-width: 1024px)': {
       position: 'fixed',
       top: 0,
       left: 0,
@@ -166,13 +155,13 @@ const useSidebarClasses = makeStyles({
       transition: 'transform 0.3s ease-in-out',
       height: '100dvh',
     },
-    '@media (min-width: 768px)': {
+    '@media (min-width: 1025px)': {
       position: 'relative',
       transform: 'none',
     },
   },
   sidebarOpen: {
-    '@media (max-width: 768px)': {
+    '@media (max-width: 1024px)': {
       transform: 'translateX(0)',
     },
   },
@@ -183,7 +172,7 @@ const useSidebarClasses = makeStyles({
 
 const useSidebarOverlayClasses = makeStyles({
   overlay: {
-    '@media (max-width: 768px)': {
+    '@media (max-width: 1024px)': {
       position: 'fixed',
       top: 0,
       left: 0,
@@ -197,7 +186,7 @@ const useSidebarOverlayClasses = makeStyles({
     },
   },
   overlayOpen: {
-    '@media (max-width: 768px)': {
+    '@media (max-width: 1024px)': {
       opacity: 1,
       pointerEvents: 'auto',
     },
@@ -209,14 +198,17 @@ export default function Sidebar() {
   const navigate = useNavigate()
   const { theme, setTheme } = useTheme()
   const { username, signOut } = useAuth()
-  const { isSidebarOpen, setSidebarOpen } = useSidebar()
+  const {
+    isLeftSidebarOpen: isSidebarOpen,
+    setLeftSidebarOpen: setSidebarOpen,
+  } = useSidebar()
   const classes = useSidebarClasses()
   const overlayClasses = useSidebarOverlayClasses()
 
   // Set up window resize handler
   useEffect(() => {
     const handleResize = () => {
-      const mobile = window.innerWidth < 768
+      const mobile = window.innerWidth < 1024
       setIsMobile(mobile)
       if (!mobile) {
         setSidebarOpen(false)
@@ -262,11 +254,10 @@ export default function Sidebar() {
           setSidebarOpen={setSidebarOpen}
         />
 
-        {/* Main Chat List */}
+        {/* Main Thread List */}
         <ScrollArea className={classes.scrollArea}>
           <Flex direction="column" px="3" py="2">
-            <ProjectSection expanded={true} />
-            <ChatsSection />
+            <ThreadsSection />
           </Flex>
         </ScrollArea>
 
@@ -282,137 +273,71 @@ export default function Sidebar() {
   )
 }
 
-const useProjectSectionClasses = makeStyles({
-  projectsButton: {
-    flexGrow: 1,
+const useThreadsSectionClasses = makeStyles({
+  threadButton: {
+    paddingLeft: '0px',
   },
-  projectButton: {
-    paddingLeft: '26px',
+  threadsContainer: {
+    paddingLeft: 'var(--space-2)',
   },
 })
 
-interface ProjectSectionProps {
-  expanded?: boolean
-}
-
-function ProjectSection({ expanded = false }: ProjectSectionProps) {
-  const classes = useProjectSectionClasses()
-  const [isExpanded, setIsExpanded] = useState(expanded)
+function ThreadsSection() {
+  const classes = useThreadsSectionClasses()
   const navigate = useNavigate()
+
+  const handleNewThread = () => {
+    navigate({ to: `/` })
+  }
+
   return (
     <>
-      <Flex>
+      <Button
+        size="2"
+        color="iris"
+        variant="soft"
+        my="2"
+        onClick={handleNewThread}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Plus size={16} />
+        New thread
+      </Button>
+
+      <Flex align="center" py="2" pl="1">
+        <Text size="2" weight="medium">
+          Threads
+        </Text>
+      </Flex>
+
+      <Flex direction="column" className={classes.threadsContainer}>
         <SidebarButton
-          label="My Project"
-          isActive={false}
-          onClick={() => setIsExpanded(!isExpanded)}
-          icon={
-            isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />
-          }
-          className={classes.projectsButton}
-        />
-        <SidebarButton
+          label="This is a conversation"
           isActive={false}
           onClick={() => {}}
-          icon={<Plus size={14} />}
-          ml="3"
-        />
-      </Flex>
-      {isExpanded && (
-        <>
-          <SidebarButton
-            label="All Issues"
-            isActive={false}
-            onClick={() => {
-              navigate({ to: `/` })
-            }}
-            icon={<Layers size={14} />}
-            className={classes.projectButton}
-          />
-          <SidebarButton
-            label="Active"
-            isActive={false}
-            onClick={() => {
-              navigate({ to: `/` })
-            }}
-            icon={<ActiveButtonLine />}
-            className={classes.projectButton}
-          />
-          <SidebarButton
-            label="Backlog"
-            isActive={false}
-            onClick={() => {
-              navigate({ to: `/` })
-            }}
-            icon={<CircleDashed size={14} />}
-            className={classes.projectButton}
-          />
-          <SidebarButton
-            label="Board"
-            isActive={false}
-            onClick={() => {}}
-            icon={<SquareKanban size={14} />}
-            className={classes.projectButton}
-          />
-        </>
-      )}
-    </>
-  )
-}
-
-const useChatsSectionClasses = makeStyles({
-  chatButton: {
-    paddingLeft: '26px',
-  },
-  chatsButton: {
-    flexGrow: 1,
-  },
-})
-
-function ChatsSection() {
-  const classes = useChatsSectionClasses()
-  const [isExpanded, setIsExpanded] = useState(true)
-  return (
-    <>
-      <Flex>
-        <SidebarButton
-          label="Chats"
-          isActive={false}
-          onClick={() => setIsExpanded(!isExpanded)}
-          icon={
-            isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />
-          }
-          className={classes.chatsButton}
+          icon={<MessagesSquare size={14} />}
+          className={classes.threadButton}
         />
         <SidebarButton
+          label="This is a conversation with a very long title"
           isActive={false}
           onClick={() => {}}
-          icon={<Plus size={14} />}
-          ml="3"
+          icon={<MessagesSquare size={14} />}
+          className={classes.threadButton}
+        />
+        <SidebarButton
+          label="This is a conversation"
+          isActive={false}
+          onClick={() => {}}
+          icon={<MessagesSquare size={14} />}
+          className={classes.threadButton}
         />
       </Flex>
-      {isExpanded && (
-        <>
-          <SidebarButton
-            label="This is a conversation"
-            isActive={false}
-            onClick={() => {}}
-            className={classes.chatButton}
-          />
-          <SidebarButton
-            label="This is a conversation with a very long title"
-            isActive={false}
-            onClick={() => {}}
-            className={classes.chatButton}
-          />
-          <SidebarButton
-            label="This is a conversation"
-            isActive={false}
-            onClick={() => {}}
-            className={classes.chatButton}
-          />
-        </>
-      )}
     </>
   )
 }
@@ -420,7 +345,8 @@ function ChatsSection() {
 const useSidebarButtonClasses = makeStyles({
   button: {
     justifyContent: 'flex-start',
-    height: '22px',
+    height: 'auto',
+    padding: 'var(--space-2) 0',
     overflow: 'hidden',
     color: 'var(--black)',
   },
@@ -433,6 +359,9 @@ const useSidebarButtonClasses = makeStyles({
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
     color: 'var(--gray-12)',
+  },
+  buttonIcon: {
+    marginRight: 'var(--space-1)',
   },
 })
 
@@ -472,7 +401,7 @@ function SidebarButton({
       )}
       onClick={onClick}
     >
-      {icon}
+      {icon && <span className={classes.buttonIcon}>{icon}</span>}
       {label && (
         <Text size="1" className={classes.buttonText}>
           {label}
@@ -480,19 +409,4 @@ function SidebarButton({
       )}
     </Button>
   )
-}
-
-const useActiveButtonLineClasses = makeStyles({
-  line: {
-    position: 'relative',
-    height: '120%',
-    width: '1px',
-    margin: '0 7px 0 6px',
-    backgroundColor: 'var(--gray-5)',
-  },
-})
-
-function ActiveButtonLine() {
-  const classes = useActiveButtonLineClasses()
-  return <div className={classes.line} />
 }

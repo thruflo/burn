@@ -3,6 +3,7 @@ import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Flex } from '@radix-ui/themes'
 import { Providers } from '../components/Providers'
 import Sidebar from '../components/Sidebar'
+import RightSidebar from '../components/RightSidebar'
 import { useAuth } from '../hooks/useAuth'
 import WelcomeScreen from '../components/WelcomeScreen'
 
@@ -23,6 +24,7 @@ function Root() {
               <Flex direction="column" className="content-area" width="100%">
                 <Outlet />
               </Flex>
+              <RightSidebar />
             </>
           ) : (
             <Flex direction="column" className="content-area" width="100%">
