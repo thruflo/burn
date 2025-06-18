@@ -7,6 +7,7 @@ interface UserAvatarProps {
   size?: `small` | `medium` | `large`
   showTooltip?: boolean
   index?: number // For staggered positioning
+  imageUrl?: string // Optional image URL
 }
 
 // Simple hash function to generate a consistent color from username
@@ -61,6 +62,12 @@ const useClasses = makeStyles({
     position: `relative`,
     boxSizing: `border-box`,
     fontSize: `var(--font-size-2)`,
+    overflow: 'hidden',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
   },
   small: {
     width: `20px`,
@@ -94,6 +101,7 @@ const UserAvatar = memo(
     size = `medium`,
     showTooltip = true,
     index = 0,
+    imageUrl,
   }: UserAvatarProps) => {
     const classes = useClasses()
     const backgroundColor = stringToColor(username)
@@ -107,10 +115,14 @@ const UserAvatar = memo(
           index > 0 && classes[`${size}.overlap`]
         )}
         style={{
-          backgroundColor,
+          backgroundColor: imageUrl ? 'transparent' : backgroundColor,
         }}
       >
-        {initials}
+        {imageUrl ? (
+          <img src={imageUrl} alt={username} className={classes.image} />
+        ) : (
+          initials
+        )}
       </div>
     )
 

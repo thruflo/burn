@@ -9,10 +9,18 @@ export const Route = createFileRoute(`/`)({
 })
 
 function Index() {
-  // Sample users in the chat
-  const activeUsers = ['alice', 'bob', 'carol', 'dave']
+  // Sample users in the chat with some having images
+  const activeUsers = [
+    { username: 'alice', imageUrl: 'https://i.pravatar.cc/150?u=alice' },
+    { username: 'bob' },
+    { username: 'carol', imageUrl: 'https://i.pravatar.cc/150?u=carol' },
+    { username: 'dave' },
+  ]
   // Sample agents in the chat
-  const activeAgents = ['claude', 'gpt4']
+  const activeAgents = [
+    { username: 'claude', imageUrl: 'https://i.pravatar.cc/150?u=claude' },
+    { username: 'gpt4' },
+  ]
 
   return (
     <ScreenWithHeader title={<ThreadHeading title="This is a conversation" />}>
