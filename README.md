@@ -47,6 +47,12 @@ sys prompt:
 - until a user says "burn me" or "burn <user>"
 - then burn them!
 
+
+Assets were setup with
+
+XXX
+https://mazaheri.dev/posts/vite-in-phoenix-2/
+
 ## Run
 
 To start your Phoenix server:

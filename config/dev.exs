@@ -25,8 +25,14 @@ config :burn, BurnWeb.Endpoint,
   debug_errors: true,
   secret_key_base: "OzgmKUHtexipthg/TD7QH53rh6TWj47VnDLOooP0wqovV02af+FBadyyC1n68bBo",
   watchers: [
-    esbuild: {Esbuild, :install_and_run, [:burn, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:burn, ~w(--watch)]}
+    pnpm: [
+      "vite",
+      "build",
+      "--config", "vite.config.js",
+      "--mode", "development",
+      "--watch",
+      cd: Path.expand("../assets", __DIR__)
+    ]
   ]
 
 # ## SSL Support

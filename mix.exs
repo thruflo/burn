@@ -34,14 +34,12 @@ defmodule Burn.MixProject do
     [
       {:argon2_elixir, "~> 3.0"},
       {:bandit, "~> 1.5"},
-      {:bcrypt_elixir, "~> 3.0"},
       {:dns_cluster, "~> 0.1.1"},
       {:dotenvy, "~> 1.1.0"},
       {:ecto_sql, "~> 3.10"},
       {:electric_client,
-       path: "../../../electric-sql/electric/packages/elixir-client", override: true},
+       path: "../../electric-sql/electric/packages/elixir-client", override: true},
       {:electric, "~> 1.0.19", override: true},
-      {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
       {:finch, "~> 0.13"},
       {:floki, ">= 0.30.0", only: :test},
       {:gettext, "~> 0.26"},
@@ -58,7 +56,6 @@ defmodule Burn.MixProject do
       {:postgrex, ">= 0.0.0"},
       {:req, "~> 0.5.9"},
       {:swoosh, "~> 1.5"},
-      {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:yamel, "~> 2.0"}
@@ -83,11 +80,10 @@ defmodule Burn.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       "ecto.reset.quiet": ["ecto.drop --quiet", "ecto.setup.quiet"],
       test: ["ecto.reset.quiet", "test"],
-      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["tailwind burn", "esbuild burn"],
+      "assets.setup": ["cmd --cd assets pnpm install"],
+      "assets.build": ["cmd --cd assets pnpm vite build --config vite.config.js"],
       "assets.deploy": [
-        "tailwind burn --minify",
-        "esbuild burn --minify",
+        "cmd --cd assets pnpm vite build --mode production --config vite.config.js",
         "phx.digest"
       ]
     ]
