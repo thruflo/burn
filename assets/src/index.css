@@ -239,12 +239,14 @@ pre:has(.syntax-highlighter) {
     grid-area: main-content;
     width: auto !important;
     min-width: 0;
+    min-height: 0;
   }
 
   /* Ensure left sidebar participates in grid */
   .app-layout .sidebar {
     grid-area: left-sidebar;
     width: auto !important;
+    min-height: 0;
   }
 
   /* Ensure right sidebar participates in grid and its contents grow */
@@ -252,6 +254,7 @@ pre:has(.syntax-highlighter) {
     grid-area: right-sidebar;
     width: auto !important;
     min-width: 280px;
+    min-height: 0;
   }
 
   /* Make sure right sidebar contents fill available width */
