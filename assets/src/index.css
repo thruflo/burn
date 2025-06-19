@@ -224,6 +224,7 @@ pre:has(.syntax-highlighter) {
 @media (min-width: 1121px) {
   .app-layout {
     display: grid !important;
+    height: 100vh !important;
     /* At 1120px: left=280px, main=560px, right=280px (total 1120px)
        Above 1120px: additional width split equally between main and right
        So: 280px + (560px + 0.5 * extra) + (280px + 0.5 * extra) */
@@ -231,6 +232,7 @@ pre:has(.syntax-highlighter) {
         280px + 50vw - 560px
       );
     grid-template-areas: 'left-sidebar main-content right-sidebar';
+    grid-template-rows: 1fr;
   }
 
   .app-layout .content-area {
