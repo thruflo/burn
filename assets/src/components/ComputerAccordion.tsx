@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Box, Flex, Text, Badge, Tooltip } from '@radix-ui/themes'
+import { Box, Flex, Text, Badge, Tooltip, TextField } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
 import { ChevronDown, ChevronRight, Lightbulb } from 'lucide-react'
 import { JsonView, darkStyles } from 'react-json-view-lite'
@@ -51,6 +51,33 @@ const useStyles = makeStyles({
   factsContainer: {
     marginLeft: 'var(--space-1)',
     marginRight: 'var(--space-1)',
+  },
+  factsFilter: {
+    marginBottom: 'var(--space-1)',
+    boxShadow: 'inset 0 0 0 var(--text-field-border-width) var(--gray-a4)',
+    '&:focus-within': {
+      boxShadow: 'inset 0 0 0 0.5px rgb(146, 129, 255) !important',
+      outline: 'none !important',
+    },
+    '& input': {
+      fontSize: '11px',
+      backgroundColor: 'transparent',
+      border: 'none',
+      boxShadow: 'none',
+      outline: 'none',
+      '&:focus': {
+        outline: 'none',
+        boxShadow: 'none',
+      },
+      '&:focus-visible': {
+        outline: 'none',
+        boxShadow: 'none',
+      },
+      '&::placeholder': {
+        color: 'var(--gray-8)',
+        fontSize: '11px',
+      },
+    },
   },
 })
 
@@ -146,12 +173,24 @@ function FactItem({ fact }: { fact: Fact }) {
   )
 }
 
-function FactsList({ facts }: { facts: Fact[] }) {
+function FactsList({ facts, filter }: { facts: Fact[]; filter: string }) {
   const classes = useStyles()
+
+  // Filter facts based on search text
+  const filteredFacts = facts.filter((fact) => {
+    if (!filter.trim()) return true
+
+    const searchText = filter.toLowerCase()
+    const subjectMatch = fact.subject.name.toLowerCase().includes(searchText)
+    const predicateMatch = fact.predicate.toLowerCase().includes(searchText)
+    const objectMatch = fact.object.toLowerCase().includes(searchText)
+
+    return subjectMatch || predicateMatch || objectMatch
+  })
 
   return (
     <Box className={classes.factsList}>
-      {facts.map((fact) => (
+      {filteredFacts.map((fact) => (
         <FactItem key={fact.id} fact={fact} />
       ))}
     </Box>
@@ -281,6 +320,8 @@ interface AccordionSectionProps {
   isOpen: boolean
   onToggle: () => void
   isMemory?: boolean
+  filter?: string
+  onFilterChange?: (filter: string) => void
 }
 
 function AccordionSection({
@@ -289,6 +330,8 @@ function AccordionSection({
   isOpen,
   onToggle,
   isMemory = false,
+  filter = '',
+  onFilterChange,
 }: AccordionSectionProps) {
   const classes = useStyles()
 
@@ -316,7 +359,16 @@ function AccordionSection({
         <Box className={classes.sectionContent}>
           {isMemory ? (
             <Box className={classes.factsContainer}>
-              <FactsList facts={data} />
+              {onFilterChange && (
+                <TextField.Root
+                  size="1"
+                  placeholder="Filter facts..."
+                  value={filter}
+                  onChange={(e) => onFilterChange(e.target.value)}
+                  className={classes.factsFilter}
+                />
+              )}
+              <FactsList facts={data} filter={filter} />
             </Box>
           ) : (
             <Box className={classes.jsonViewer}>
@@ -340,6 +392,7 @@ export default function ComputerAccordion() {
     events: false,
     agents: false,
   })
+  const [factsFilter, setFactsFilter] = useState('')
 
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections((prev) => ({
@@ -356,6 +409,8 @@ export default function ComputerAccordion() {
         isOpen={openSections.memory}
         onToggle={() => toggleSection('memory')}
         isMemory={true}
+        filter={factsFilter}
+        onFilterChange={setFactsFilter}
       />
       <AccordionSection
         title="Context"
