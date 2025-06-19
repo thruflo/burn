@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Box, Flex, Text, Badge, Tooltip, TextField } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
 import {
@@ -232,7 +232,7 @@ function FactItem({ fact }: { fact: Fact }) {
       <Badge
         size="1"
         variant="soft"
-        color="purple"
+        color="orange"
         style={{
           whiteSpace: 'normal',
           wordBreak: 'break-word',
@@ -284,44 +284,6 @@ interface Event {
 function EventItem({ event }: { event: Event }) {
   const classes = useStyles()
 
-  // Get icon based on event type
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'text':
-        return (
-          <Send
-            size={12}
-            color="var(--green-9)"
-            style={{ display: 'inline', verticalAlign: 'middle' }}
-          />
-        )
-      case 'tool_use':
-        return (
-          <Wrench
-            size={12}
-            color="var(--orange-9)"
-            style={{ display: 'inline', verticalAlign: 'middle' }}
-          />
-        )
-      case 'tool_result':
-        return (
-          <ArrowLeftRight
-            size={12}
-            color="var(--red-9)"
-            style={{ display: 'inline', verticalAlign: 'middle' }}
-          />
-        )
-      default:
-        return (
-          <Send
-            size={12}
-            color="var(--green-9)"
-            style={{ display: 'inline', verticalAlign: 'middle' }}
-          />
-        )
-    }
-  }
-
   // Get badge color based on event type
   const getTypeBadgeColor = (type: string) => {
     switch (type) {
@@ -330,7 +292,7 @@ function EventItem({ event }: { event: Event }) {
       case 'tool_use':
         return 'orange'
       case 'tool_result':
-        return 'red'
+        return 'orange'
       default:
         return 'green'
     }
@@ -367,7 +329,19 @@ function EventItem({ event }: { event: Event }) {
 
   return (
     <Box className={classes.eventItem}>
-      {getTypeIcon(event.type)}
+      {event.role === 'user' ? (
+        <User
+          size={12}
+          color="var(--gray-12)"
+          style={{ display: 'inline', verticalAlign: 'middle' }}
+        />
+      ) : (
+        <Bot
+          size={12}
+          color="var(--gray-12)"
+          style={{ display: 'inline', verticalAlign: 'middle' }}
+        />
+      )}
       <Badge
         size="1"
         variant="soft"
@@ -393,20 +367,6 @@ function EventItem({ event }: { event: Event }) {
       >
         {event.type === 'text' ? 'from' : 'by'}
       </Text>
-      {event.role === 'user' && (
-        <User
-          size={13}
-          color="var(--blue-9)"
-          style={{ display: 'inline', verticalAlign: 'middle' }}
-        />
-      )}
-      {event.role === 'assistant' && (
-        <Bot
-          size={13}
-          color="var(--plum-11)"
-          style={{ display: 'inline', verticalAlign: 'middle' }}
-        />
-      )}
       <Badge
         size="1"
         variant="soft"
@@ -433,12 +393,49 @@ function EventItem({ event }: { event: Event }) {
   )
 }
 
-function EventsList({ events }: { events: Event[] }) {
+function EventsList({ events, filter }: { events: Event[]; filter: string }) {
   const classes = useStyles()
+
+  // Helper function to extract searchable text from event data
+  const extractTextFromData = (data: any): string => {
+    if (typeof data === 'string') return data
+    if (typeof data === 'number' || typeof data === 'boolean')
+      return String(data)
+    if (data === null || data === undefined) return ''
+    if (Array.isArray(data)) {
+      return data.map((item) => extractTextFromData(item)).join(' ')
+    }
+    if (typeof data === 'object') {
+      return Object.values(data)
+        .map((value) => extractTextFromData(value))
+        .join(' ')
+    }
+    return ''
+  }
+
+  // Filter events based on search text
+  const filteredEvents = events.filter((event) => {
+    if (!filter.trim()) return true
+
+    const searchText = filter.toLowerCase()
+    const typeMatch = event.type.toLowerCase().includes(searchText)
+    const roleMatch = event.role.toLowerCase().includes(searchText)
+    const assistantMatch =
+      event.assistant?.toLowerCase().includes(searchText) || false
+    const userNameMatch =
+      event.user?.name.toLowerCase().includes(searchText) || false
+    const dataMatch = extractTextFromData(event.data)
+      .toLowerCase()
+      .includes(searchText)
+
+    return (
+      typeMatch || roleMatch || assistantMatch || userNameMatch || dataMatch
+    )
+  })
 
   return (
     <Box className={classes.eventsList}>
-      {events.map((event) => (
+      {filteredEvents.map((event) => (
         <EventItem key={event.id} event={event} />
       ))}
     </Box>
@@ -680,7 +677,16 @@ function AccordionSection({
             </Box>
           ) : isContext ? (
             <Box className={classes.factsContainer}>
-              <EventsList events={data} />
+              {onFilterChange && (
+                <TextField.Root
+                  size="1"
+                  placeholder="Filter events..."
+                  value={filter}
+                  onChange={(e) => onFilterChange(e.target.value)}
+                  className={classes.factsFilter}
+                />
+              )}
+              <EventsList events={data} filter={filter} />
             </Box>
           ) : (
             <Box className={classes.jsonViewer}>
@@ -705,6 +711,7 @@ export default function ComputerAccordion() {
     agents: false,
   })
   const [factsFilter, setFactsFilter] = useState('')
+  const [eventsFilter, setEventsFilter] = useState('')
 
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections((prev) => ({
@@ -730,6 +737,8 @@ export default function ComputerAccordion() {
         isOpen={openSections.events}
         onToggle={() => toggleSection('events')}
         isContext={true}
+        filter={eventsFilter}
+        onFilterChange={setEventsFilter}
       />
       <AccordionSection
         title="Processes"

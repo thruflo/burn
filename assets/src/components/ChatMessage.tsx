@@ -1,4 +1,4 @@
-import { Box, Flex, Text } from '@radix-ui/themes'
+import { Box, Flex, Text, Badge } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
 import UserAvatar from './UserAvatar'
 
@@ -88,9 +88,19 @@ export default function ChatMessage({ message }: ChatMessageProps) {
       </Box>
       <Box className={classes.content}>
         <Flex align="center" gap="2" mb="1">
-          <Text size="2" weight="medium">
+          <Badge
+            size="2"
+            variant="soft"
+            color={isUser ? 'blue' : 'purple'}
+            style={{
+              whiteSpace: 'normal',
+              wordBreak: 'break-word',
+              display: 'inline',
+              verticalAlign: 'middle',
+            }}
+          >
             {message.username || (isUser ? 'You' : 'Assistant')}
-          </Text>
+          </Badge>
           <Text size="1" className={classes.timestamp}>
             {formatTimestamp(message.timestamp)}
           </Text>
