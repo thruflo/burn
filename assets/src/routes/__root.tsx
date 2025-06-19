@@ -17,7 +17,12 @@ function Root() {
   return (
     <>
       <Providers defaultTheme="dark">
-        <Flex height="100vh" width="100vw" overflow="hidden">
+        <Flex
+          height="100vh"
+          width="100vw"
+          overflow="hidden"
+          className="app-layout"
+        >
           {isLoggedIn ? (
             <>
               <Sidebar />

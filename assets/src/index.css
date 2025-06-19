@@ -220,6 +220,45 @@ pre:has(.syntax-highlighter) {
   }
 }
 
+/* Responsive layout for large screens */
+@media (min-width: 1121px) {
+  .app-layout {
+    display: grid !important;
+    /* At 1120px: left=280px, main=560px, right=280px (total 1120px)
+       Above 1120px: additional width split equally between main and right
+       So: 280px + (560px + 0.5 * extra) + (280px + 0.5 * extra) */
+    grid-template-columns: 280px calc(560px + 50vw - 560px) calc(
+        280px + 50vw - 560px
+      );
+    grid-template-areas: 'left-sidebar main-content right-sidebar';
+  }
+
+  .app-layout .content-area {
+    grid-area: main-content;
+    width: auto !important;
+    min-width: 0;
+  }
+
+  /* Ensure left sidebar participates in grid */
+  .app-layout .sidebar {
+    grid-area: left-sidebar;
+    width: auto !important;
+  }
+
+  /* Ensure right sidebar participates in grid and its contents grow */
+  .app-layout .right-sidebar {
+    grid-area: right-sidebar;
+    width: auto !important;
+    min-width: 280px;
+  }
+
+  /* Make sure right sidebar contents fill available width */
+  .right-sidebar .rt-Flex,
+  .right-sidebar .rt-Box {
+    width: 100% !important;
+  }
+}
+
 /* Sidebar responsive behavior */
 /* Hide close buttons on desktop */
 @media (min-width: 970px) {
