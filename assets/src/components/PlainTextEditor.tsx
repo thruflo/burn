@@ -36,12 +36,14 @@ interface PlainTextEditorProps {
   content: string
   onChange?: (content: string) => void
   placeholder?: string
+  onKeyDown?: (event: KeyboardEvent) => void
 }
 
 export function PlainTextEditor({
   content,
   onChange,
   placeholder = '',
+  onKeyDown,
 }: PlainTextEditorProps) {
   const classes = useStyles()
 
@@ -69,6 +71,12 @@ export function PlainTextEditor({
     onUpdate: ({ editor }) => {
       // Get plain text content
       onChange?.(editor.getText())
+    },
+    editorProps: {
+      handleKeyDown: (view, event) => {
+        onKeyDown?.(event)
+        return false
+      },
     },
   })
 

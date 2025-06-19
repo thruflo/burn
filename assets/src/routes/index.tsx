@@ -3,6 +3,7 @@ import ScreenWithHeader from '../components/ScreenWithHeader'
 import { Flex, Box } from '@radix-ui/themes'
 import ThreadHeading from '../components/ThreadHeading'
 import UserTopBar from '../components/UserTopBar'
+import ChatArea from '../components/ChatArea'
 
 export const Route = createFileRoute(`/`)({
   component: Index,
@@ -24,11 +25,13 @@ function Index() {
 
   return (
     <ScreenWithHeader title={<ThreadHeading title="This is a conversation" />}>
-      <Flex direction="column">
+      <Flex direction="column" height="100%">
         <Box>
           <UserTopBar users={activeUsers} agents={activeAgents} />
         </Box>
-        {/* Main content area */}
+        <Box style={{ flex: 1, overflow: 'hidden' }}>
+          <ChatArea />
+        </Box>
       </Flex>
     </ScreenWithHeader>
   )
