@@ -388,8 +388,8 @@ function AccordionSection({
 
 export default function ComputerAccordion() {
   const [openSections, setOpenSections] = useState({
-    memory: false,
-    events: false,
+    memory: true,
+    events: true,
     agents: false,
   })
   const [factsFilter, setFactsFilter] = useState('')

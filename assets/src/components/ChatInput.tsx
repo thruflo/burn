@@ -96,8 +96,9 @@ export default function ChatInput({
             align="center"
             style={{
               position: 'absolute',
-              bottom: 'var(--space-2)',
+              top: '50%',
               right: 'var(--space-2)',
+              transform: 'translateY(-50%)',
               zIndex: 1,
             }}
           >
