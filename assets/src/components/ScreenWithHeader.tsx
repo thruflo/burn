@@ -38,10 +38,12 @@ export default function ScreenWithHeader({
   title,
   children,
   toolbarItems,
+  disableScroll = false,
 }: {
   title: string | React.ReactNode
   children: React.ReactNode
   toolbarItems?: React.ReactNode
+  disableScroll?: boolean
 }) {
   const { toggleLeftSidebar, toggleRightSidebar } = useSidebar()
   const classes = useClasses()
@@ -79,7 +81,11 @@ export default function ScreenWithHeader({
           </Flex>
         </Flex>
       </Box>
-      <ScrollArea className={classes.scrollArea}>{children}</ScrollArea>
+      {disableScroll ? (
+        <Box style={{ flex: 1, overflow: 'hidden' }}>{children}</Box>
+      ) : (
+        <ScrollArea className={classes.scrollArea}>{children}</ScrollArea>
+      )}
     </Flex>
   )
 }

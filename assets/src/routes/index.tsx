@@ -24,7 +24,10 @@ function Index() {
   ]
 
   return (
-    <ScreenWithHeader title={<ThreadHeading title="This is a conversation" />}>
+    <ScreenWithHeader
+      title={<ThreadHeading title="This is a conversation" />}
+      disableScroll={true}
+    >
       <Flex direction="column" height="100%">
         <Box>
           <UserTopBar users={activeUsers} agents={activeAgents} />
