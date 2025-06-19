@@ -10,6 +10,7 @@ import {
 import { makeStyles, mergeClasses } from '@griffel/react'
 import { useSidebar } from './SidebarProvider'
 import { Cpu } from 'lucide-react'
+import ComputerAccordion from './ComputerAccordion'
 
 const useHeaderClasses = makeStyles({
   header: {
@@ -54,7 +55,7 @@ function RightSidebarHeader({ setRightSidebarOpen }: HeaderProps) {
         <span className={classes.icon}>
           <Cpu size={14} />
         </span>
-        <Text size="2" weight="medium">
+        <Text size="3" weight="medium">
           Computer
         </Text>
       </Flex>
@@ -149,8 +150,8 @@ export default function RightSidebar() {
 
         {/* Content Area */}
         <ScrollArea className={classes.scrollArea}>
-          <Flex direction="column" px="3" py="2">
-            {/* Content will go here */}
+          <Flex direction="column">
+            <ComputerAccordion />
           </Flex>
         </ScrollArea>
       </Box>

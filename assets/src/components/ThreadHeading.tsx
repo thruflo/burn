@@ -68,7 +68,7 @@ export default function ThreadHeading({ title }: ThreadHeadingProps) {
           <span className={classes.icon}>
             <MessagesSquare size={14} />
           </span>
-          <Text size="2" weight="medium" className={classes.text}>
+          <Text size="3" weight="medium" className={classes.text}>
             {title}
           </Text>
         </div>
