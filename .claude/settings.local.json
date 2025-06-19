@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pnpm format:*)"
+      "Bash(pnpm format:*)",
+      "Bash(rg:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:app.unpkg.com)",
+      "WebFetch(domain:anyroad.github.io)"
     ],
     "deny": []
   }
