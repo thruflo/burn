@@ -324,7 +324,8 @@ const useSidebarButtonClasses = makeStyles({
   button: {
     justifyContent: 'flex-start',
     height: 'auto',
-    padding: 'var(--space-2) 0',
+    padding: 'var(--space-2) !important',
+    margin: '0 calc(-1 * var(--space-1)) 0 calc(-1 * var(--space-3))',
     overflow: 'hidden',
     color: 'var(--black)',
   },
