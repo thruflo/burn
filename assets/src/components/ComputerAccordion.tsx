@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Box, Flex, Text } from '@radix-ui/themes'
+import { Box, Flex, Text, Badge, Tooltip } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import { ChevronDown, ChevronRight, Lightbulb } from 'lucide-react'
 import { JsonView, darkStyles } from 'react-json-view-lite'
 import 'react-json-view-lite/dist/index.css'
 
@@ -32,39 +32,174 @@ const useStyles = makeStyles({
     background: 'transparent !important',
     backgroundColor: 'transparent !important',
   },
+  factsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 'var(--space-2)',
+    paddingTop: 'var(--space-1)',
+    paddingBottom: 'var(--space-1)',
+  },
+  factItem: {
+    lineHeight: '1.4',
+    '& > *': {
+      marginRight: 'var(--space-1)',
+    },
+    '& > *:last-child': {
+      marginRight: 0,
+    },
+  },
+  factsContainer: {
+    marginLeft: 'var(--space-1)',
+    marginRight: 'var(--space-1)',
+  },
 })
 
-// Sample data based on the Ecto schemas
-const sampleMemoryData = {
-  facts: [
-    {
-      id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-      source_event_id: 'e12b09c2-1234-4567-8901-234567890123',
-      subject: {
-        id: '45c789a-5678-9012-3456-789012345678',
-        name: 'alice',
-      },
-      predicate: 'likes',
-      object: 'biscuits',
-      category: 'preference',
-      confidence: 0.85,
-      disputed: false,
-    },
-    {
-      id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-      source_event_id: 'e12b09c2-1234-4567-8901-234567890123',
-      subject: {
-        id: '45c789a-5678-9012-3456-789012345678',
-        name: 'alice',
-      },
-      predicate: 'likes',
-      object: 'biscuits',
-      category: 'preference',
-      confidence: 0.85,
-      disputed: false,
-    },
-  ],
+// Fact component for displaying subject-predicate-object relationships
+interface Fact {
+  id: string
+  subject: { id: string; name: string }
+  predicate: string
+  object: string
+  category: string
+  confidence: number
+  disputed: boolean
 }
+
+function FactItem({ fact }: { fact: Fact }) {
+  const classes = useStyles()
+
+  // Helper function to get confidence level text
+  const getConfidenceLevel = (confidence: number) => {
+    if (confidence >= 0.8) return 'High confidence'
+    if (confidence >= 0.5) return 'Medium confidence'
+    return 'Low confidence'
+  }
+
+  // Determine icon style based on confidence
+  const getConfidenceIcon = (confidence: number) => {
+    const tooltipContent = `${getConfidenceLevel(confidence)} (${confidence.toFixed(2)})`
+
+    if (confidence >= 0.8) {
+      // High confidence: solid green icon
+      return (
+        <Tooltip content={tooltipContent}>
+          <Lightbulb size={12} color="var(--green-9)" fill="var(--green-9)" />
+        </Tooltip>
+      )
+    } else if (confidence >= 0.5) {
+      // Medium confidence: solid orange icon
+      return (
+        <Tooltip content={tooltipContent}>
+          <Lightbulb size={12} color="var(--orange-9)" fill="var(--orange-9)" />
+        </Tooltip>
+      )
+    } else {
+      // Low confidence: outlined red icon
+      return (
+        <Tooltip content={tooltipContent}>
+          <Lightbulb size={12} color="var(--red-9)" fill="none" />
+        </Tooltip>
+      )
+    }
+  }
+
+  return (
+    <Box className={classes.factItem}>
+      {getConfidenceIcon(fact.confidence)}
+      <Badge
+        size="1"
+        variant="soft"
+        color="blue"
+        style={{
+          whiteSpace: 'normal',
+          wordBreak: 'break-word',
+          display: 'inline',
+        }}
+      >
+        {fact.subject.name}
+      </Badge>
+      <Text
+        size="1"
+        weight="medium"
+        color="gray"
+        style={{
+          whiteSpace: 'normal',
+          wordBreak: 'break-word',
+          display: 'inline',
+        }}
+      >
+        {fact.predicate}
+      </Text>
+      <Badge
+        size="1"
+        variant="soft"
+        color="purple"
+        style={{
+          whiteSpace: 'normal',
+          wordBreak: 'break-word',
+          display: 'inline',
+        }}
+      >
+        {fact.object}
+      </Badge>
+    </Box>
+  )
+}
+
+function FactsList({ facts }: { facts: Fact[] }) {
+  const classes = useStyles()
+
+  return (
+    <Box className={classes.factsList}>
+      {facts.map((fact) => (
+        <FactItem key={fact.id} fact={fact} />
+      ))}
+    </Box>
+  )
+}
+
+// Sample data based on the Ecto schemas
+const sampleMemoryData = [
+  {
+    id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+    source_event_id: 'e12b09c2-1234-4567-8901-234567890123',
+    subject: {
+      id: '45c789a-5678-9012-3456-789012345678',
+      name: 'alice',
+    },
+    predicate: 'likes',
+    object: 'biscuits',
+    category: 'preference',
+    confidence: 0.85,
+    disputed: false,
+  },
+  {
+    id: 'a1b2c3d4-5678-9012-3456-789012345678',
+    source_event_id: 'e23c10d3-2345-5678-9012-345678901234',
+    subject: {
+      id: '45c789a-5678-9012-3456-789012345678',
+      name: 'alice',
+    },
+    predicate: 'works with',
+    object: 'React',
+    category: 'skill',
+    confidence: 0.92,
+    disputed: false,
+  },
+  {
+    id: 'b2c3d4e5-6789-0123-4567-890123456789',
+    source_event_id: 'e34d11e4-3456-6789-0123-456789012345',
+    subject: {
+      id: '56d890b-6789-0123-4567-890123456789',
+      name: 'sarah',
+    },
+    predicate: 'loves',
+    object: 'dark mode',
+    category: 'preference',
+    confidence: 0.78,
+    disputed: false,
+  },
+]
 
 const sampleContextData = {
   events: [
@@ -145,6 +280,7 @@ interface AccordionSectionProps {
   data: any
   isOpen: boolean
   onToggle: () => void
+  isMemory?: boolean
 }
 
 function AccordionSection({
@@ -152,6 +288,7 @@ function AccordionSection({
   data,
   isOpen,
   onToggle,
+  isMemory = false,
 }: AccordionSectionProps) {
   const classes = useStyles()
 
@@ -177,14 +314,20 @@ function AccordionSection({
       </Flex>
       {isOpen && (
         <Box className={classes.sectionContent}>
-          <Box className={classes.jsonViewer}>
-            <JsonView
-              data={data}
-              shouldExpandNode={(level) => level < 2}
-              style={customDarkStyles}
-              clickToExpandNode={true}
-            />
-          </Box>
+          {isMemory ? (
+            <Box className={classes.factsContainer}>
+              <FactsList facts={data} />
+            </Box>
+          ) : (
+            <Box className={classes.jsonViewer}>
+              <JsonView
+                data={data}
+                shouldExpandNode={(level) => level < 2}
+                style={customDarkStyles}
+                clickToExpandNode={true}
+              />
+            </Box>
+          )}
         </Box>
       )}
     </Box>
@@ -212,6 +355,7 @@ export default function ComputerAccordion() {
         data={sampleMemoryData}
         isOpen={openSections.memory}
         onToggle={() => toggleSection('memory')}
+        isMemory={true}
       />
       <AccordionSection
         title="Context"
