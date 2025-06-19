@@ -1,7 +1,16 @@
 import { useState } from 'react'
 import { Box, Flex, Text, Badge, Tooltip, TextField } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
-import { ChevronDown, ChevronRight, Lightbulb } from 'lucide-react'
+import {
+  ChevronDown,
+  ChevronRight,
+  Lightbulb,
+  User,
+  Bot,
+  Send,
+  Wrench,
+  ArrowLeftRight,
+} from 'lucide-react'
 import { JsonView, darkStyles } from 'react-json-view-lite'
 import 'react-json-view-lite/dist/index.css'
 
@@ -31,6 +40,8 @@ const useStyles = makeStyles({
   transparentContainer: {
     background: 'transparent !important',
     backgroundColor: 'transparent !important',
+    fontSize: '11px',
+    fontWeight: '500',
   },
   factsList: {
     display: 'flex',
@@ -77,6 +88,67 @@ const useStyles = makeStyles({
         color: 'var(--gray-8)',
         fontSize: '11px',
       },
+    },
+  },
+  eventsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 'var(--space-2)',
+    paddingTop: 'var(--space-1)',
+    paddingBottom: 'var(--space-1)',
+  },
+  eventItem: {
+    lineHeight: '1.4',
+    '& > *': {
+      marginRight: 'var(--space-1)',
+    },
+    '& > *:last-child': {
+      marginRight: 0,
+    },
+    '& .inline-json-view': {
+      display: 'inline !important',
+      verticalAlign: 'middle !important',
+      '& > div': {
+        display: 'inline !important',
+        verticalAlign: 'middle !important',
+      },
+    },
+    '& .json-punctuation, & .json-label, & .json-basic-element': {
+      color: 'var(--gray-12) !important',
+      fontWeight: '500 !important',
+      fontSize: '12px !important',
+    },
+    '& .json-label': {
+      marginRight: '4px !important',
+      fontWeight: '500 !important',
+      color: 'var(--gray-12) !important',
+    },
+    '& .json-clickable-label': {
+      marginRight: '4px !important',
+      fontWeight: '500 !important',
+      color: 'var(--gray-12) !important',
+    },
+    '& .inline-json-view ul': {
+      paddingLeft: 'var(--space-4) !important',
+    },
+    '& .inline-json-view > .json-basic-element > ul': {
+      marginTop: 'var(--space-1) !important',
+    },
+    '& .json-string-value': {
+      color: 'var(--cyan-9) !important',
+    },
+    '& .json-number-value': {
+      color: 'var(--purple-9) !important',
+    },
+    '& .json-boolean-value': {
+      color: 'var(--purple-9) !important',
+    },
+    '& .json-null-value, & .json-undefined-value': {
+      color: 'var(--purple-9) !important',
+    },
+    '& .inline-json-view span.json-punctuation + span': {
+      marginLeft: '2px !important',
+      marginRight: '2px !important',
     },
   },
 })
@@ -148,11 +220,11 @@ function FactItem({ fact }: { fact: Fact }) {
       <Text
         size="1"
         weight="medium"
-        color="gray"
         style={{
           whiteSpace: 'normal',
           wordBreak: 'break-word',
           display: 'inline',
+          color: 'var(--gray-12)',
         }}
       >
         {fact.predicate}
@@ -192,6 +264,182 @@ function FactsList({ facts, filter }: { facts: Fact[]; filter: string }) {
     <Box className={classes.factsList}>
       {filteredFacts.map((fact) => (
         <FactItem key={fact.id} fact={fact} />
+      ))}
+    </Box>
+  )
+}
+
+// Event component for displaying context events
+interface Event {
+  id: string
+  role: 'assistant' | 'user'
+  type: 'text' | 'tool_use' | 'tool_result'
+  assistant?: string
+  user?: { id: string; name: string }
+  data: any
+  inserted_at: string
+  updated_at: string
+}
+
+function EventItem({ event }: { event: Event }) {
+  const classes = useStyles()
+
+  // Get icon based on event type
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'text':
+        return (
+          <Send
+            size={12}
+            color="var(--green-9)"
+            style={{ display: 'inline', verticalAlign: 'middle' }}
+          />
+        )
+      case 'tool_use':
+        return (
+          <Wrench
+            size={12}
+            color="var(--orange-9)"
+            style={{ display: 'inline', verticalAlign: 'middle' }}
+          />
+        )
+      case 'tool_result':
+        return (
+          <ArrowLeftRight
+            size={12}
+            color="var(--red-9)"
+            style={{ display: 'inline', verticalAlign: 'middle' }}
+          />
+        )
+      default:
+        return (
+          <Send
+            size={12}
+            color="var(--green-9)"
+            style={{ display: 'inline', verticalAlign: 'middle' }}
+          />
+        )
+    }
+  }
+
+  // Get badge color based on event type
+  const getTypeBadgeColor = (type: string) => {
+    switch (type) {
+      case 'text':
+        return 'green'
+      case 'tool_use':
+        return 'orange'
+      case 'tool_result':
+        return 'red'
+      default:
+        return 'green'
+    }
+  }
+
+  // Get display type
+  const getDisplayType = (type: string) => {
+    return type === 'text' ? 'message' : type
+  }
+
+  // Get attribution name
+  const getAttributionName = (event: Event) => {
+    if (event.role === 'user') {
+      return event.user?.name || 'unknown'
+    } else {
+      return event.assistant || 'assistant'
+    }
+  }
+
+  // Custom dark styles for collapsed JSON
+  const customDarkStyles = {
+    ...darkStyles,
+    container: classes.transparentContainer,
+    punctuation: 'json-punctuation',
+    label: 'json-label',
+    clickableLabel: 'json-clickable-label',
+    basicChildStyle: 'json-basic-element',
+    stringValue: 'json-string-value',
+    numberValue: 'json-number-value',
+    booleanValue: 'json-boolean-value',
+    nullValue: 'json-null-value',
+    undefinedValue: 'json-undefined-value',
+  }
+
+  return (
+    <Box className={classes.eventItem}>
+      {getTypeIcon(event.type)}
+      <Badge
+        size="1"
+        variant="soft"
+        color={getTypeBadgeColor(event.type)}
+        style={{
+          whiteSpace: 'normal',
+          wordBreak: 'break-word',
+          display: 'inline',
+          verticalAlign: 'middle',
+        }}
+      >
+        {getDisplayType(event.type)}
+      </Badge>
+      <Text
+        size="1"
+        weight="medium"
+        style={{
+          whiteSpace: 'normal',
+          wordBreak: 'break-word',
+          display: 'inline',
+          color: 'var(--gray-12)',
+        }}
+      >
+        {event.type === 'text' ? 'from' : 'by'}
+      </Text>
+      {event.role === 'user' && (
+        <User
+          size={13}
+          color="var(--blue-9)"
+          style={{ display: 'inline', verticalAlign: 'middle' }}
+        />
+      )}
+      {event.role === 'assistant' && (
+        <Bot
+          size={13}
+          color="var(--plum-11)"
+          style={{ display: 'inline', verticalAlign: 'middle' }}
+        />
+      )}
+      <Badge
+        size="1"
+        variant="soft"
+        color={event.role === 'assistant' ? 'purple' : 'blue'}
+        style={{
+          whiteSpace: 'normal',
+          wordBreak: 'break-word',
+          display: 'inline',
+          verticalAlign: 'middle',
+        }}
+      >
+        {getAttributionName(event)}
+      </Badge>
+      <JsonView
+        data={event.data}
+        shouldExpandNode={() => false}
+        style={{
+          ...customDarkStyles,
+          container: `${classes.transparentContainer} inline-json-view`,
+        }}
+        clickToExpandNode={true}
+      />
+    </Box>
+  )
+}
+
+function EventsList({ events }: { events: Event[] }) {
+  const classes = useStyles()
+
+  return (
+    <Box className={classes.eventsList}>
+      {events.map((event) => (
+        <EventItem key={event.id} event={event} />
       ))}
     </Box>
   )
@@ -240,52 +488,110 @@ const sampleMemoryData = [
   },
 ]
 
-const sampleContextData = {
-  events: [
-    {
-      id: 'evt_1a2b3c4d5e6f7g8h9i0j',
-      role: 'user',
-      type: 'text',
-      data: {
-        content:
-          'Hi everyone! I have a question about implementing dark mode in our React app.',
-      },
-      user: {
-        id: 'u45c789a-5678-9012-3456-789012345678',
-        name: 'alice',
-      },
-      inserted_at: '2024-06-16T14:30:00Z',
-      updated_at: '2024-06-16T14:30:00Z',
+const sampleContextData = [
+  {
+    id: 'evt_1a2b3c4d5e6f7g8h9i0j',
+    role: 'user' as const,
+    type: 'text' as const,
+    data: {
+      content:
+        'Hi everyone! I have a question about implementing dark mode in our React app.',
     },
-    {
-      id: 'evt_2b3c4d5e6f7g8h9i0j1k',
-      role: 'assistant',
-      assistant: 'claude',
-      type: 'tool_use',
-      data: {
-        tool_name: 'extract_facts',
-        parameters: {
-          text: 'User is asking about dark mode implementation',
-          category: 'question',
+    user: {
+      id: 'u45c789a-5678-9012-3456-789012345678',
+      name: 'alice',
+    },
+    inserted_at: '2024-06-16T14:30:00Z',
+    updated_at: '2024-06-16T14:30:00Z',
+  },
+  {
+    id: 'evt_2b3c4d5e6f7g8h9i0j1k',
+    role: 'assistant' as const,
+    assistant: 'claude',
+    type: 'tool_use' as const,
+    data: {
+      tool_name: 'extract_facts',
+      parameters: {
+        text: 'User is asking about dark mode implementation',
+        category: 'question',
+      },
+    },
+    inserted_at: '2024-06-16T14:30:15Z',
+    updated_at: '2024-06-16T14:30:15Z',
+  },
+  {
+    id: 'evt_3c4d5e6f7g8h9i0j1k2l',
+    role: 'assistant' as const,
+    assistant: 'claude',
+    type: 'tool_result' as const,
+    data: {
+      tool_name: 'analyze_project',
+      execution_time: 1247.5,
+      success: true,
+      errors: null,
+      warnings: [],
+      metadata: {
+        version: '2.1.4',
+        environment: 'production',
+        features_enabled: ['dark_mode', 'analytics', 'caching'],
+        performance_metrics: {
+          memory_usage: 45.7,
+          cpu_utilization: 23.4,
+          cache_hit_ratio: 0.87,
+        },
+        user_preferences: {
+          theme: 'dark',
+          notifications: true,
+          auto_save: false,
+          language: 'en-US',
         },
       },
-      inserted_at: '2024-06-16T14:30:15Z',
-      updated_at: '2024-06-16T14:30:15Z',
-    },
-    {
-      id: 'evt_3c4d5e6f7g8h9i0j1k2l',
-      role: 'assistant',
-      assistant: 'claude',
-      type: 'text',
-      data: {
-        content:
-          'I can help with dark mode implementation! Here are some best practices...',
+      results: {
+        components_analyzed: 42,
+        issues_found: [
+          {
+            severity: 'warning',
+            type: 'accessibility',
+            component: 'UserProfile',
+            description: 'Missing aria-label attribute',
+            line_number: 127,
+            suggestions: [
+              'Add descriptive aria-label',
+              'Use semantic HTML elements',
+            ],
+          },
+          {
+            severity: 'error',
+            type: 'performance',
+            component: 'DataTable',
+            description: 'Unnecessary re-renders detected',
+            line_number: null,
+            suggestions: ['Implement React.memo', 'Optimize dependency arrays'],
+          },
+        ],
+        dependencies: {
+          outdated: ['react@17.0.2', 'lodash@4.17.20'],
+          vulnerable: [],
+          total_count: 156,
+          dev_dependencies: 43,
+        },
+        code_quality: {
+          test_coverage: 0.847,
+          complexity_score: 6.3,
+          maintainability_index: 78.2,
+          technical_debt_ratio: 0.12,
+        },
       },
-      inserted_at: '2024-06-16T14:31:00Z',
-      updated_at: '2024-06-16T14:31:00Z',
+      timestamps: {
+        started_at: '2024-06-16T14:30:45.123Z',
+        completed_at: '2024-06-16T14:31:00.891Z',
+        duration_ms: 15768,
+      },
     },
-  ],
-}
+    inserted_at: '2024-06-16T14:31:00Z',
+    updated_at: '2024-06-16T14:31:00Z',
+  },
+]
 
 const sampleProcessesData = {
   agents: [
@@ -320,6 +626,7 @@ interface AccordionSectionProps {
   isOpen: boolean
   onToggle: () => void
   isMemory?: boolean
+  isContext?: boolean
   filter?: string
   onFilterChange?: (filter: string) => void
 }
@@ -330,6 +637,7 @@ function AccordionSection({
   isOpen,
   onToggle,
   isMemory = false,
+  isContext = false,
   filter = '',
   onFilterChange,
 }: AccordionSectionProps) {
@@ -369,6 +677,10 @@ function AccordionSection({
                 />
               )}
               <FactsList facts={data} filter={filter} />
+            </Box>
+          ) : isContext ? (
+            <Box className={classes.factsContainer}>
+              <EventsList events={data} />
             </Box>
           ) : (
             <Box className={classes.jsonViewer}>
@@ -417,6 +729,7 @@ export default function ComputerAccordion() {
         data={sampleContextData}
         isOpen={openSections.events}
         onToggle={() => toggleSection('events')}
+        isContext={true}
       />
       <AccordionSection
         title="Processes"
