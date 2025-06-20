@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ThreadsThreadIdRouteImport } from './routes/threads/$threadId'
+import { Route as JoinThreadIdRouteImport } from './routes/join/$threadId'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -28,34 +29,43 @@ const ThreadsThreadIdRoute = ThreadsThreadIdRouteImport.update({
   path: '/threads/$threadId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JoinThreadIdRoute = JoinThreadIdRouteImport.update({
+  id: '/join/$threadId',
+  path: '/join/$threadId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/welcome': typeof WelcomeRoute
+  '/join/$threadId': typeof JoinThreadIdRoute
   '/threads/$threadId': typeof ThreadsThreadIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/welcome': typeof WelcomeRoute
+  '/join/$threadId': typeof JoinThreadIdRoute
   '/threads/$threadId': typeof ThreadsThreadIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/welcome': typeof WelcomeRoute
+  '/join/$threadId': typeof JoinThreadIdRoute
   '/threads/$threadId': typeof ThreadsThreadIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/welcome' | '/threads/$threadId'
+  fullPaths: '/' | '/welcome' | '/join/$threadId' | '/threads/$threadId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/welcome' | '/threads/$threadId'
-  id: '__root__' | '/' | '/welcome' | '/threads/$threadId'
+  to: '/' | '/welcome' | '/join/$threadId' | '/threads/$threadId'
+  id: '__root__' | '/' | '/welcome' | '/join/$threadId' | '/threads/$threadId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   WelcomeRoute: typeof WelcomeRoute
+  JoinThreadIdRoute: typeof JoinThreadIdRoute
   ThreadsThreadIdRoute: typeof ThreadsThreadIdRoute
 }
 
@@ -82,12 +92,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ThreadsThreadIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/join/$threadId': {
+      id: '/join/$threadId'
+      path: '/join/$threadId'
+      fullPath: '/join/$threadId'
+      preLoaderRoute: typeof JoinThreadIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   WelcomeRoute: WelcomeRoute,
+  JoinThreadIdRoute: JoinThreadIdRoute,
   ThreadsThreadIdRoute: ThreadsThreadIdRoute,
 }
 export const routeTree = rootRouteImport

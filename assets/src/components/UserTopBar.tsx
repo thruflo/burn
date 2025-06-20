@@ -1,3 +1,4 @@
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { Flex, IconButton, Tooltip } from '@radix-ui/themes'
 import { Edit, Plus, User, Bot } from 'lucide-react'
 import { makeStyles, mergeClasses } from '@griffel/react'
@@ -11,6 +12,7 @@ interface UserInfo {
 interface UserTopBarProps {
   users: UserInfo[]
   agents?: UserInfo[]
+  threadId: string
 }
 
 const useClasses = makeStyles({
@@ -70,8 +72,45 @@ const useClasses = makeStyles({
   },
 })
 
-export default function UserTopBar({ users, agents = [] }: UserTopBarProps) {
+export default function UserTopBar({
+  users,
+  agents = [],
+  threadId,
+}: UserTopBarProps) {
   const classes = useClasses()
+  const [tooltipText, setTooltipText] = useState('Copy invitation link')
+  const [showTooltip, setShowTooltip] = useState(false)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  const handleInviteClick = useCallback(() => {
+    const joinUrl = `${window.location.origin}/join/${threadId}`
+    navigator.clipboard.writeText(joinUrl)
+
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+    }
+
+    // Force show tooltip
+    setTooltipText('Invite link copied!')
+    setShowTooltip(true)
+
+    // Hide tooltip and reset text after 2 seconds
+    timeoutRef.current = setTimeout(() => {
+      setShowTooltip(false)
+      setTooltipText('Copy invitation link')
+      timeoutRef.current = null
+    }, 2000)
+  }, [threadId])
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
 
   return (
     <Flex className={classes.container}>
@@ -88,8 +127,11 @@ export default function UserTopBar({ users, agents = [] }: UserTopBarProps) {
                 index={index}
               />
             ))}
-            <Tooltip content="Invite user">
-              <div className={mergeClasses(classes.inviteButton, 'clickable')}>
+            <Tooltip content={tooltipText} open={showTooltip}>
+              <div
+                className={mergeClasses(classes.inviteButton, 'clickable')}
+                onClick={handleInviteClick}
+              >
                 <Plus size={16} />
               </div>
             </Tooltip>
