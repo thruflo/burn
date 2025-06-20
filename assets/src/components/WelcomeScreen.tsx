@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import {
   Box,
   Flex,
@@ -35,6 +35,7 @@ export default function WelcomeScreen() {
   const [error, setError] = useState(``)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const navigate = useNavigate()
+  const search = useSearch({ from: '/welcome' })
   const { theme, setTheme } = useTheme()
   const classes = useClasses()
 
@@ -48,7 +49,11 @@ export default function WelcomeScreen() {
 
     setIsSubmitting(true)
     signIn(username)
-    navigate({ to: `/` })
+
+    // Navigate to the next path if provided, otherwise go to home
+    const nextPath =
+      search.next && search.next.startsWith('/') ? search.next : '/'
+    navigate({ to: nextPath })
   }
 
   return (

@@ -1,16 +1,7 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Box, Flex, Text, Badge, Tooltip, TextField } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
-import {
-  ChevronDown,
-  ChevronRight,
-  Lightbulb,
-  User,
-  Bot,
-  Send,
-  Wrench,
-  ArrowLeftRight,
-} from 'lucide-react'
+import { ChevronDown, ChevronRight, Lightbulb, User, Bot } from 'lucide-react'
 import { JsonView, darkStyles } from 'react-json-view-lite'
 import 'react-json-view-lite/dist/index.css'
 

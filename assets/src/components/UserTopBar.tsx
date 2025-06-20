@@ -1,4 +1,4 @@
-import { Flex, IconButton, Tooltip, Text } from '@radix-ui/themes'
+import { Flex, IconButton, Tooltip } from '@radix-ui/themes'
 import { Edit, Plus, User, Bot } from 'lucide-react'
 import { makeStyles, mergeClasses } from '@griffel/react'
 import UserAvatar from './UserAvatar'
