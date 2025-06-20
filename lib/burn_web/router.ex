@@ -17,26 +17,6 @@ defmodule BurnWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", BurnWeb do
-    pipe_through :browser
-
-    get "/", PageController, :home
-  end
-
-  # Other scopes may use custom stacks.
-  # scope "/api", BurnWeb do
-  #   pipe_through :api
-  # end
-
-  # Enable Swoosh mailbox preview in development
-  if Application.compile_env(:burn, :dev_routes) do
-    scope "/dev" do
-      pipe_through :browser
-
-      forward "/mailbox", Plug.Swoosh.MailboxPreview
-    end
-  end
-
   ## Authentication routes
 
   scope "/auth", BurnWeb.Auth, as: :auth do
@@ -68,5 +48,25 @@ defmodule BurnWeb.Router do
     # post "/users/confirm", UserConfirmationController, :create
     # get "/users/confirm/:token", UserConfirmationController, :edit
     # post "/users/confirm/:token", UserConfirmationController, :update
+  end
+
+  scope "/", BurnWeb do
+    pipe_through :browser
+
+    get "/*path", PageController, :home
+  end
+
+  # Other scopes may use custom stacks.
+  # scope "/api", BurnWeb do
+  #   pipe_through :api
+  # end
+
+  # Enable Swoosh mailbox preview in development
+  if Application.compile_env(:burn, :dev_routes) do
+    scope "/dev" do
+      pipe_through :browser
+
+      forward "/mailbox", Plug.Swoosh.MailboxPreview
+    end
   end
 end
