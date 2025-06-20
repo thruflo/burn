@@ -137,7 +137,13 @@ function Welcome() {
                 </Text>
               )}
 
-              <Button type="submit" size="3" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                size="3"
+                color="iris"
+                variant="soft"
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? `Entering...` : `Enter`}
               </Button>
             </Flex>

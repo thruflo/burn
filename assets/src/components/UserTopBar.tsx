@@ -3,6 +3,7 @@ import { Flex, IconButton, Tooltip } from '@radix-ui/themes'
 import { Edit, Plus, User, Bot } from 'lucide-react'
 import { makeStyles, mergeClasses } from '@griffel/react'
 import UserAvatar from './UserAvatar'
+import { copyInviteLink } from '../utils/clipboard'
 
 interface UserInfo {
   username: string
@@ -13,6 +14,7 @@ interface UserTopBarProps {
   users: UserInfo[]
   agents?: UserInfo[]
   threadId: string
+  onEditClick: () => void
 }
 
 const useClasses = makeStyles({
@@ -76,6 +78,7 @@ export default function UserTopBar({
   users,
   agents = [],
   threadId,
+  onEditClick,
 }: UserTopBarProps) {
   const classes = useClasses()
   const [tooltipText, setTooltipText] = useState('Copy invitation link')
@@ -83,8 +86,7 @@ export default function UserTopBar({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const handleInviteClick = useCallback(() => {
-    const joinUrl = `${window.location.origin}/join/${threadId}`
-    navigator.clipboard.writeText(joinUrl)
+    copyInviteLink(threadId)
 
     // Clear any existing timeout
     if (timeoutRef.current) {
@@ -160,6 +162,7 @@ export default function UserTopBar({
         variant="ghost"
         size="1"
         className={mergeClasses('clickable', classes.editButton)}
+        onClick={onEditClick}
       >
         <Edit size={16} />
       </IconButton>

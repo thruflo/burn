@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import { createFileRoute, useParams } from '@tanstack/react-router'
 import ScreenWithHeader from '../../components/ScreenWithHeader'
 import { Flex, Box } from '@radix-ui/themes'
 import ThreadHeading from '../../components/ThreadHeading'
 import UserTopBar from '../../components/UserTopBar'
+import ThreadEditTopBar from '../../components/ThreadEditTopBar'
+import ThreadEditForm from '../../components/ThreadEditForm'
 import ChatArea from '../../components/ChatArea'
 import Sidebar from '../../components/Sidebar'
 import RightSidebar from '../../components/RightSidebar'
@@ -15,6 +18,7 @@ export const Route = createFileRoute(`/threads/$threadId`)({
 function ThreadPage() {
   const { isLoggedIn } = useAuth()
   const { threadId } = useParams({ from: '/threads/$threadId' })
+  const [isEditing, setIsEditing] = useState(false)
 
   // Don't render anything if not authenticated (redirect will handle this)
   if (!isLoggedIn) {
@@ -43,16 +47,31 @@ function ThreadPage() {
           disableScroll={true}
         >
           <Flex direction="column" height="100%">
-            <Box>
-              <UserTopBar
-                users={activeUsers}
-                agents={activeAgents}
-                threadId={threadId}
-              />
-            </Box>
-            <Box style={{ flex: 1, overflow: 'hidden' }}>
-              <ChatArea />
-            </Box>
+            {!isEditing && (
+              <Box>
+                <UserTopBar
+                  users={activeUsers}
+                  agents={activeAgents}
+                  threadId={threadId}
+                  onEditClick={() => setIsEditing(true)}
+                />
+              </Box>
+            )}
+            {isEditing && (
+              <Box>
+                <ThreadEditTopBar onClose={() => setIsEditing(false)} />
+              </Box>
+            )}
+            {!isEditing && (
+              <Box style={{ flex: 1, overflow: 'hidden' }}>
+                <ChatArea />
+              </Box>
+            )}
+            {isEditing && (
+              <Box style={{ flex: 1, overflow: 'hidden' }}>
+                <ThreadEditForm threadId={threadId} />
+              </Box>
+            )}
           </Flex>
         </ScreenWithHeader>
       </Flex>
