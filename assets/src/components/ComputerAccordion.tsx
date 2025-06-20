@@ -26,6 +26,13 @@ const useStyles = makeStyles({
       backgroundColor: 'var(--gray-3)',
     },
   },
+  sectionHeaderDisabled: {
+    cursor: 'not-allowed',
+    userSelect: 'none',
+    width: '100%',
+    borderBottom: '1px solid var(--border-color)',
+    opacity: 0.5,
+  },
   sectionContent: {
     paddingLeft: 'var(--space-1)',
     paddingRight: 'var(--space-1)',
@@ -626,6 +633,7 @@ interface AccordionSectionProps {
   isContext?: boolean
   filter?: string
   onFilterChange?: (filter: string) => void
+  disabled?: boolean
 }
 
 function AccordionSection({
@@ -637,6 +645,7 @@ function AccordionSection({
   isContext = false,
   filter = '',
   onFilterChange,
+  disabled = false,
 }: AccordionSectionProps) {
   const classes = useStyles()
 
@@ -652,13 +661,19 @@ function AccordionSection({
         align="center"
         justify="between"
         p="3"
-        className={classes.sectionHeader}
-        onClick={onToggle}
+        className={
+          disabled ? classes.sectionHeaderDisabled : classes.sectionHeader
+        }
+        onClick={disabled ? undefined : onToggle}
       >
         <Text size="2" weight="medium">
           {title}
         </Text>
-        {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+        {disabled ? null : isOpen ? (
+          <ChevronDown size={14} />
+        ) : (
+          <ChevronRight size={14} />
+        )}
       </Flex>
       {isOpen && (
         <Box className={classes.sectionContent}>
@@ -745,6 +760,7 @@ export default function ComputerAccordion() {
         data={sampleProcessesData}
         isOpen={openSections.agents}
         onToggle={() => toggleSection('agents')}
+        disabled={true}
       />
     </Flex>
   )

@@ -1,5 +1,5 @@
 import { Flex, IconButton, Tooltip, Text } from '@radix-ui/themes'
-import { Edit, Plus } from 'lucide-react'
+import { Edit, Plus, User, Bot } from 'lucide-react'
 import { makeStyles, mergeClasses } from '@griffel/react'
 import UserAvatar from './UserAvatar'
 
@@ -77,9 +77,7 @@ export default function UserTopBar({ users, agents = [] }: UserTopBarProps) {
     <Flex className={classes.container}>
       <Flex className={classes.sectionsContainer}>
         <Flex className={classes.section}>
-          <Text size="2" weight="medium" className={classes.label}>
-            Users
-          </Text>
+          <User size={18} color="var(--gray-12)" className={classes.label} />
           <Flex className={classes.usersList}>
             {users.map((user, index) => (
               <UserAvatar
@@ -100,9 +98,7 @@ export default function UserTopBar({ users, agents = [] }: UserTopBarProps) {
 
         {agents.length > 0 && (
           <Flex className={classes.section}>
-            <Text size="2" weight="medium" className={classes.label}>
-              Agents
-            </Text>
+            <Bot size={18} color="var(--gray-12)" className={classes.label} />
             <Flex className={classes.usersList}>
               {agents.map((agent, index) => (
                 <UserAvatar
