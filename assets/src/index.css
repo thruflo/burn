@@ -27,6 +27,21 @@
   --purple-10: #6b5dd0;
   --purple-11: #5e4fc7;
   --purple-12: #3a2c8a;
+
+  /* Iris colors for button styling */
+  --iris-1: #fdfdff;
+  --iris-2: #f8f8ff;
+  --iris-3: #f0f1fe;
+  --iris-4: #e6e7ff;
+  --iris-5: #d9daff;
+  --iris-6: #c8caff;
+  --iris-7: #b1b4ff;
+  --iris-8: #9b9ef9;
+  --iris-9: #5b5bd6;
+  --iris-10: #5151cd;
+  --iris-11: #5753c6;
+  --iris-12: #2f2d78;
+  
 }
 
 /* Light theme */
@@ -294,4 +309,15 @@ pre:has(.syntax-highlighter) {
   40% {
     transform: translateY(-6px);
   }
+}
+
+/* Custom iris button styling - target specific buttons without affecting global colors */
+@media (hover: hover) {
+    .rt-BaseButton:where(.rt-variant-soft):where(:hover) {
+        background-color: var(--iris-a6);
+    }
+}
+
+.rt-BaseButton:where(.rt-variant-soft) {
+    background-color: var(--iris-a5);
 }
