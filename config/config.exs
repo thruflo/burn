@@ -24,20 +24,11 @@ config :burn, BurnWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
-    formats: [html: BurnWeb.ErrorHTML, json: BurnWeb.ErrorJSON],
+    formats: [json: BurnWeb.ErrorJSON],
     layout: false
   ],
   pubsub_server: Burn.PubSub,
   live_view: [signing_salt: "DcrMg+jk"]
-
-# Configures the mailer
-#
-# By default it uses the "Local" adapter which stores the emails
-# locally. You can see the emails in your browser, at "/dev/mailbox".
-#
-# For production it's recommended to configure a different adapter
-# at the `config/runtime.exs`.
-config :burn, Burn.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configures Elixir's Logger
 config :logger, :console,

@@ -1,40 +1,49 @@
-import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
+import uuid4 from 'uuid4'
+
 import { useEffect } from 'react'
+import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
+import { useLiveQuery } from '@tanstack/react-db'
+import { membershipCollection } from '../../db/collections'
 import { useAuth } from '../../hooks/useAuth'
 
-export const Route = createFileRoute(`/join/$threadId`)({
-  component: JoinThread,
-})
-
-// Stub function for inserting membership
-function insertMembership(threadId: string) {
-  // TODO: Implement actual membership insertion logic
-  console.log(`Inserting membership for thread: ${threadId}`)
-}
-
 function JoinThread() {
-  const { isLoggedIn } = useAuth()
   const navigate = useNavigate()
+
+  const { currentUserId, isAuthenticated } = useAuth()
   const { threadId } = useParams({ from: '/join/$threadId' })
 
-  // Don't render anything if not authenticated (redirect will handle this)
-  if (!isLoggedIn) {
-    return null
-  }
-
-  // Check membership (stubbed)
-  const hasMembership = false // TODO: Replace with actual membership check
+  const { data: memberships } = useLiveQuery(query => (
+    query
+      .from({ membershipCollection })
+      .where('@thread_id', '=', threadId)
+      .where('@user_id', '=', isAuthenticated ? currentUserId : null)
+  ))
+  const hasMembership = memberships.length > 0
 
   useEffect(() => {
-    if (hasMembership) {
-      // Redirect to thread if already a member
-      navigate({ to: '/threads/$threadId', params: { threadId } })
-    } else {
-      // Insert membership (stub) - no redirect after
-      insertMembership(threadId)
+    if (!isAuthenticated) {
+      return
     }
-  }, [threadId, hasMembership, navigate])
+
+    // If the user is in the thread, redirect to it.
+    if (hasMembership) {
+      navigate({ to: '/threads/$threadId', params: { threadId } })
+
+      return
+    }
+
+    // Otherwise add them to the thread.
+    membershipCollection.insert({
+      id: uuid4(),
+      thread_id: threadId,
+      user_id: currentUserId as string
+    })
+  }, [currentUserId, isAuthenticated, hasMembership, threadId, navigate])
 
   // Always return null - this page never shows content
   return null
 }
+
+export const Route = createFileRoute(`/join/$threadId`)({
+  component: JoinThread,
+})

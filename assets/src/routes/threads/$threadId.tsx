@@ -1,27 +1,27 @@
 import { useState } from 'react'
 import { createFileRoute, useParams } from '@tanstack/react-router'
-import ScreenWithHeader from '../../components/ScreenWithHeader'
 import { Flex, Box } from '@radix-ui/themes'
+
+import ScreenWithHeader from '../../components/ScreenWithHeader'
+import Sidebar from '../../components/Sidebar'
+import RightSidebar from '../../components/RightSidebar'
+
 import ThreadHeading from '../../components/ThreadHeading'
 import UserTopBar from '../../components/UserTopBar'
 import ThreadEditTopBar from '../../components/ThreadEditTopBar'
 import ThreadEditForm from '../../components/ThreadEditForm'
 import ChatArea from '../../components/ChatArea'
-import Sidebar from '../../components/Sidebar'
-import RightSidebar from '../../components/RightSidebar'
+
 import { useAuth } from '../../hooks/useAuth'
 
-export const Route = createFileRoute(`/threads/$threadId`)({
-  component: ThreadPage,
-})
-
 function ThreadPage() {
-  const { isLoggedIn } = useAuth()
+  const { isAuthenticated } = useAuth()
   const { threadId } = useParams({ from: '/threads/$threadId' })
-  const [isEditing, setIsEditing] = useState(false)
+
+  const [ isEditing, setIsEditing ] = useState(false)
 
   // Don't render anything if not authenticated (redirect will handle this)
-  if (!isLoggedIn) {
+  if (!isAuthenticated) {
     return null
   }
 
@@ -40,37 +40,35 @@ function ThreadPage() {
 
   return (
     <Flex height="100vh" width="100vw" overflow="hidden" className="app-layout">
-      <Sidebar />
+      <Sidebar activeThreadId={threadId} />
       <Flex direction="column" className="content-area" width="100%">
         <ScreenWithHeader
-          title={<ThreadHeading title="This is a conversation" />}
-          disableScroll={true}
-        >
+            title={<ThreadHeading title="This is a conversation" />}
+            disableScroll={true}>
           <Flex direction="column" height="100%">
-            {!isEditing && (
-              <Box>
-                <UserTopBar
-                  users={activeUsers}
-                  agents={activeAgents}
-                  threadId={threadId}
-                  onEditClick={() => setIsEditing(true)}
-                />
-              </Box>
-            )}
-            {isEditing && (
-              <Box>
-                <ThreadEditTopBar onClose={() => setIsEditing(false)} />
-              </Box>
-            )}
-            {!isEditing && (
-              <Box style={{ flex: 1, overflow: 'hidden' }}>
-                <ChatArea />
-              </Box>
-            )}
-            {isEditing && (
-              <Box style={{ flex: 1, overflow: 'hidden' }}>
-                <ThreadEditForm threadId={threadId} />
-              </Box>
+            {isEditing ? (
+              <>
+                <Box>
+                  <ThreadEditTopBar onClose={() => setIsEditing(false)} />
+                </Box>
+                <Box style={{ flex: 1, overflow: 'hidden' }}>
+                  <ThreadEditForm threadId={threadId} />
+                </Box>
+              </>
+            ) : (
+              <>
+                <Box>
+                  <UserTopBar
+                      users={activeUsers}
+                      agents={activeAgents}
+                      threadId={threadId}
+                      onEditClick={() => setIsEditing(true)}
+                  />
+                </Box>
+                <Box style={{ flex: 1, overflow: 'hidden' }}>
+                  <ChatArea />
+                </Box>
+              </>
             )}
           </Flex>
         </ScreenWithHeader>
@@ -79,3 +77,7 @@ function ThreadPage() {
     </Flex>
   )
 }
+
+export const Route = createFileRoute(`/threads/$threadId`)({
+  component: ThreadPage,
+})

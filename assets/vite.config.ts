@@ -11,7 +11,9 @@ export default defineConfig(({ command, mode }) => {
   return {
     build: {
       outDir: '../priv/static',
-      target: ['es2020'],
+      target: ['es2022'],
+      minify: mode === 'production',
+      sourcemap: mode === 'development',
       rollupOptions: {
         input: 'src/app.tsx',
         output: {

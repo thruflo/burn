@@ -1,17 +1,21 @@
 import { memo } from 'react'
 import { Tooltip } from '@radix-ui/themes'
-import { makeStyles, mergeClasses } from '@griffel/react'
+import { makeStyles, mergeClasses } from '@griffel/react';
 
-interface UserAvatarProps {
+type UserAvatarProps = {
   username: string
   size?: `small` | `medium` | `large`
   showTooltip?: boolean
   index?: number // For staggered positioning
   imageUrl?: string // Optional image URL
-}
+};
 
 // Simple hash function to generate a consistent color from username
 function stringToColor(str: string) {
+  if (!str) {
+    return 'hsl(280, 60%, 55%)'
+  }
+
   let hash = 0
   for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash)

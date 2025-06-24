@@ -46,6 +46,7 @@ defmodule BurnWeb.ConnCase do
   """
   def register_and_log_in_user(%{conn: conn}) do
     user = Burn.AccountsFixtures.user_fixture()
+
     %{conn: log_in_user(conn, user), user: user}
   end
 
@@ -54,11 +55,8 @@ defmodule BurnWeb.ConnCase do
 
   It returns an updated `conn`.
   """
-  def log_in_user(conn, user) do
-    token = Burn.Accounts.generate_user_session_token(user)
-
+  def log_in_user(conn, %Burn.Accounts.User{name: username}) do
     conn
-    |> Phoenix.ConnTest.init_test_session(%{})
-    |> Plug.Conn.put_session(:user_token, token)
+    |> Plug.Conn.put_req_header("authorization", "Bearer #{username}")
   end
 end

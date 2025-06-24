@@ -2,7 +2,6 @@ import { Box, Flex, Text, IconButton, ScrollArea } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
 import { useSidebar } from './SidebarProvider'
 import { Menu, Cpu } from 'lucide-react'
-import UserTopBar from './UserTopBar'
 
 const useClasses = makeStyles({
   scrollArea: {

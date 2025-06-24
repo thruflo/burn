@@ -6,15 +6,15 @@ import {
   Text,
   Heading,
   Button,
-  IconButton,
-  Tooltip,
   TextField,
 } from '@radix-ui/themes'
-import { Sun, Moon, Monitor } from 'lucide-react'
-import { useTheme } from '../components/ThemeProvider'
-import { useAuth } from '../hooks/useAuth'
-import AboutSection from '../components/AboutSection'
 import { makeStyles } from '@griffel/react'
+import AboutSection from '../components/AboutSection'
+import ThemeToggle from '../components/ThemeToggle'
+import { setCurrentUser } from '../hooks/useAuth'
+import * as api from '../api'
+
+import { type User } from '../db/schema'
 
 const useClasses = makeStyles({
   fireIcon: {
@@ -29,95 +29,56 @@ const useClasses = makeStyles({
     position: `relative`,
     overflowY: `auto`,
   },
-  themeToggle: {
-    position: `absolute`,
-    top: `16px`,
-    right: `16px`,
-  },
-})
-
-export const Route = createFileRoute('/welcome')({
-  component: Welcome,
-  validateSearch: (search: Record<string, unknown>) => ({
-    next: (search.next as string) || undefined,
-  }),
 })
 
 function Welcome() {
-  const { signIn } = useAuth()
-  const [username, setUsername] = useState(``)
-  const [error, setError] = useState(``)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [ username, setUsername ] = useState(``)
+  const [ error, setError ] = useState(``)
+  const [ isSubmitting, setIsSubmitting ] = useState(false)
+
   const navigate = useNavigate()
   const search = useSearch({ from: '/welcome' })
-  const { theme, setTheme } = useTheme()
+
   const classes = useClasses()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const signInUser = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!username.trim()) {
+    const trimmedUserName = username.trim()
+
+    if (!trimmedUserName) {
       setError(`Please enter your name`)
+
       return
     }
 
     setIsSubmitting(true)
-    signIn(username)
 
-    // Navigate to the next path if provided, otherwise go to home
-    const nextPath =
-      search.next && search.next.startsWith('/') ? search.next : '/'
-    navigate({ to: nextPath })
+    let user: User
+    try {
+      user = await api.signIn(trimmedUserName)
+    }
+    catch (_err) {
+      setError(`There was an error. Please try again`)
+      setIsSubmitting(false)
+
+      return
+    }
+
+    setCurrentUser(user)
+    navigate({ to: search.next ? search.next : '/' })
   }
 
   return (
     <Flex direction="column" className={classes.welcomeScreen}>
-      {/* Theme Toggle */}
-      <Box className={classes.themeToggle}>
-        <Tooltip
-          content={
-            theme === `dark`
-              ? `Light mode`
-              : theme === `light`
-                ? `System mode`
-                : `Dark mode`
-          }
-        >
-          <IconButton
-            size="1"
-            variant="ghost"
-            onClick={() => {
-              if (theme === `dark`) setTheme(`light`)
-              else if (theme === `light`) setTheme(`system`)
-              else setTheme(`dark`)
-            }}
-          >
-            {theme === `dark` ? (
-              <Sun size={14} />
-            ) : theme === `light` ? (
-              <Monitor size={14} />
-            ) : (
-              <Moon size={14} />
-            )}
-          </IconButton>
-        </Tooltip>
-      </Box>
-
-      {/* Main Content */}
-      <Flex
-        direction="column"
-        align="center"
-        justify="center"
-        p="4"
-        flexGrow="1"
-      >
+      <ThemeToggle />
+      <Flex direction="column" align="center" justify="center" p="4" flexGrow="1">
         <Box maxWidth="512px" width="100%" p="0 16px">
           <Heading size="6" mb="5" mt="5" align="center" weight="medium">
             <Text className={classes.fireIcon}>🔥</Text>
             Welcome to Burn
           </Heading>
-
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={signInUser}>
             <Flex direction="column" gap="4" width="100%">
               <TextField.Root
                 type="text"
@@ -130,20 +91,12 @@ function Welcome() {
                 disabled={isSubmitting}
                 size="3"
               />
-
               {error && (
                 <Text color="red" size="2" align="center">
                   {error}
                 </Text>
               )}
-
-              <Button
-                type="submit"
-                size="3"
-                color="iris"
-                variant="soft"
-                disabled={isSubmitting}
-              >
+              <Button type="submit" size="3" color="iris" variant="soft" disabled={isSubmitting}>
                 {isSubmitting ? `Entering...` : `Enter`}
               </Button>
             </Flex>
@@ -154,3 +107,10 @@ function Welcome() {
     </Flex>
   )
 }
+
+export const Route = createFileRoute('/welcome')({
+  component: Welcome,
+  validateSearch: (search: Record<string, unknown>) => ({
+    next: (search.next as string) || undefined,
+  }),
+})

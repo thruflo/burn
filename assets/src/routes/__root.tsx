@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import {
   createRootRoute,
   Outlet,
@@ -5,56 +6,30 @@ import {
   useLocation,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
-import { useEffect } from 'react'
 import { Flex } from '@radix-ui/themes'
 import { Providers } from '../components/Providers'
 import { useAuth } from '../hooks/useAuth'
 
-export const Route = createRootRoute({
-  component: Root,
-})
-
+// The Root component renders the theme and handles redirecting
+// on and off the welcome page based on authentication state.
 function Root() {
-  const { isLoggedIn } = useAuth()
-  const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
 
-  // Redirect to welcome with next parameter if not logged in
   useEffect(() => {
-    if (!isLoggedIn && location.pathname !== '/welcome') {
-      // Check if we're at root path with no search params
-      if (
-        location.pathname === '/' &&
-        (!location.search || Object.keys(location.search).length === 0)
-      ) {
-        // Redirect to welcome without next parameter for clean URL
-        navigate({
-          to: '/welcome',
-          replace: true,
-        })
-      } else {
-        // Build full path with search parameters for non-root paths
-        const searchString =
-          typeof location.search === 'string'
-            ? location.search
-            : location.search
-              ? `?${new URLSearchParams(location.search as any).toString()}`
-              : ''
-        const nextPath = location.pathname + searchString
+    if (!isAuthenticated && location.pathname !== '/welcome') {
+      const path = location.pathname
+      const hasPath = path !== undefined && path !== '/'
+      const search = hasPath ? {next: path} : {next: undefined}
 
-        navigate({
-          to: '/welcome',
-          search: { next: nextPath },
-          replace: true,
-        })
-      }
+      navigate({to: '/welcome', replace: true, search})
     }
 
-    // Redirect away from welcome if already logged in
-    if (isLoggedIn && location.pathname === '/welcome') {
-      navigate({ to: '/', replace: true })
+    if (isAuthenticated && location.pathname === '/welcome') {
+      navigate({to: '/', replace: true})
     }
-  }, [isLoggedIn, location.pathname, location.search, navigate])
+  }, [isAuthenticated, location.pathname, location.search, navigate])
 
   return (
     <>
@@ -67,3 +42,5 @@ function Root() {
     </>
   )
 }
+
+export const Route = createRootRoute({component: Root})

@@ -9,7 +9,7 @@ defmodule Burn.Threads.Thread do
   @foreign_key_type :binary_id
   schema "threads" do
     field :name, :string
-    field :status, Ecto.Enum, values: [:pending, :started, :cancelled, :completed]
+    field :status, Ecto.Enum, values: [:started, :cancelled, :completed]
 
     has_many :events, Threads.Event
     many_to_many :users, Accounts.User, join_through: Threads.Membership

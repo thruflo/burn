@@ -1,48 +1,36 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import { Flex, Box, Text } from '@radix-ui/themes'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useLiveQuery } from '@tanstack/react-db'
 import { useAuth } from '../hooks/useAuth'
+import { threadCollection } from '../db/collections'
 
-export const Route = createFileRoute(`/`)({
-  component: Index,
-})
-
+// The index page always redirects to the latest thread.
 function Index() {
-  const { isLoggedIn } = useAuth()
+  const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
 
-  // Don't render anything if not authenticated (redirect will handle this)
-  if (!isLoggedIn) {
-    return null
-  }
+  const { data: threads } = useLiveQuery(query => (
+    query
+      .from({ threadCollection })
+      .orderBy({'@inserted_at': 'desc'})
+      .limit(1)
+  ))
 
-  // Always redirect to most recent thread (backend ensures thread exists)
+  const latestThreadId =
+    threads.length > 0
+    ? threads[0].id
+    : undefined
+
   useEffect(() => {
-    // TODO: Replace with actual data fetch
-    const latestThreadId = 'latest-thread-123' // or null if race condition
-
-    if (latestThreadId) {
-      navigate({
-        to: '/threads/$threadId',
-        params: { threadId: latestThreadId },
-      })
+    if (!isAuthenticated || latestThreadId === undefined) {
+      return
     }
-    // If null, component returns null (handles race conditions)
-  }, [navigate])
 
-  return (
-    <Flex
-      height="100vh"
-      width="100vw"
-      align="center"
-      justify="center"
-      direction="column"
-    >
-      <Box>
-        <Text size="4" color="gray">
-          Home page placeholder
-        </Text>
-      </Box>
-    </Flex>
-  )
+    navigate({to: '/threads/$threadId', params: { threadId: latestThreadId! }})
+  }, [isAuthenticated, latestThreadId, navigate])
+
+  // Always return null - this page never shows content
+  return null
 }
+
+export const Route = createFileRoute(`/`)({component: Index})

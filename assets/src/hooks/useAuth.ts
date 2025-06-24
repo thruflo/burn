@@ -1,40 +1,51 @@
-import { useState, useEffect } from 'react'
+import { useLiveQuery } from '@tanstack/react-db'
 
-export function useAuth() {
-  const [username, setUsername] = useState<string | null>(
-    localStorage.getItem(`username`)
+import * as auth from '../db/auth'
+import { authCollection } from '../db/collections'
+import type { Auth, User } from '../db/schema'
+
+type CurrentUser = Auth | undefined
+type AuthResult = {
+  currentUser: CurrentUser,
+  currentUserId: string | undefined,
+  isAuthenticated: boolean
+}
+
+export async function setCurrentUser(user: User): Promise<void> {
+  auth.set(user)
+
+  return authCollection.utils.refetch()
+}
+
+export async function clearCurrentUser(): Promise<void> {
+  auth.clear()
+
+  return authCollection.utils.refetch()
+}
+
+export function useAuth(): AuthResult {
+  const { data } = useLiveQuery(
+    (query) =>
+      query
+        .from({ authCollection })
   )
 
-  const isLoggedIn = !!username
+  let currentUser: CurrentUser
+  let currentUserId: string | undefined
+  let isAuthenticated: boolean
 
-  const signOut = () => {
-    localStorage.removeItem(`username`)
-    setUsername(null)
-    window.dispatchEvent(new Event(`storage`))
+  if (data.length === 1) {
+    currentUser = data[0]! as Auth
+    currentUserId = currentUser.id
+    isAuthenticated = true
+  }
+  else {
+    currentUser = undefined
+    currentUserId = undefined
+    isAuthenticated = false
   }
 
-  const signIn = (username: string) => {
-    localStorage.setItem(`username`, username)
-    setUsername(username)
-    window.dispatchEvent(new Event(`storage`))
-  }
+  // console.log('useAuth return value', { currentUser, currentUserId, isAuthenticated })
 
-  // Listen for localStorage changes to detect login/logout
-  useEffect(() => {
-    const checkAuth = () => {
-      const currentUser = localStorage.getItem(`username`)
-      if (currentUser !== username) {
-        setUsername(currentUser)
-      }
-    }
-
-    // Add storage event listener to detect changes from other tabs
-    window.addEventListener(`storage`, checkAuth)
-
-    return () => {
-      window.removeEventListener(`storage`, checkAuth)
-    }
-  }, [username])
-
-  return { username, isLoggedIn, signOut, signIn }
+  return { currentUser, currentUserId, isAuthenticated }
 }

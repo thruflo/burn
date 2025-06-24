@@ -1,11 +1,9 @@
-import { useState, useEffect } from 'react'
 import {
   Box,
   Flex,
   Text,
   IconButton,
-  ScrollArea,
-  Tooltip,
+  ScrollArea
 } from '@radix-ui/themes'
 import { makeStyles, mergeClasses } from '@griffel/react'
 import { useSidebar } from './SidebarProvider'

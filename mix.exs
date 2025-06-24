@@ -32,7 +32,6 @@ defmodule Burn.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:argon2_elixir, "~> 3.0"},
       {:bandit, "~> 1.5"},
       {:dns_cluster, "~> 0.1.1"},
       {:dotenvy, "~> 1.1.0"},
@@ -52,10 +51,11 @@ defmodule Burn.MixProject do
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 1.0"},
-      {:phoenix_sync, "~> 0.4.3"},
+      # {:phoenix_sync, "~> 0.4.3"},
+      {:phoenix_sync,
+       path: "../../electric-sql/phoenix_sync", override: true},
       {:postgrex, ">= 0.0.0"},
       {:req, "~> 0.5.9"},
-      {:swoosh, "~> 1.5"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:yamel, "~> 2.0"}

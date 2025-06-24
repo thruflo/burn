@@ -9,7 +9,11 @@ defmodule Burn.Threads do
   alias Burn.Accounts
   alias Burn.Repo
 
-  alias Burn.Threads.Thread
+  alias Burn.Threads.{
+    Event,
+    Membership,
+    Thread
+  }
 
   @doc """
   Returns the list of threads.
@@ -58,6 +62,27 @@ defmodule Burn.Threads do
     |> Repo.insert()
   end
 
+  def create_new_thread(%Accounts.User{id: user_id}) do
+    num_existing_threads = Repo.one(
+      from(
+        m in Membership,
+          where: m.user_id == ^user_id,
+          select: count(m.thread_id)
+      )
+    )
+
+    name =
+      case num_existing_threads do
+        0 ->
+          "Untitled thread"
+
+        n ->
+          "Untitled thread #{n + 1}"
+      end
+
+    create_thread(%{name: name, status: :started, user_id: user_id})
+  end
+
   @doc """
   Updates a thread.
 
@@ -104,8 +129,6 @@ defmodule Burn.Threads do
   def change_thread(%Thread{} = thread, attrs \\ %{}) do
     Thread.changeset(thread, attrs)
   end
-
-  alias Burn.Threads.Event
 
   @doc """
   Returns the list of events.
@@ -228,8 +251,6 @@ defmodule Burn.Threads do
   def change_event(%Event{} = event, attrs \\ %{}) do
     Event.changeset(event, attrs)
   end
-
-  alias Burn.Threads.Membership
 
   @doc """
   Returns the list of memberships.

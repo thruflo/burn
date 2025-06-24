@@ -5,11 +5,10 @@ import {
   Text,
   TextField,
   Button,
-  Heading,
   IconButton,
   Checkbox,
 } from '@radix-ui/themes'
-import { X, User, Bot } from 'lucide-react'
+import { X as CloseIcon } from 'lucide-react'
 import { makeStyles, mergeClasses } from '@griffel/react'
 import UserAvatar from './UserAvatar'
 import UserRemoveModal from './UserRemoveModal'
@@ -148,7 +147,7 @@ export default function ThreadEditForm({ threadId }: ThreadEditFormProps) {
         <Box mb="6">
           <form onSubmit={handleSaveThreadName}>
             <Box mb="1">
-              <Text as="label" size="2" weight="medium" display="block">
+              <Text as="label" size="2" weight="medium">
                 Thread name
               </Text>
             </Box>
@@ -210,7 +209,7 @@ export default function ThreadEditForm({ threadId }: ThreadEditFormProps) {
                       handleRemoveUser(user)
                     }}
                   >
-                    <X size={14} />
+                    <CloseIcon size={14} />
                   </IconButton>
                 )}
               </Flex>
@@ -220,7 +219,7 @@ export default function ThreadEditForm({ threadId }: ThreadEditFormProps) {
           {/* Invite Users Section */}
           <Box mt="1">
             <Box mb="1">
-              <Text as="label" size="2" weight="medium" display="block">
+              <Text as="label" size="2" weight="medium">
                 Invite
               </Text>
             </Box>
