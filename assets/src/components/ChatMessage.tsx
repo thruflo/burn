@@ -35,8 +35,6 @@ const useStyles = makeStyles({
     marginBottom: 'var(--space-5)',
     maxWidth: '100%',
   },
-  userMessage: {},
-  aiMessage: {},
   avatar: {
     flexShrink: 0,
   },
@@ -73,11 +71,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.sender === 'user'
 
   return (
-    <Box
-      className={`${classes.message} ${
-        isUser ? classes.userMessage : classes.aiMessage
-      }`}
-    >
+    <Box className={classes.message}>
       <Box className={classes.avatar}>
         <UserAvatar
           username={message.username || (isUser ? 'You' : 'Assistant')}

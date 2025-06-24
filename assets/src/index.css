@@ -133,36 +133,7 @@ a,
   flex-direction: column;
 }
 
-/* Animation for typing indicator */
-@keyframes bounce {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-}
 
-/* Electric style button and UI element styling */
-.electric-button {
-  background-color: var(--purple-9);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 16px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.electric-button:hover {
-  background-color: var(--purple-8);
-  transform: translateY(-1px);
-}
-
-.dark .electric-button {
-  box-shadow: 0 0 12px rgba(126, 120, 219, 0.3);
-}
 
 .dark a,
 .dark button {
@@ -195,25 +166,6 @@ a,
 /* Dark mode sidebar enhancements */
 .dark .sidebar {
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-}
-
-.dark .sidebar-item.active {
-  background-color: rgba(126, 120, 219, 0.15);
-  border-left: 3px solid var(--purple-9);
-}
-
-.dark .sidebar-item:hover:not(.active) {
-  background-color: rgba(126, 120, 219, 0.07);
-}
-
-/* Message styling for dark mode */
-.dark .message.user {
-  background-color: #242424;
-}
-
-.dark .message.ai {
-  background-color: var(--electric-dark);
-  border: 1px solid #242424;
 }
 
 pre:has(.syntax-highlighter) {
