@@ -15,7 +15,7 @@ defmodule Burn.ThreadsFixtures do
       attrs
       |> Enum.into(%{
         name: "some name",
-        status: :pending
+        status: :started
       })
       |> Threads.create_thread()
 

@@ -21,11 +21,11 @@ defmodule Burn.ThreadsTest do
     end
 
     test "create_thread/1 with valid data creates a thread" do
-      valid_attrs = %{name: "some name", status: :pending}
+      valid_attrs = %{name: "some name", status: :completed}
 
       assert {:ok, %Thread{} = thread} = Threads.create_thread(valid_attrs)
       assert thread.name == "some name"
-      assert thread.status == :pending
+      assert thread.status == :completed
     end
 
     test "create_thread/1 with invalid data returns error changeset" do
