@@ -1,11 +1,22 @@
 import { createCollection } from '@tanstack/db'
-import { electricCollectionOptions, queryCollectionOptions } from '@tanstack/db-collections'
+import {
+  electricCollectionOptions,
+  queryCollectionOptions,
+} from '@tanstack/db-collections'
 import { QueryClient } from '@tanstack/query-core'
 
-import type { Value } from "@electric-sql/client"
+import type { Value } from '@electric-sql/client'
+import type {
+  InsertMutationFn,
+  UpdateMutationFn,
+  DeleteMutationFn,
+} from '@tanstack/db'
+import type {
+  ElectricCollectionUtils,
+  QueryCollectionUtils,
+} from '@tanstack/db-collections'
 
-import type { ElectricCollectionUtils } from '@tanstack/db-collections'
-import type { QueryCollectionUtils } from './utils'
+import { ingestMutations } from './mutations'
 
 import {
   authSchema,
@@ -13,48 +24,37 @@ import {
   factSchema,
   membershipSchema,
   threadSchema,
-  userSchema
+  userSchema,
 } from './schema'
 
-import type {
-  Auth,
-  Event,
-  Fact,
-  Membership,
-  Thread,
-  User
-} from './schema'
+import type { Auth, Event, Fact, Membership, Thread, User } from './schema'
 
 import * as auth from './auth'
 
 type CollectionKey = string | number
 
-const relativeUrl = (path: string) => (
-  `${window.location.origin}${path}`
-)
+const relativeUrl = (path: string) => `${window.location.origin}${path}`
 
 const headers = {
-  'Authorization': async () => {
+  Authorization: async () => {
     const user = auth.get()
     const username = user ? user.name : null
 
     return `Bearer ${username}`
-  }
+  },
 }
 
 const parser = {
-  timestamp: (date: string) => (
-    new Date(date) as unknown as Value
-  )
+  timestamp: (date: string) => new Date(date) as unknown as Value,
 }
 
 const localQueryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 0,
-      retry: false
-    }
-  }
+      retry: false,
+    },
+  },
 })
 
 // const config: QueryCollectionConfig<TestItem> = {
@@ -68,78 +68,115 @@ const localQueryClient = new QueryClient({
 //     const options = queryCollectionOptions(config)
 //     const collection = createCollection(options)
 
-export const authCollection = createCollection<Auth, CollectionKey, QueryCollectionUtils>(
+export const authCollection = createCollection<
+  Auth,
+  CollectionKey,
+  QueryCollectionUtils
+>(
   queryCollectionOptions({
     queryClient: localQueryClient,
     queryKey: ['auth'],
     queryFn: async () => auth.all(),
     getKey: (item: Auth) => item.id,
-    schema: authSchema
+    schema: authSchema,
   })
 )
 
-export const eventCollection = createCollection<Event, CollectionKey, ElectricCollectionUtils>(
+function operationHandlers<Type extends object>() {
+  return {
+    onInsert: ingestMutations as InsertMutationFn<Type>,
+    onUpdate: ingestMutations as UpdateMutationFn<Type>,
+    onDelete: ingestMutations as DeleteMutationFn<Type>,
+  }
+}
+
+export const eventCollection = createCollection<
+  Event,
+  CollectionKey,
+  ElectricCollectionUtils
+>(
   electricCollectionOptions({
     id: `events`,
     shapeOptions: {
       url: relativeUrl('/sync/events'),
       headers,
-      parser
+      parser,
     },
     getKey: (item: Event) => item.id as string,
-    schema: eventSchema
+    schema: eventSchema,
+    ...operationHandlers<Event>(),
   })
 )
 
-export const factCollection = createCollection<Fact, CollectionKey, ElectricCollectionUtils>(
+export const factCollection = createCollection<
+  Fact,
+  CollectionKey,
+  ElectricCollectionUtils
+>(
   electricCollectionOptions({
     id: `facts`,
     shapeOptions: {
       url: relativeUrl('/sync/facts'),
       headers,
-      parser
+      parser,
     },
     getKey: (item: Fact) => item.id as string,
-    schema: factSchema
+    schema: factSchema,
+    ...operationHandlers<Fact>(),
   })
 )
 
-export const membershipCollection = createCollection<Membership, CollectionKey, ElectricCollectionUtils>(
+export const membershipCollection = createCollection<
+  Membership,
+  CollectionKey,
+  ElectricCollectionUtils
+>(
   electricCollectionOptions({
     id: `memberships`,
     shapeOptions: {
       url: relativeUrl('/sync/memberships'),
       headers,
-      parser
+      parser,
     },
     getKey: (item: Membership) => item.id as string,
-    schema: membershipSchema
+    schema: membershipSchema,
+    ...operationHandlers<Membership>(),
   })
 )
 
-export const threadCollection = createCollection<Thread, CollectionKey, ElectricCollectionUtils>(
+export const threadCollection = createCollection<
+  Thread,
+  CollectionKey,
+  ElectricCollectionUtils
+>(
   electricCollectionOptions({
     id: `threads`,
     shapeOptions: {
       url: relativeUrl('/sync/threads'),
       headers,
-      parser
+      parser,
     },
     getKey: (item: Thread) => item.id as string,
-    schema: threadSchema
+    schema: threadSchema,
+    ...operationHandlers<Thread>(),
   })
 )
 
-export const userCollection = createCollection<User, CollectionKey, ElectricCollectionUtils>(
+export const userCollection = createCollection<
+  User,
+  CollectionKey,
+  ElectricCollectionUtils
+>(
   electricCollectionOptions({
     id: `users`,
     shapeOptions: {
       url: relativeUrl('/sync/users'),
       headers,
-      parser
+      parser,
     },
     getKey: (item: User) => item.id as string,
-    schema: userSchema
+    schema: userSchema,
+    ...operationHandlers<User>(),
   })
 )
 

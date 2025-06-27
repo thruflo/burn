@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useLiveQuery } from '@tanstack/react-db'
 import {
   Box,
   Flex,
@@ -10,20 +11,20 @@ import {
 } from '@radix-ui/themes'
 import { X as CloseIcon } from 'lucide-react'
 import { makeStyles, mergeClasses } from '@griffel/react'
-import UserAvatar from './UserAvatar'
-import UserRemoveModal from './UserRemoveModal'
-import { copyInviteLink, getJoinUrl } from '../utils/clipboard'
+import { useAuth } from '../../hooks/useAuth'
+import { copyInviteLink, getJoinUrl } from '../../utils/clipboard'
+import UserAvatar from '../UserAvatar'
+import ThreadRemoveUserModal from './ThreadRemoveUserModal'
 
-interface User {
-  username: string
-  imageUrl?: string
-}
+import {
+  membershipCollection,
+  threadCollection,
+  userCollection,
+} from '../../db/collections'
+import type { Membership, User } from '../../db/schema'
 
-interface Agent {
-  username: string
-  imageUrl?: string
-  isProducer?: boolean
-  enabled: boolean
+type UserResult = Pick<User, 'id' | 'name'> & {
+  membership_id: Membership['id']
 }
 
 const useClasses = makeStyles({
@@ -42,66 +43,84 @@ const useClasses = makeStyles({
   },
 })
 
-interface ThreadEditFormProps {
+// XXX
+type Agent = {
+  name: string
+  imageUrl: string | undefined
+  isEnabled: boolean
+  isProducer: boolean
+}
+
+type Props = {
   threadId: string
 }
 
-export default function ThreadEditForm({ threadId }: ThreadEditFormProps) {
+export default function ThreadEditForm({ threadId }: Props) {
   const classes = useClasses()
+  const { currentUserId } = useAuth()
+
   const [threadName, setThreadName] = useState('This is a conversation')
   const [showRemoveModal, setShowRemoveModal] = useState(false)
-  const [userToRemove, setUserToRemove] = useState<User | null>(null)
+  const [userToRemove, setUserToRemove] = useState<UserResult | null>(null)
   const [inviteCopied, setInviteCopied] = useState(false)
   const [threadNameSaved, setThreadNameSaved] = useState(false)
 
-  // Sample data - will be replaced with real data
-  const currentUser: User = {
-    username: 'alice',
-    imageUrl: 'https://i.pravatar.cc/150?u=alice',
-  }
+  const { data: users } = useLiveQuery(
+    (query) =>
+      query
+        .from({ u: userCollection })
+        .join({
+          type: 'inner',
+          from: { m: membershipCollection },
+          on: [`@u.id`, `=`, `@m.user_id`],
+        })
+        .orderBy({ '@u.name': 'asc' })
+        .select('@u.id', '@u.name', { membership_id: '@m.id' })
+        .where('@m.thread_id', '=', threadId),
+    [threadId]
+  )
 
-  const threadUsers: User[] = [
-    currentUser,
-    { username: 'bob' },
-    { username: 'carol', imageUrl: 'https://i.pravatar.cc/150?u=carol' },
-    { username: 'dave' },
-  ]
+  const currentUser = users.find((user) => user.id === currentUserId)!
+  const otherUsers = users.filter((user) => user.id !== currentUserId)
+  const threadUsers = [currentUser, ...otherUsers]
 
+  // XXX
   const [allAgents, setAllAgents] = useState<Agent[]>([
     {
-      username: 'sarah',
+      name: 'sarah',
+      imageUrl: 'https://i.pravatar.cc/150?u=sarah',
+      isEnabled: true,
       isProducer: true,
-      enabled: true,
     },
     {
-      username: 'claude',
-      imageUrl: 'https://i.pravatar.cc/150?u=claude',
-      enabled: false,
-    },
-    {
-      username: 'gpt4',
-      enabled: true,
+      name: 'frankie',
+      imageUrl: 'https://i.pravatar.cc/150?u=frankie',
+      isEnabled: false,
+      isProducer: false,
     },
   ])
 
   const handleSaveThreadName = (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Wire up actual save logic
-    console.log('Saving thread name:', threadName)
+
+    threadCollection.update(threadId, (draft) => {
+      draft.name = threadName
+    })
+
     setThreadNameSaved(true)
     setTimeout(() => setThreadNameSaved(false), 2000)
   }
 
-  const handleRemoveUser = (user: User) => {
+  const handleRemoveUser = (user: UserResult) => {
     setUserToRemove(user)
     setShowRemoveModal(true)
   }
 
   const confirmRemoveUser = () => {
     if (userToRemove) {
-      // TODO: Wire up actual remove logic
-      console.log('Removing user:', userToRemove.username)
+      membershipCollection.delete(userToRemove.membership_id)
     }
+
     setShowRemoveModal(false)
     setUserToRemove(null)
   }
@@ -111,25 +130,25 @@ export default function ThreadEditForm({ threadId }: ThreadEditFormProps) {
     setUserToRemove(null)
   }
 
-  const handleAgentToggle = (agentUsername: string, enabled: boolean) => {
+  const handleAgentToggle = (agentName: string, isEnabled: boolean) => {
     setAllAgents((prev) =>
       prev.map((agent) =>
-        agent.username === agentUsername ? { ...agent, enabled } : agent
+        agent.name === agentName ? { ...agent, isEnabled } : agent
       )
     )
-    // TODO: Wire up actual agent toggle logic
-    console.log('Toggle agent:', agentUsername, enabled)
+
+    // XXX
+    console.log('Actually toggle agent:', agentName, isEnabled)
   }
 
   const handleAgentRowClick = (agent: Agent) => {
     if (!agent.isProducer) {
-      handleAgentToggle(agent.username, !agent.enabled)
+      handleAgentToggle(agent.name, !agent.isEnabled)
     }
   }
 
-  const handleUserRowClick = (user: User, index: number) => {
-    if (index !== 0) {
-      // Don't allow removing current user
+  const handleUserRowClick = (user: UserResult) => {
+    if (user.id !== currentUserId) {
       handleRemoveUser(user)
     }
   }
@@ -143,7 +162,7 @@ export default function ThreadEditForm({ threadId }: ThreadEditFormProps) {
   return (
     <>
       <Box p="4" pt="0" height="100%" style={{ overflowY: 'auto' }}>
-        {/* Thread Name Section */}
+        {/* Edit thread name */}
         <Box mb="6">
           <form onSubmit={handleSaveThreadName}>
             <Box mb="1">
@@ -155,8 +174,8 @@ export default function ThreadEditForm({ threadId }: ThreadEditFormProps) {
               <Box flexGrow="1">
                 <TextField.Root
                   value={threadName}
-                  onChange={(e) => setThreadName(e.target.value)}
                   size="2"
+                  onChange={(e) => setThreadName(e.target.value)}
                 />
               </Box>
               <Button type="submit" size="2" color="iris" variant="soft">
@@ -165,8 +184,7 @@ export default function ThreadEditForm({ threadId }: ThreadEditFormProps) {
             </Flex>
           </form>
         </Box>
-
-        {/* Users Section */}
+        {/* Manage users */}
         <Box mb="5">
           <Box mb="2">
             <Text size="3" weight="medium">
@@ -176,7 +194,6 @@ export default function ThreadEditForm({ threadId }: ThreadEditFormProps) {
           <Flex direction="column">
             {threadUsers.map((user, index) => (
               <Flex
-                key={user.username}
                 align="center"
                 justify="between"
                 pb="1"
@@ -184,15 +201,12 @@ export default function ThreadEditForm({ threadId }: ThreadEditFormProps) {
                   classes.listItem,
                   index !== 0 && classes.clickableRow
                 )}
-                onClick={() => handleUserRowClick(user, index)}
+                key={user.name}
+                onClick={() => handleUserRowClick(user)}
               >
                 <Flex align="center" gap="2">
-                  <UserAvatar
-                    username={user.username}
-                    imageUrl={user.imageUrl}
-                    size="medium"
-                  />
-                  <Text size="2">{user.username}</Text>
+                  <UserAvatar username={user.name} size="medium" />
+                  <Text size="2">{user.name}</Text>
                   {index === 0 && (
                     <Text size="1" color="gray">
                       (you)
@@ -215,8 +229,6 @@ export default function ThreadEditForm({ threadId }: ThreadEditFormProps) {
               </Flex>
             ))}
           </Flex>
-
-          {/* Invite Users Section */}
           <Box mt="1">
             <Box mb="1">
               <Text as="label" size="2" weight="medium">
@@ -226,9 +238,9 @@ export default function ThreadEditForm({ threadId }: ThreadEditFormProps) {
             <Flex gap="3" align="end">
               <Box flexGrow="1">
                 <TextField.Root
+                  size="2"
                   value={getJoinUrl(threadId)}
                   readOnly
-                  size="2"
                 />
               </Box>
               <Button
@@ -242,8 +254,7 @@ export default function ThreadEditForm({ threadId }: ThreadEditFormProps) {
             </Flex>
           </Box>
         </Box>
-
-        {/* Agents Section */}
+        {/* Manage agents */}
         <Box>
           <Box mb="2">
             <Text size="3" weight="medium">
@@ -253,10 +264,10 @@ export default function ThreadEditForm({ threadId }: ThreadEditFormProps) {
           <Flex direction="column">
             {allAgents.map((agent) => (
               <Flex
-                key={agent.username}
                 align="center"
                 justify="between"
                 pb="1"
+                key={agent.name}
                 className={mergeClasses(
                   classes.listItem,
                   !agent.isProducer && classes.clickableRow
@@ -265,11 +276,11 @@ export default function ThreadEditForm({ threadId }: ThreadEditFormProps) {
               >
                 <Flex align="center" gap="2">
                   <UserAvatar
-                    username={agent.username}
+                    username={agent.name}
                     imageUrl={agent.imageUrl}
                     size="medium"
                   />
-                  <Text size="2">{agent.username}</Text>
+                  <Text size="2">{agent.name}</Text>
                   {agent.isProducer && (
                     <Text size="1" color="gray">
                       (producer)
@@ -277,10 +288,10 @@ export default function ThreadEditForm({ threadId }: ThreadEditFormProps) {
                   )}
                 </Flex>
                 <Checkbox
-                  checked={agent.enabled}
+                  checked={agent.isEnabled}
                   disabled={agent.isProducer}
                   onCheckedChange={(checked) =>
-                    handleAgentToggle(agent.username, checked === true)
+                    handleAgentToggle(agent.name, checked === true)
                   }
                   onClick={(e) => e.stopPropagation()}
                 />
@@ -289,10 +300,9 @@ export default function ThreadEditForm({ threadId }: ThreadEditFormProps) {
           </Flex>
         </Box>
       </Box>
-
-      <UserRemoveModal
+      <ThreadRemoveUserModal
         isOpen={showRemoveModal}
-        userName={userToRemove?.username || ''}
+        userName={userToRemove?.name || ''}
         onConfirm={confirmRemoveUser}
         onCancel={cancelRemoveUser}
       />

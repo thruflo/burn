@@ -33,7 +33,13 @@ type SidebarButtonProps = {
   className?: string
 }
 
-function SidebarButton({ label, icon, isActive, onClick, className}: SidebarButtonProps) {
+function SidebarButton({
+  label,
+  icon,
+  isActive,
+  onClick,
+  className,
+}: SidebarButtonProps) {
   const classes = useClasses()
   const buttonClasses = mergeClasses(
     classes.button,
@@ -42,8 +48,15 @@ function SidebarButton({ label, icon, isActive, onClick, className}: SidebarButt
   )
 
   return (
-    <Button variant="ghost" color="gray" size="1" my="1" mx="1"
-        className={buttonClasses} onClick={onClick}>
+    <Button
+      variant="ghost"
+      color="gray"
+      size="1"
+      my="1"
+      mx="1"
+      className={buttonClasses}
+      onClick={onClick}
+    >
       {icon && <span className={classes.buttonIcon}>{icon}</span>}
       {label && (
         <Text size="1" className={classes.buttonText}>

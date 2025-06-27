@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import '@radix-ui/themes/styles.css'
 import '@fontsource/open-sauce-one'
+import 'react-json-view-lite/dist/index.css'
 import './index.css'
 
 // Import the generated route tree

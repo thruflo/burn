@@ -87,7 +87,8 @@ defmodule Burn.Accounts do
 
   def bootstrap_user(name) when is_binary(name) do
     with {:ok, user} = create_user(%{name: name}),
-         {:ok, _thread} = Threads.create_new_thread(user) do
+         {:ok, thread} = Threads.create_new_thread(user),
+         {:ok, _membership} = Threads.create_membership(thread, user) do
       {:ok, user}
     end
   end

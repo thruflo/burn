@@ -1,18 +1,19 @@
+import * as api from '../api'
+
 import type {
   Collection,
   MutationFn,
   PendingMutation,
   Transaction,
-  UtilsRecord
+  UtilsRecord,
 } from '@tanstack/db'
 
-import type { ElectricCollectionUtils } from '@tanstack/db-collections'
-import type { QueryCollectionUtils } from './utils'
+import type {
+  ElectricCollectionUtils,
+  QueryCollectionUtils,
+} from '@tanstack/db-collections'
 
-const ONE_HOUR =
-  60 *
-  60 *
-  1_000
+const ONE_HOUR = 60 * 60 * 1_000
 
 function isElectricUtils(utils: UtilsRecord): utils is ElectricCollectionUtils {
   return 'awaitTxId' in utils && typeof (utils as any).awaitTxId === 'function'
@@ -23,25 +24,25 @@ function isQueryUtils(utils: UtilsRecord): utils is QueryCollectionUtils {
 }
 
 function buildPayload(tx: Transaction) {
-  const mutations = tx.mutations.map(
-    (mutation: PendingMutation) => {
-      const { collection: _, ...rest } = mutation
+  const mutations = tx.mutations.map((mutation: PendingMutation) => {
+    const { collection: _, ...rest } = mutation
 
-      return rest
-    }
-  )
+    return rest
+  })
 
   return { mutations }
 }
 
-async function hasSyncedBack(tx: Transaction, txid: string, timeout: number = ONE_HOUR) {
+async function hasSyncedBack(
+  tx: Transaction,
+  txid: string,
+  timeout: number = ONE_HOUR
+) {
   const collections = new Set<Collection>(
-    tx.mutations
-      .map(mutation => mutation.collection)
-      .filter(Boolean)
+    tx.mutations.map((mutation) => mutation.collection).filter(Boolean)
   )
 
-  const promises = [...collections].map(collection => {
+  const promises = [...collections].map((collection) => {
     const utils = collection.utils
 
     if (isElectricUtils(utils)) {
@@ -59,21 +60,14 @@ async function hasSyncedBack(tx: Transaction, txid: string, timeout: number = ON
 }
 
 export const ingestMutations: MutationFn = async ({ transaction }) => {
-  console.log('mutationFn', transaction)
-
   const payload = buildPayload(transaction)
-  const response = await fetch('/ingest/mutations', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload)
-  })
+  console.log('ingest', payload.mutations)
 
-  if (!response.ok) {
-    throw new Error(`HTTP Error: ${response.status}`)
+  const txid = await api.ingest(payload)
+
+  if (txid === undefined) {
+    return
   }
 
-  const { txid } = await response.json()
   await hasSyncedBack(transaction, txid)
 }

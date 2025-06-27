@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import {
-  createRootRoute,
   Outlet,
+  createRootRoute,
   useNavigate,
   useLocation,
 } from '@tanstack/react-router'
@@ -17,17 +17,30 @@ function Root() {
   const location = useLocation()
   const navigate = useNavigate()
 
+  console.log('Root page', 'isAuthenticated', isAuthenticated)
+
   useEffect(() => {
+    console.log(
+      'Root.useEffect',
+      'isAuthenticated',
+      isAuthenticated,
+      location.pathname
+    )
+
     if (!isAuthenticated && location.pathname !== '/welcome') {
+      console.log('redirect to welcome ...')
+
       const path = location.pathname
       const hasPath = path !== undefined && path !== '/'
-      const search = hasPath ? {next: path} : {next: undefined}
+      const search = hasPath ? { next: path } : { next: undefined }
 
-      navigate({to: '/welcome', replace: true, search})
+      navigate({ to: '/welcome', replace: true, search })
     }
 
     if (isAuthenticated && location.pathname === '/welcome') {
-      navigate({to: '/', replace: true})
+      console.log('redirect to index ...')
+
+      navigate({ to: '/', replace: true })
     }
   }, [isAuthenticated, location.pathname, location.search, navigate])
 
@@ -43,4 +56,4 @@ function Root() {
   )
 }
 
-export const Route = createRootRoute({component: Root})
+export const Route = createRootRoute({ component: Root })

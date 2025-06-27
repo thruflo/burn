@@ -7,7 +7,7 @@ interface UserRemoveModalProps {
   onCancel: () => void
 }
 
-export default function UserRemoveModal({
+function ThreadRemoveUserModal({
   isOpen,
   userName,
   onConfirm,
@@ -32,3 +32,5 @@ export default function UserRemoveModal({
     </Dialog.Root>
   )
 }
+
+export default ThreadRemoveUserModal

@@ -1,20 +1,11 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
-import {
-  Box,
-  Flex,
-  Text,
-  Heading,
-  Button,
-  TextField,
-} from '@radix-ui/themes'
+import { Box, Flex, Text, Heading, Button, TextField } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
 import AboutSection from '../components/AboutSection'
 import ThemeToggle from '../components/ThemeToggle'
 import { setCurrentUser } from '../hooks/useAuth'
 import * as api from '../api'
-
-import { type User } from '../db/schema'
 
 const useClasses = makeStyles({
   fireIcon: {
@@ -32,9 +23,9 @@ const useClasses = makeStyles({
 })
 
 function Welcome() {
-  const [ username, setUsername ] = useState(``)
-  const [ error, setError ] = useState(``)
-  const [ isSubmitting, setIsSubmitting ] = useState(false)
+  const [username, setUsername] = useState(``)
+  const [error, setError] = useState(``)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const navigate = useNavigate()
   const search = useSearch({ from: '/welcome' })
@@ -45,7 +36,6 @@ function Welcome() {
     e.preventDefault()
 
     const trimmedUserName = username.trim()
-
     if (!trimmedUserName) {
       setError(`Please enter your name`)
 
@@ -54,25 +44,31 @@ function Welcome() {
 
     setIsSubmitting(true)
 
-    let user: User
-    try {
-      user = await api.signIn(trimmedUserName)
-    }
-    catch (_err) {
+    const user = await api.signIn(trimmedUserName)
+
+    setIsSubmitting(false)
+
+    if (user === undefined) {
       setError(`There was an error. Please try again`)
-      setIsSubmitting(false)
 
       return
     }
 
     setCurrentUser(user)
+
     navigate({ to: search.next ? search.next : '/' })
   }
 
   return (
     <Flex direction="column" className={classes.welcomeScreen}>
       <ThemeToggle />
-      <Flex direction="column" align="center" justify="center" p="4" flexGrow="1">
+      <Flex
+        direction="column"
+        align="center"
+        justify="center"
+        p="4"
+        flexGrow="1"
+      >
         <Box maxWidth="512px" width="100%" p="0 16px">
           <Heading size="6" mb="5" mt="5" align="center" weight="medium">
             <Text className={classes.fireIcon}>🔥</Text>
@@ -96,7 +92,13 @@ function Welcome() {
                   {error}
                 </Text>
               )}
-              <Button type="submit" size="3" color="iris" variant="soft" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                size="3"
+                color="iris"
+                variant="soft"
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? `Entering...` : `Enter`}
               </Button>
             </Flex>

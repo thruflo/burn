@@ -1,6 +1,6 @@
 import { Box, Flex, Text, Badge } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
-import UserAvatar from './UserAvatar'
+import UserAvatar from '../../UserAvatar'
 
 // Helper function to format timestamp with proper localization
 function formatTimestamp(timestamp: Date): string {

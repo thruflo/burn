@@ -1,67 +1,10 @@
-import {
-  Box,
-  Flex,
-  Text,
-  IconButton,
-  ScrollArea
-} from '@radix-ui/themes'
+import { Box, Flex, ScrollArea } from '@radix-ui/themes'
 import { makeStyles, mergeClasses } from '@griffel/react'
-import { useSidebar } from './SidebarProvider'
-import { Cpu } from 'lucide-react'
+import { useSidebar } from './Providers/SidebarProvider'
+import RightSidebarHeader from './RightSidebar/RightSidebarHeader'
 import ComputerAccordion from './ComputerAccordion'
 
-const useHeaderClasses = makeStyles({
-  header: {
-    height: `56px`,
-    borderBottom: `1px solid var(--gray-5)`,
-    position: `relative`,
-    flexShrink: 0,
-  },
-  title: {
-    paddingLeft: `4px`,
-  },
-  icon: {
-    marginRight: 'var(--space-2)',
-  },
-  closeButton: {
-    position: `absolute`,
-    right: `12px`,
-    opacity: 0.8,
-    height: `28px`,
-    width: `28px`,
-  },
-})
-
-// Header Component
-type HeaderProps = {
-  setRightSidebarOpen: (value: boolean) => void
-}
-
-function RightSidebarHeader({ setRightSidebarOpen }: HeaderProps) {
-  const classes = useHeaderClasses()
-  return (
-    <Flex p="3" align="center" justify="between" className={classes.header}>
-      <IconButton
-        size="1"
-        variant="ghost"
-        className={mergeClasses(classes.closeButton, 'closeButton')}
-        onClick={() => setRightSidebarOpen(false)}
-      >
-        ✕
-      </IconButton>
-      <Flex align="center" className={classes.title}>
-        <span className={classes.icon}>
-          <Cpu size={14} />
-        </span>
-        <Text size="3" weight="medium">
-          Computer
-        </Text>
-      </Flex>
-    </Flex>
-  )
-}
-
-const useRightSidebarClasses = makeStyles({
+const useClasses = makeStyles({
   sidebar: {
     backgroundColor: 'var(--sidebar-bg) !important',
     borderLeft: '1px solid var(--border-color)',
@@ -95,7 +38,7 @@ const useRightSidebarClasses = makeStyles({
   },
 })
 
-const useRightSidebarOverlayClasses = makeStyles({
+const useOverlayClasses = makeStyles({
   overlay: {
     '@media (max-width: 699px)': {
       position: 'fixed',
@@ -118,38 +61,39 @@ const useRightSidebarOverlayClasses = makeStyles({
   },
 })
 
-export default function RightSidebar() {
+type Props = {
+  threadId: string
+}
+
+export default function RightSidebar({ threadId }: Props) {
   const { isRightSidebarOpen, setRightSidebarOpen } = useSidebar()
-  const classes = useRightSidebarClasses()
-  const overlayClasses = useRightSidebarOverlayClasses()
+
+  const classes = useClasses()
+  const sidebarClassName = mergeClasses(
+    classes.sidebar,
+    'right-sidebar',
+    isRightSidebarOpen && classes.sidebarOpen,
+    isRightSidebarOpen && 'sidebarOpen'
+  )
+
+  const overlayClasses = useOverlayClasses()
+  const overlayClassName = mergeClasses(
+    overlayClasses.overlay,
+    isRightSidebarOpen && overlayClasses.overlayOpen
+  )
+
+  const closeSidebar = () => {
+    setRightSidebarOpen(false)
+  }
 
   return (
     <>
-      {/* Sidebar overlay */}
-      <Box
-        className={mergeClasses(
-          overlayClasses.overlay,
-          isRightSidebarOpen && overlayClasses.overlayOpen
-        )}
-        onClick={() => setRightSidebarOpen(false)}
-      />
-
-      {/* Right Sidebar */}
-      <Box
-        className={mergeClasses(
-          classes.sidebar,
-          isRightSidebarOpen && classes.sidebarOpen,
-          'right-sidebar',
-          isRightSidebarOpen && 'sidebarOpen'
-        )}
-      >
-        {/* Header */}
-        <RightSidebarHeader setRightSidebarOpen={setRightSidebarOpen} />
-
-        {/* Content Area */}
+      <Box className={overlayClassName} onClick={closeSidebar} />
+      <Box className={sidebarClassName}>
+        <RightSidebarHeader />
         <ScrollArea className={classes.scrollArea}>
           <Flex direction="column">
-            <ComputerAccordion />
+            <ComputerAccordion threadId={threadId} />
           </Flex>
         </ScrollArea>
       </Box>

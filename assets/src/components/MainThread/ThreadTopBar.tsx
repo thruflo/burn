@@ -1,21 +1,11 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
+import { useLiveQuery } from '@tanstack/react-db'
 import { Flex, IconButton, Tooltip } from '@radix-ui/themes'
-import { Edit, Plus, User, Bot } from 'lucide-react'
+import { Edit, Plus, User as UserIcon, Bot } from 'lucide-react'
 import { makeStyles, mergeClasses } from '@griffel/react'
-import UserAvatar from './UserAvatar'
-import { copyInviteLink } from '../utils/clipboard'
-
-interface UserInfo {
-  username: string
-  imageUrl?: string
-}
-
-interface UserTopBarProps {
-  users: UserInfo[]
-  agents?: UserInfo[]
-  threadId: string
-  onEditClick: () => void
-}
+import { membershipCollection, userCollection } from '../../db/collections'
+import { copyInviteLink } from '../../utils/clipboard'
+import UserAvatar from '../UserAvatar'
 
 const useClasses = makeStyles({
   container: {
@@ -74,16 +64,39 @@ const useClasses = makeStyles({
   },
 })
 
-export default function UserTopBar({
-  users,
-  agents = [],
-  threadId,
-  onEditClick,
-}: UserTopBarProps) {
+interface Props {
+  threadId: string
+  onEditClick: () => void
+}
+
+function ThreadTopBar({ threadId, onEditClick }: Props) {
   const classes = useClasses()
+
   const [tooltipText, setTooltipText] = useState('Copy invitation link')
   const [showTooltip, setShowTooltip] = useState(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  const { data: users } = useLiveQuery(
+    (query) =>
+      query
+        .from({ u: userCollection })
+        .join({
+          type: 'inner',
+          from: { m: membershipCollection },
+          on: [`@u.id`, `=`, `@m.user_id`],
+        })
+        .select('@u.id', '@u.name')
+        .where('@m.thread_id', '=', threadId),
+    [threadId]
+  )
+
+  // XXX
+  const agents = [
+    {
+      name: 'sarah',
+      imageUrl: 'https://i.pravatar.cc/150?u=sarah',
+    },
+  ]
 
   const handleInviteClick = useCallback(() => {
     copyInviteLink(threadId)
@@ -118,13 +131,16 @@ export default function UserTopBar({
     <Flex className={classes.container}>
       <Flex className={classes.sectionsContainer}>
         <Flex className={classes.section}>
-          <User size={18} color="var(--gray-12)" className={classes.label} />
+          <UserIcon
+            size={18}
+            color="var(--gray-12)"
+            className={classes.label}
+          />
           <Flex className={classes.usersList}>
             {users.map((user, index) => (
               <UserAvatar
-                key={user.username}
-                username={user.username}
-                imageUrl={user.imageUrl}
+                key={user.id}
+                username={user.name}
                 size="medium"
                 index={index}
               />
@@ -139,15 +155,14 @@ export default function UserTopBar({
             </Tooltip>
           </Flex>
         </Flex>
-
         {agents.length > 0 && (
           <Flex className={classes.section}>
             <Bot size={18} color="var(--gray-12)" className={classes.label} />
             <Flex className={classes.usersList}>
               {agents.map((agent, index) => (
                 <UserAvatar
-                  key={agent.username}
-                  username={agent.username}
+                  key={agent.name}
+                  username={agent.name}
                   imageUrl={agent.imageUrl}
                   size="medium"
                   index={index}
@@ -157,7 +172,6 @@ export default function UserTopBar({
           </Flex>
         )}
       </Flex>
-
       <IconButton
         variant="ghost"
         size="1"
@@ -169,3 +183,5 @@ export default function UserTopBar({
     </Flex>
   )
 }
+
+export default ThreadTopBar

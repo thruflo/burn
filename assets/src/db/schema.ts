@@ -2,14 +2,14 @@ import * as z from 'zod/v4'
 
 const timestamps = {
   inserted_at: z.date().optional(),
-  updated_at: z.date().optional()
+  updated_at: z.date().optional(),
 }
 
 export const threadSchema = z.object({
   id: z.uuid(),
   name: z.string(),
 
-  ...timestamps
+  ...timestamps,
 })
 
 export const membershipSchema = z.object({
@@ -17,19 +17,19 @@ export const membershipSchema = z.object({
   thread_id: z.uuid(),
   user_id: z.uuid(),
 
-  ...timestamps
+  ...timestamps,
 })
 
 export const userSchema = z.object({
   id: z.uuid(),
   name: z.string(),
 
-  ...timestamps
+  ...timestamps,
 })
 
 export const authSchema = z.object({
   id: z.uuid(),
-  name: z.string()
+  name: z.string(),
 })
 
 export const eventSchema = z.object({
@@ -43,7 +43,7 @@ export const eventSchema = z.object({
   type: z.enum(['text', 'tool_use', 'tool_result']),
   data: z.object(),
 
-  ...timestamps
+  ...timestamps,
 })
 
 export const factSchema = z.object({
@@ -58,7 +58,7 @@ export const factSchema = z.object({
   confidence: z.number(),
   disputed: z.boolean(),
 
-  ...timestamps
+  ...timestamps,
 })
 
 export type Thread = z.infer<typeof threadSchema>

@@ -1,14 +1,9 @@
+import { useNavigate } from '@tanstack/react-router'
 import { makeStyles } from '@griffel/react'
-import {
-  Box,
-  Flex,
-  Text,
-  IconButton,
-  Tooltip,
-} from '@radix-ui/themes'
+import { Box, Flex, Text, IconButton, Tooltip } from '@radix-ui/themes'
 import { LogOut, Moon, Sun, Monitor } from 'lucide-react'
 import { clearCurrentUser, useAuth } from '../../hooks/useAuth'
-import { useTheme } from '../ThemeProvider'
+import { useTheme } from '../Providers/ThemeProvider'
 import UserAvatar from '../UserAvatar'
 
 const useClasses = makeStyles({
@@ -20,16 +15,17 @@ const useClasses = makeStyles({
 
 function SidebarFooter() {
   const classes = useClasses()
+  const navigate = useNavigate()
   const { theme, setTheme } = useTheme()
   const { currentUser, isAuthenticated } = useAuth()
   const username = isAuthenticated ? currentUser!.name : ''
 
   const themeLabel =
     theme === `dark`
-    ? `Light mode`
-    : theme === `light`
-      ? `System mode`
-      : `Dark mode`
+      ? `Light mode`
+      : theme === `light`
+        ? `System mode`
+        : `Dark mode`
 
   const themeComponent =
     theme === `dark` ? (
@@ -52,15 +48,17 @@ function SidebarFooter() {
     return setTheme(`dark`)
   }
 
+  function handleLogout() {
+    clearCurrentUser()
+
+    navigate({ to: '/welcome', search: { next: undefined } })
+  }
+
   return (
     <Box p="2" className={classes.footer}>
       <Flex align="center" justify="between" px="2">
         <Flex align="center" gap="2">
-          <UserAvatar
-              username={username}
-              size="small"
-              showTooltip={false}
-          />
+          <UserAvatar username={username} size="small" showTooltip={false} />
           <Text size="1">{username}</Text>
         </Flex>
         <Flex gap="3">
@@ -70,7 +68,12 @@ function SidebarFooter() {
             </IconButton>
           </Tooltip>
           <Tooltip content="Log out">
-            <IconButton size="1" variant="ghost" color="red" onClick={clearCurrentUser}>
+            <IconButton
+              size="1"
+              variant="ghost"
+              color="red"
+              onClick={handleLogout}
+            >
               <LogOut size={14} />
             </IconButton>
           </Tooltip>

@@ -1,7 +1,6 @@
 import { Box, Flex, ScrollArea } from '@radix-ui/themes'
 import { makeStyles, mergeClasses } from '@griffel/react'
-import { useSidebar } from './SidebarProvider'
-
+import { useSidebar } from './Providers/SidebarProvider'
 import SidebarFooter from './Sidebar/SidebarFooter'
 import SidebarHeader from './Sidebar/SidebarHeader'
 import SidebarThreads from './Sidebar/SidebarThreads'
@@ -64,10 +63,10 @@ const useOverlayClasses = makeStyles({
 })
 
 type Props = {
-  activeThreadId: string
+  threadId: string
 }
 
-function Sidebar({ activeThreadId }: Props) {
+function Sidebar({ threadId }: Props) {
   const { isLeftSidebarOpen, setLeftSidebarOpen } = useSidebar()
 
   const classes = useClasses()
@@ -95,7 +94,7 @@ function Sidebar({ activeThreadId }: Props) {
         <SidebarHeader />
         <ScrollArea className={classes.scrollArea}>
           <Flex direction="column" px="3" py="2">
-            <SidebarThreads activeThreadId={activeThreadId} />
+            <SidebarThreads threadId={threadId} />
           </Flex>
         </ScrollArea>
         <SidebarFooter />

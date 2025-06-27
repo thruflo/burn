@@ -1,16 +1,13 @@
 import { ReactNode } from 'react'
-import { ThemeProvider } from './ThemeProvider'
-import { SidebarProvider } from './SidebarProvider'
+import { ThemeProvider } from './Providers/ThemeProvider'
+import { SidebarProvider } from './Providers/SidebarProvider'
 
 type ProvidersProps = {
   children: ReactNode
   defaultTheme?: `light` | `dark` | `system`
 }
 
-export function Providers({
-  children,
-  defaultTheme = `light`,
-}: ProvidersProps) {
+export function Providers({ children, defaultTheme = `dark` }: ProvidersProps) {
   return (
     <ThemeProvider defaultTheme={defaultTheme}>
       <SidebarProvider>{children}</SidebarProvider>

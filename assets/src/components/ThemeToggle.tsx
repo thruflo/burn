@@ -1,10 +1,6 @@
-import {
-  Box,
-  IconButton,
-  Tooltip
-} from '@radix-ui/themes'
+import { Box, IconButton, Tooltip } from '@radix-ui/themes'
 import { Sun, Moon, Monitor } from 'lucide-react'
-import { useTheme } from '../components/ThemeProvider'
+import { useTheme } from '../components/Providers/ThemeProvider'
 import { makeStyles } from '@griffel/react'
 
 const useClasses = makeStyles({

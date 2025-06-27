@@ -1,7 +1,7 @@
-import { useNavigate } from '@tanstack/react-router'
 import { Flex, Text, IconButton } from '@radix-ui/themes'
 import { makeStyles, mergeClasses } from '@griffel/react'
 import { useSidebar } from '../Providers/SidebarProvider'
+import { Cpu } from 'lucide-react'
 
 const useClasses = makeStyles({
   header: {
@@ -12,7 +12,9 @@ const useClasses = makeStyles({
   },
   title: {
     paddingLeft: `4px`,
-    cursor: `pointer`,
+  },
+  icon: {
+    marginRight: 'var(--space-2)',
   },
   closeButton: {
     position: `absolute`,
@@ -23,31 +25,30 @@ const useClasses = makeStyles({
   },
 })
 
-function SidebarHeader() {
+function RightSidebarHeader() {
   const classes = useClasses()
-  const navigate = useNavigate()
-  const { setLeftSidebarOpen } = useSidebar()
+  const { setRightSidebarOpen } = useSidebar()
 
   return (
     <Flex p="3" align="center" justify="between" className={classes.header}>
-      <Text
-        size="3"
-        weight="bold"
-        className={classes.title}
-        onClick={() => navigate({ to: `/` })}
-      >
-        🔥 Burn
-      </Text>
       <IconButton
         size="1"
         variant="ghost"
         className={mergeClasses(classes.closeButton, 'closeButton')}
-        onClick={() => setLeftSidebarOpen(false)}
+        onClick={() => setRightSidebarOpen(false)}
       >
         ✕
       </IconButton>
+      <Flex align="center" className={classes.title}>
+        <span className={classes.icon}>
+          <Cpu size={14} />
+        </span>
+        <Text size="3" weight="medium">
+          Computer
+        </Text>
+      </Flex>
     </Flex>
   )
 }
 
-export default SidebarHeader
+export default RightSidebarHeader

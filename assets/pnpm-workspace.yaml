@@ -1,0 +1,4 @@
+packages:
+  - "../../../TanStack/db/packages/db"
+  - "../../../TanStack/db/packages/db-collections"
+  - "../../../TanStack/db/packages/react-db"

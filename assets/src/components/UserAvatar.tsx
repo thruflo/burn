@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { Tooltip } from '@radix-ui/themes'
-import { makeStyles, mergeClasses } from '@griffel/react';
+import { makeStyles, mergeClasses } from '@griffel/react'
 
 type UserAvatarProps = {
   username: string
@@ -8,7 +8,7 @@ type UserAvatarProps = {
   showTooltip?: boolean
   index?: number // For staggered positioning
   imageUrl?: string // Optional image URL
-};
+}
 
 // Simple hash function to generate a consistent color from username
 function stringToColor(str: string) {

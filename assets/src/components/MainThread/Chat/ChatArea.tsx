@@ -1,9 +1,9 @@
+import uuid4 from 'uuid4'
 import { useState, useRef, useEffect } from 'react'
 import { Box, ScrollArea } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
-import ChatMessage, { Message } from './ChatMessage'
 import ChatInput from './ChatInput'
-import { v4 as uuidv4 } from 'uuid'
+import ChatMessage, { Message } from './ChatMessage'
 
 const useStyles = makeStyles({
   container: {
@@ -72,7 +72,7 @@ export default function ChatArea() {
 
   const handleSendMessage = (content: string) => {
     const newMessage: Message = {
-      id: uuidv4(),
+      id: uuid4(),
       content,
       sender: 'user',
       timestamp: new Date(),
@@ -84,7 +84,7 @@ export default function ChatArea() {
     // Simulate AI response (replace with actual AI integration later)
     setTimeout(() => {
       const aiResponse: Message = {
-        id: uuidv4(),
+        id: uuid4(),
         content: `I received your message: "${content}". This is a placeholder response.`,
         sender: 'ai',
         timestamp: new Date(),
