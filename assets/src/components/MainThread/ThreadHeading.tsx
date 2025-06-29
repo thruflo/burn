@@ -44,7 +44,7 @@ type ThreadHeadingProps = {
   title: string
 }
 
-export default function ThreadHeading({ title }: ThreadHeadingProps) {
+function ThreadHeading({ title }: ThreadHeadingProps) {
   const classes = useThreadHeadingStyles()
 
   return (
@@ -76,3 +76,5 @@ export default function ThreadHeading({ title }: ThreadHeadingProps) {
     </div>
   )
 }
+
+export default ThreadHeading

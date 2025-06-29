@@ -5,7 +5,8 @@ import { Flex, Box } from '@radix-ui/themes'
 import ThreadEditForm from './MainThread/ThreadEditForm'
 import ThreadEditTopBar from './MainThread/ThreadEditTopBar'
 import ThreadTopBar from './MainThread/ThreadTopBar'
-import ChatArea from './MainThread/Chat/ChatArea'
+
+import ChatArea from './ChatArea'
 
 const useClasses = makeStyles({
   content: {
@@ -22,30 +23,29 @@ function MainThread({ threadId }: Props) {
   const classes = useClasses()
   const [isEditing, setIsEditing] = useState(false)
 
-  if (isEditing) {
-    return (
-      <Flex direction="column" height="100%">
-        <Box>
-          <ThreadEditTopBar onClose={() => setIsEditing(false)} />
-        </Box>
-        <Box className={classes.content}>
-          <ThreadEditForm threadId={threadId} />
-        </Box>
-      </Flex>
-    )
-  }
-
   return (
     <Flex direction="column" height="100%">
-      <Box>
-        <ThreadTopBar
-          threadId={threadId}
-          onEditClick={() => setIsEditing(true)}
-        />
-      </Box>
-      <Box className={classes.content}>
-        <ChatArea />
-      </Box>
+      {isEditing ? (
+        <>
+          <Box>
+            <ThreadEditTopBar onClose={() => setIsEditing(false)} />
+          </Box>
+          <Box className={classes.content}>
+            <ThreadEditForm key={threadId} threadId={threadId} />
+          </Box>
+        </>
+      ) : (
+        <>
+          <Box>
+            <ThreadTopBar key={threadId} threadId={threadId}
+              onEditClick={() => setIsEditing(true)}
+            />
+          </Box>
+          <Box className={classes.content}>
+            <ChatArea threadId={threadId} />
+          </Box>
+        </>
+      )}
     </Flex>
   )
 }

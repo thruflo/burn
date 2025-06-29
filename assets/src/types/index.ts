@@ -1,18 +1,25 @@
-export type Status = 'backlog' | 'todo' | 'in-progress' | 'done' | 'cancelled'
-export type Priority = 'none' | 'low' | 'medium' | 'high' | 'urgent'
+import type { Event, Fact, User } from '../db/schema'
 
-export const priorityDisplay: Record<Priority, string> = {
-  none: 'None',
-  low: 'Low',
-  medium: 'Medium',
-  high: 'High',
-  urgent: 'Urgent',
+export type EventResult = Pick<
+  Event,
+  'id' | 'assistant' | 'data' | 'role' | 'type' | 'inserted_at'
+> & {
+  user_name: User['name'] | null
 }
 
-export const statusDisplay: Record<Status, string> = {
-  backlog: 'Backlog',
-  todo: 'Todo',
-  'in-progress': 'In Progress',
-  done: 'Done',
-  cancelled: 'Cancelled',
+export type FactResult = Pick<
+  Fact,
+  | 'id'
+  | 'predicate'
+  | 'object'
+  | 'category'
+  | 'confidence'
+  | 'disputed'
+  | 'inserted_at'
+> & {
+  subject: User['name']
+}
+
+export type MessageResult = EventResult & {
+  user_id: User['id'] | null
 }

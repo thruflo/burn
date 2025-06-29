@@ -5,9 +5,22 @@ const timestamps = {
   updated_at: z.date().optional(),
 }
 
+export const authSchema = z.object({
+  key: z.literal('current'),
+  user_id: z.uuid(),
+})
+
+export const userSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+
+  ...timestamps,
+})
+
 export const threadSchema = z.object({
   id: z.uuid(),
   name: z.string(),
+  status: z.enum(['started', 'cancelled', 'completed']),
 
   ...timestamps,
 })
@@ -20,18 +33,6 @@ export const membershipSchema = z.object({
   ...timestamps,
 })
 
-export const userSchema = z.object({
-  id: z.uuid(),
-  name: z.string(),
-
-  ...timestamps,
-})
-
-export const authSchema = z.object({
-  id: z.uuid(),
-  name: z.string(),
-})
-
 export const eventSchema = z.object({
   id: z.uuid(),
   thread_id: z.uuid(),
@@ -41,7 +42,7 @@ export const eventSchema = z.object({
   user_id: z.uuid().optional(),
 
   type: z.enum(['text', 'tool_use', 'tool_result']),
-  data: z.object(),
+  data: z.record(z.string(), z.any()),
 
   ...timestamps,
 })

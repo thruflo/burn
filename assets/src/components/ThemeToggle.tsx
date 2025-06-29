@@ -11,7 +11,7 @@ const useClasses = makeStyles({
   },
 })
 
-export default function ThemeToggle() {
+function ThemeToggle() {
   const { theme, setTheme } = useTheme()
   const classes = useClasses()
 
@@ -47,3 +47,5 @@ export default function ThemeToggle() {
     </Box>
   )
 }
+
+export default ThemeToggle

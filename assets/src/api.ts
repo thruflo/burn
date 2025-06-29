@@ -1,31 +1,32 @@
 import axios, { AxiosError } from 'axios'
 import type { PendingMutation } from '@tanstack/db'
 
-import * as auth from './db/auth'
-import type { Auth } from './db/schema'
+import { authCollection } from './db/collections'
+import type { User } from './db/schema'
+
+type SignInResult = Pick<User, 'id' | 'name'>;
 
 type IngestPayload = {
   mutations: Omit<PendingMutation, 'collection'>[]
-}
+};
 
 const authHeaders = () => {
-  const user = auth.get()
+  const auth = authCollection.get('current')
 
-  if (user) {
-    return { Authorization: `Bearer ${user.name}` }
-  }
-
-  return {}
+  return auth !== undefined
+    ? { Authorization: `Bearer ${auth.user_id}` }
+    : {}
 }
 
-export async function signIn(username: string): Promise<Auth | undefined> {
+export async function signIn(username: string): Promise<string | undefined> {
   const data = { username }
   const headers = authHeaders()
 
   try {
     const response = await axios.post('/auth/sign-in', data, { headers })
+    const { id: user_id }: SignInResult = response.data
 
-    return response.data as Auth
+    return user_id
   } catch (err: unknown) {
     if (err instanceof AxiosError) {
       return

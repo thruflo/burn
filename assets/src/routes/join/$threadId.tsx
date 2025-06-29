@@ -4,8 +4,8 @@ import { useEffect } from 'react'
 import { useLiveQuery } from '@tanstack/react-db'
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 
+import { useAuth } from '../../db/auth'
 import { membershipCollection } from '../../db/collections'
-import { useAuth } from '../../hooks/useAuth'
 
 function JoinPage() {
   const navigate = useNavigate()

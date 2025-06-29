@@ -1,25 +1,28 @@
-import type { Auth, User } from './schema'
+import { authCollection } from './collections'
+import type { Auth } from './schema'
 
-const KEY = 'burn:auth:user'
+type CurrentAuth = Auth | undefined;
+type AuthResult = {
+  currentUserId: string | null
+  isAuthenticated: boolean
+};
 
-export function get(): Auth | null {
-  const value = localStorage.getItem(KEY)
-
-  return value ? JSON.parse(value) : null
+export async function signIn(user_id: string): Promise<void> {
+  await authCollection.insert({
+    key: 'current',
+    user_id: user_id
+  })
 }
 
-export function all(): Auth[] {
-  const value = get()
-
-  return value ? [value] : []
+export async function signOut(): Promise<void> {
+  await authCollection.delete('current')
 }
 
-export function set({ id, name }: User): void {
-  const auth: Auth = { id, name }
+export function useAuth(): AuthResult {
+  const auth: CurrentAuth = authCollection.get('current')
 
-  return localStorage.setItem(KEY, JSON.stringify(auth))
-}
+  const currentUserId = auth !== undefined ? auth.user_id : null
+  const isAuthenticated = currentUserId !== null
 
-export function clear(): void {
-  return localStorage.removeItem(KEY)
+  return { currentUserId, isAuthenticated }
 }

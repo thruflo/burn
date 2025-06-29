@@ -12,8 +12,8 @@ import { useSidebar } from '../../components/Providers/SidebarProvider'
 import MainThread from '../../components/MainThread'
 import ThreadHeading from '../../components/MainThread/ThreadHeading'
 
+import { useAuth } from '../../db/auth'
 import { membershipCollection, threadCollection } from '../../db/collections'
-import { useAuth } from '../../hooks/useAuth'
 
 const useClasses = makeStyles({
   scrollArea: {
@@ -32,13 +32,13 @@ const useClasses = makeStyles({
     zIndex: 10,
   },
   leftToggle: {
-    display: 'inline-flex' /* Make sure it's visible by default */,
+    display: 'inline-flex',
     '@media (min-width: 970px)': {
       display: 'none',
     },
   },
   rightToggle: {
-    display: 'inline-flex' /* Make sure it's visible by default */,
+    display: 'inline-flex',
     '@media (min-width: 700px)': {
       display: 'none',
     },
@@ -49,17 +49,9 @@ function ThreadPage() {
   const classes = useClasses()
   const navigate = useNavigate()
 
-  console.log('ThreadPage')
-
   const { currentUserId, isAuthenticated } = useAuth()
   const { threadId } = useParams({ from: '/threads/$threadId' })
   const { toggleLeftSidebar, toggleRightSidebar } = useSidebar()
-
-  console.log('threadCollection.syncedData', threadCollection.syncedData)
-  console.log(
-    'membershipCollection.syncedData',
-    membershipCollection.syncedData
-  )
 
   const { data: threads } = useLiveQuery(
     (query) =>
@@ -72,50 +64,12 @@ function ThreadPage() {
         })
         .select('@t.id', '@t.name')
         .where('@t.id', '=', threadId)
-        .where('@m.user_id', '=', currentUserId),
-    [threadId, currentUserId]
-  )
-
+        .where('@m.user_id', '=', currentUserId
+  ), [threadId, currentUserId])
   const activeThread = threads.length === 1 ? threads[0] : undefined
 
-  console.log('activeThread')
-
-  // const { data: threads } = useLiveQuery(query =>
-  //   query
-  //     .from({ threadCollection })
-  //     .select('@id', '@name')
-  //     .where('@id', '=', threadId)
-  // )
-
-  // const { data: memberships } = useLiveQuery(query => (
-  //   query
-  //     .from({ membershipCollection })
-  //     .where('@thread_id', '=', threadId)
-  //     .where('@user_id', '=', currentUserId)
-  //     .select('@id')
-  // ))
-  // const hasMembership = activeThread !== undefined
-
-  // console.log(
-  //   'ThreadPage',
-  //   'currentUserId', currentUserId,
-  //   'threads', threads,
-  //   'hasMembership', hasMembership
-  // )
-
-  // // If the user isn't in the thread, redirect to the root.
   useEffect(() => {
-    console.log(
-      'ThreadPage.useEffect',
-      'isAuthenticated',
-      isAuthenticated,
-      'activeThread',
-      activeThread
-    )
-
     if (isAuthenticated && !activeThread) {
-      console.log('navigate.to /')
-
       navigate({ to: `/` })
     }
   }, [isAuthenticated, activeThread, navigate])
@@ -154,7 +108,7 @@ function ThreadPage() {
             </Flex>
           </Box>
           <Box style={{ flex: 1, overflow: 'hidden' }}>
-            <MainThread threadId={activeThread.id} />
+            <MainThread key={activeThread.id} threadId={activeThread.id} />
           </Box>
         </Flex>
       </Flex>

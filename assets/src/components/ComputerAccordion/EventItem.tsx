@@ -3,7 +3,7 @@ import { makeStyles } from '@griffel/react'
 import { User as UserIcon, Bot } from 'lucide-react'
 import { JsonView, darkStyles } from 'react-json-view-lite'
 
-import type { EventResult } from './types'
+import type { EventResult } from '../../types'
 
 const useStyles = makeStyles({
   eventItem: {
@@ -17,6 +17,10 @@ const useStyles = makeStyles({
     '& .inline-json-view': {
       display: 'inline !important',
       verticalAlign: 'middle !important',
+      background: 'transparent !important',
+      backgroundColor: 'transparent !important',
+      fontSize: '11px',
+      fontWeight: '500',
       '& > div': {
         display: 'inline !important',
         verticalAlign: 'middle !important',
@@ -75,14 +79,22 @@ const useStyles = makeStyles({
     wordBreak: 'break-word',
     display: 'inline',
     color: 'var(--gray-12)',
-  },
-  jsonViewContainer: {
-    background: 'transparent !important',
-    backgroundColor: 'transparent !important',
-    fontSize: '11px',
-    fontWeight: '500',
-  },
+  }
 })
+
+const customDarkStyles = {
+  ...darkStyles,
+  container: `inline-json-view`, //${classes.jsonViewContainer}
+  punctuation: 'json-punctuation',
+  label: 'json-label',
+  clickableLabel: 'json-clickable-label',
+  basicChildStyle: 'json-basic-element',
+  stringValue: 'json-string-value',
+  numberValue: 'json-number-value',
+  booleanValue: 'json-boolean-value',
+  nullValue: 'json-null-value',
+  undefinedValue: 'json-undefined-value',
+}
 
 type Props = {
   event: EventResult
@@ -91,24 +103,7 @@ type Props = {
 function EventItem({ event }: Props) {
   const classes = useStyles()
 
-  console.log('XXX Needed???')
-  console.log('darkStyles', darkStyles)
-
-  const customDarkStyles = {
-    ...darkStyles,
-    container: `${classes.jsonViewContainer} inline-json-view`,
-    punctuation: 'json-punctuation',
-    label: 'json-label',
-    clickableLabel: 'json-clickable-label',
-    basicChildStyle: 'json-basic-element',
-    stringValue: 'json-string-value',
-    numberValue: 'json-number-value',
-    booleanValue: 'json-boolean-value',
-    nullValue: 'json-null-value',
-    undefinedValue: 'json-undefined-value',
-  }
-
-  console.log('customDarkStyles', customDarkStyles)
+  console.log('EventItem', event)
 
   const toolTypes = ['tool_use', 'tool_result']
   const typeColor = toolTypes.includes(event.type) ? 'orange' : 'green'
@@ -121,6 +116,9 @@ function EventItem({ event }: Props) {
   ) as string
 
   const IconComponent = event.role === 'user' ? UserIcon : Bot
+
+  console.log('typeLabel', typeLabel)
+  console.log('attrName', attrName)
 
   return (
     <Box className={classes.eventItem}>

@@ -11,7 +11,7 @@ import {
 } from '@radix-ui/themes'
 import { X as CloseIcon } from 'lucide-react'
 import { makeStyles, mergeClasses } from '@griffel/react'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth } from '../../db/auth'
 import { copyInviteLink, getJoinUrl } from '../../utils/clipboard'
 import UserAvatar from '../UserAvatar'
 import ThreadRemoveUserModal from './ThreadRemoveUserModal'
@@ -25,6 +25,14 @@ import type { Membership, User } from '../../db/schema'
 
 type UserResult = Pick<User, 'id' | 'name'> & {
   membership_id: Membership['id']
+}
+
+// XXX
+type Agent = {
+  name: string
+  imageUrl: string | undefined
+  isEnabled: boolean
+  isProducer: boolean
 }
 
 const useClasses = makeStyles({
@@ -43,23 +51,24 @@ const useClasses = makeStyles({
   },
 })
 
-// XXX
-type Agent = {
-  name: string
-  imageUrl: string | undefined
-  isEnabled: boolean
-  isProducer: boolean
-}
-
 type Props = {
   threadId: string
 }
 
-export default function ThreadEditForm({ threadId }: Props) {
+function ThreadEditForm({ threadId }: Props) {
   const classes = useClasses()
   const { currentUserId } = useAuth()
 
-  const [threadName, setThreadName] = useState('This is a conversation')
+  const { data: threads } = useLiveQuery(
+    (query) =>
+      query
+        .from({ threadCollection })
+        .where('@id', '=', threadId),
+    [threadId]
+  )
+  const thread = threads[0]!
+
+  const [threadName, setThreadName] = useState(thread.name)
   const [showRemoveModal, setShowRemoveModal] = useState(false)
   const [userToRemove, setUserToRemove] = useState<UserResult | null>(null)
   const [inviteCopied, setInviteCopied] = useState(false)
@@ -309,3 +318,5 @@ export default function ThreadEditForm({ threadId }: Props) {
     </>
   )
 }
+
+export default ThreadEditForm

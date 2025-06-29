@@ -4,7 +4,7 @@ import { Box, Flex, Text, Heading, Button, TextField } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
 import AboutSection from '../components/AboutSection'
 import ThemeToggle from '../components/ThemeToggle'
-import { setCurrentUser } from '../hooks/useAuth'
+import * as auth from '../db/auth'
 import * as api from '../api'
 
 const useClasses = makeStyles({
@@ -44,17 +44,17 @@ function Welcome() {
 
     setIsSubmitting(true)
 
-    const user = await api.signIn(trimmedUserName)
+    const user_id = await api.signIn(trimmedUserName)
 
     setIsSubmitting(false)
 
-    if (user === undefined) {
+    if (user_id === undefined) {
       setError(`There was an error. Please try again`)
 
       return
     }
 
-    setCurrentUser(user)
+    await auth.signIn(user_id)
 
     navigate({ to: search.next ? search.next : '/' })
   }

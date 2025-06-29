@@ -1,16 +1,15 @@
 import uuid4 from 'uuid4'
 
 import { useNavigate } from '@tanstack/react-router'
-import { useOptimisticMutation, useLiveQuery } from '@tanstack/react-db'
+import { useLiveQuery } from '@tanstack/react-db'
 import { makeStyles } from '@griffel/react'
 
 import { Button, Flex, Text } from '@radix-ui/themes'
 import { Plus, MessagesSquare } from 'lucide-react'
 
-import { useAuth } from '../../hooks/useAuth'
-
+import { useAuth } from '../../db/auth'
 import { membershipCollection, threadCollection } from '../../db/collections'
-import { ingestMutations } from '../../db/mutations'
+import { createTransaction } from '../../db/transaction'
 
 import SidebarButton from './SidebarButton'
 
@@ -39,32 +38,45 @@ function SidebarThreads({ threadId }: Props) {
   const classes = useClasses()
   const navigate = useNavigate()
 
-  const tx = useOptimisticMutation({ mutationFn: ingestMutations })
-
-  const { data: threads } = useLiveQuery(
-    (query) =>
-      query
-        .from({ t: threadCollection })
-        .join({
-          type: `inner`,
-          from: { m: membershipCollection },
-          on: [`@t.id`, `=`, `@m.thread_id`],
-        })
-        .select('@t.id', '@t.name')
-        .where('@m.user_id', '=', currentUserId)
-        .orderBy({ '@inserted_at': 'desc' }),
+  const { collection: baseQuery } = useLiveQuery(query =>
+    query
+      .from({ t: threadCollection })
+      .join({
+        type: `inner`,
+        from: { m: membershipCollection },
+        on: [`@t.id`, `=`, `@m.thread_id`],
+      })
+      .select('@t.id', '@t.name', '@t.inserted_at')
+      .where('@m.user_id', '=', currentUserId),
     [currentUserId]
   )
+  const { data: nonSyncedThreads } = useLiveQuery(query =>
+    query
+      .from({ t: baseQuery })
+      .where(({ t }) => t.inserted_at === undefined)
+      .select('@t.id', '@t.name')
+      .orderBy({ '@t.name': 'desc' })
+  )
+  const { data: syncedThreads } = useLiveQuery(query =>
+    query
+      .from({ t: baseQuery })
+      .where(({ t }) => t.inserted_at !== undefined)
+      .select('@t.id', '@t.name')
+      .orderBy({ '@t.inserted_at': 'desc' })
+  )
+  const threads = nonSyncedThreads.concat(syncedThreads)
 
   const createNewThread = () => {
     const newThreadId = uuid4()
     const userId = currentUserId as string
     const numThreads = threads.length
 
+    const tx = createTransaction()
     tx.mutate(() => {
       threadCollection.insert({
         id: newThreadId,
         name: `Untitled thread ${numThreads + 1}`,
+        status: 'started'
       })
 
       membershipCollection.insert({

@@ -32,11 +32,14 @@ defmodule BurnWeb.Router do
     post "/sign-in", AuthController, :sign_in
   end
 
+  scope "/ingest", BurnWeb do
+    pipe_through [:api, :auth]
+
+    post "/mutations", IngestController, :ingest
+  end
+
   scope "/sync" do
-    pipe_through [
-      :api,
-      :auth
-    ]
+    pipe_through [:api, :auth]
 
     sync "/users", Accounts.User
     sync "/threads", Threads.Thread

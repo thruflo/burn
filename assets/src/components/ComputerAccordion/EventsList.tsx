@@ -4,7 +4,17 @@ import { makeStyles } from '@griffel/react'
 import { extractSearchableText } from '../../utils/extract'
 import { eventCollection, userCollection } from '../../db/collections'
 import EventItem from './EventItem'
-import type { EventResult } from './types'
+import type { EventResult } from '../../types'
+
+const useStyles = makeStyles({
+  eventsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 'var(--space-2)',
+    paddingTop: 'var(--space-1)',
+    paddingBottom: 'var(--space-1)',
+  },
+})
 
 function matchesFilter(event: EventResult, text: string): boolean {
   const { assistant, data, type, user_name } = event
@@ -23,16 +33,6 @@ function matchesFilter(event: EventResult, text: string): boolean {
 
   return extractSearchableText(data).toLowerCase().includes(text)
 }
-
-const useStyles = makeStyles({
-  eventsList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 'var(--space-2)',
-    paddingTop: 'var(--space-1)',
-    paddingBottom: 'var(--space-1)',
-  },
-})
 
 type Props = {
   threadId: string
@@ -54,7 +54,7 @@ function EventsList({ threadId, filter }: Props) {
         .join({
           type: 'left', // a left outer join because `user_id` can be null
           from: { u: userCollection },
-          on: [`@u.id`, `=`, `@events.user_id`],
+          on: [`@u.id`, `=`, `@e.user_id`],
         })
         .where('@e.thread_id', '=', threadId)
         .select(
@@ -77,6 +77,7 @@ function EventsList({ threadId, filter }: Props) {
     (query) => {
       const baseQuery = query
         .from({ e: eventResults })
+        .select('@*')
         .orderBy({ '@e.inserted_at': 'asc' })
 
       return filterText

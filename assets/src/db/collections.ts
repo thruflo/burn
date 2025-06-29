@@ -1,23 +1,7 @@
 import { createCollection } from '@tanstack/db'
-import {
-  electricCollectionOptions,
-  queryCollectionOptions,
-} from '@tanstack/db-collections'
-import { QueryClient } from '@tanstack/query-core'
-
-import type { Value } from '@electric-sql/client'
-import type {
-  InsertMutationFn,
-  UpdateMutationFn,
-  DeleteMutationFn,
-} from '@tanstack/db'
-import type {
-  ElectricCollectionUtils,
-  QueryCollectionUtils,
-} from '@tanstack/db-collections'
+import { electricCollectionOptions, localStorageCollectionOptions } from '@tanstack/db-collections'
 
 import { ingestMutations } from './mutations'
-
 import {
   authSchema,
   eventSchema,
@@ -27,60 +11,44 @@ import {
   userSchema,
 } from './schema'
 
-import type { Auth, Event, Fact, Membership, Thread, User } from './schema'
+import type { InsertMutationFn, UpdateMutationFn, DeleteMutationFn } from '@tanstack/db'
+import type { ElectricCollectionUtils } from '@tanstack/db-collections'
+import type { Value } from '@electric-sql/client'
+import type {
+  Auth,
+  Event,
+  Fact,
+  Membership,
+  Thread,
+  User
+} from './schema'
 
-import * as auth from './auth'
+type CollectionKey = string | number;
 
-type CollectionKey = string | number
-
-const relativeUrl = (path: string) => `${window.location.origin}${path}`
+export const authCollection = createCollection<Auth>(
+  localStorageCollectionOptions({
+    storageKey: 'auth',
+    getKey: (item: Auth) => item.key,
+    onInsert: async () => true,
+    onUpdate: async () => true,
+    onDelete: async () => true,
+    schema: authSchema,
+  })
+)
 
 const headers = {
   Authorization: async () => {
-    const user = auth.get()
-    const username = user ? user.name : null
+    const auth = authCollection.get('current')
 
-    return `Bearer ${username}`
+    return auth ? `Bearer ${auth.user_id}` : 'Unauthenticated'
   },
 }
 
 const parser = {
-  timestamp: (date: string) => new Date(date) as unknown as Value,
+  timestamp: (date: string) => ( // N.b.: https://github.com/TanStack/db/pull/201
+    new Date(date) as unknown as Value
+  )
 }
-
-const localQueryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 0,
-      retry: false,
-    },
-  },
-})
-
-// const config: QueryCollectionConfig<TestItem> = {
-//       id: `test`,
-//       queryClient,
-//       queryKey,
-//       queryFn,
-//       getKey,
-//     }
-
-//     const options = queryCollectionOptions(config)
-//     const collection = createCollection(options)
-
-export const authCollection = createCollection<
-  Auth,
-  CollectionKey,
-  QueryCollectionUtils
->(
-  queryCollectionOptions({
-    queryClient: localQueryClient,
-    queryKey: ['auth'],
-    queryFn: async () => auth.all(),
-    getKey: (item: Auth) => item.id,
-    schema: authSchema,
-  })
-)
 
 function operationHandlers<Type extends object>() {
   return {
@@ -88,6 +56,10 @@ function operationHandlers<Type extends object>() {
     onUpdate: ingestMutations as UpdateMutationFn<Type>,
     onDelete: ingestMutations as DeleteMutationFn<Type>,
   }
+}
+
+function relativeUrl(path: string) {
+  return `${window.location.origin}${path}`
 }
 
 export const eventCollection = createCollection<

@@ -1,7 +1,7 @@
 import { Box, Badge, Text, Tooltip } from '@radix-ui/themes'
 import { makeStyles, mergeClasses } from '@griffel/react'
 import { Lightbulb } from 'lucide-react'
-import type { FactResult } from './types'
+import type { FactResult } from '../../types'
 
 type ConfidenceConfig = {
   color: string

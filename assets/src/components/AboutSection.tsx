@@ -13,7 +13,7 @@ const useClasses = makeStyles({
   },
 })
 
-export default function AboutSection() {
+function AboutSection() {
   const classes = useClasses()
   return (
     <Box className={classes.box}>
@@ -57,3 +57,5 @@ export default function AboutSection() {
     </Box>
   )
 }
+
+export default AboutSection

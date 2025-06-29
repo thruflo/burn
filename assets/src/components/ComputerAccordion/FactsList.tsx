@@ -3,17 +3,7 @@ import { Box } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
 import { factCollection, userCollection } from '../../db/collections'
 import FactItem from './FactItem'
-import type { FactResult } from './types'
-
-function matchesFilter(fact: FactResult, text: string): boolean {
-  const { subject, predicate, object } = fact
-
-  return (
-    subject.toLowerCase().includes(text) ||
-    predicate.toLowerCase().includes(text) ||
-    object.toLowerCase().includes(text)
-  )
-}
+import type { FactResult } from '../../types'
 
 const useStyles = makeStyles({
   factsList: {
@@ -24,6 +14,16 @@ const useStyles = makeStyles({
     paddingBottom: 'var(--space-1)',
   },
 })
+
+function matchesFilter(fact: FactResult, text: string): boolean {
+  const { subject, predicate, object } = fact
+
+  return (
+    subject.toLowerCase().includes(text) ||
+    predicate.toLowerCase().includes(text) ||
+    object.toLowerCase().includes(text)
+  )
+}
 
 type Props = {
   threadId: string

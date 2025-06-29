@@ -1,8 +1,10 @@
+import { useLiveQuery } from '@tanstack/react-db'
 import { useNavigate } from '@tanstack/react-router'
 import { makeStyles } from '@griffel/react'
 import { Box, Flex, Text, IconButton, Tooltip } from '@radix-ui/themes'
 import { LogOut, Moon, Sun, Monitor } from 'lucide-react'
-import { clearCurrentUser, useAuth } from '../../hooks/useAuth'
+import { signOut as authSignOut, useAuth } from '../../db/auth'
+import { userCollection } from '../../db/collections'
 import { useTheme } from '../Providers/ThemeProvider'
 import UserAvatar from '../UserAvatar'
 
@@ -17,8 +19,15 @@ function SidebarFooter() {
   const classes = useClasses()
   const navigate = useNavigate()
   const { theme, setTheme } = useTheme()
-  const { currentUser, isAuthenticated } = useAuth()
-  const username = isAuthenticated ? currentUser!.name : ''
+  const { currentUserId, isAuthenticated } = useAuth()
+
+  const { data: users } = useLiveQuery(query => (
+    query
+      .from({ userCollection })
+      .select('@name')
+      .where('@id', '=', currentUserId)
+  ), [currentUserId])
+  const userName = users.length > 0 ? users[0].name : undefined
 
   const themeLabel =
     theme === `dark`
@@ -49,17 +58,21 @@ function SidebarFooter() {
   }
 
   function handleLogout() {
-    clearCurrentUser()
+    authSignOut()
 
     navigate({ to: '/welcome', search: { next: undefined } })
+  }
+
+  if (!isAuthenticated || userName === undefined) {
+    return null
   }
 
   return (
     <Box p="2" className={classes.footer}>
       <Flex align="center" justify="between" px="2">
         <Flex align="center" gap="2">
-          <UserAvatar username={username} size="small" showTooltip={false} />
-          <Text size="1">{username}</Text>
+          <UserAvatar username={userName} size="small" showTooltip={false} />
+          <Text size="1">{userName}</Text>
         </Flex>
         <Flex gap="3">
           <Tooltip content={themeLabel}>

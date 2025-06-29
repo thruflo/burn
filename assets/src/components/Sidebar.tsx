@@ -5,6 +5,47 @@ import SidebarFooter from './Sidebar/SidebarFooter'
 import SidebarHeader from './Sidebar/SidebarHeader'
 import SidebarThreads from './Sidebar/SidebarThreads'
 
+type Props = {
+  threadId: string
+}
+
+function Sidebar({ threadId }: Props) {
+  const { isLeftSidebarOpen, setLeftSidebarOpen } = useSidebar()
+
+  const classes = useClasses()
+  const sidebarClassName = mergeClasses(
+    classes.sidebar,
+    'sidebar',
+    isLeftSidebarOpen && classes.sidebarOpen,
+    isLeftSidebarOpen && 'sidebarOpen'
+  )
+
+  const overlayClasses = useOverlayClasses()
+  const overlayClassName = mergeClasses(
+    overlayClasses.overlay,
+    isLeftSidebarOpen && overlayClasses.overlayOpen
+  )
+
+  const closeSidebar = () => {
+    setLeftSidebarOpen(false)
+  }
+
+  return (
+    <>
+      <Box className={overlayClassName} onClick={closeSidebar} />
+      <Box className={sidebarClassName}>
+        <SidebarHeader />
+        <ScrollArea className={classes.scrollArea}>
+          <Flex direction="column" px="3" py="2">
+            <SidebarThreads threadId={threadId} />
+          </Flex>
+        </ScrollArea>
+        <SidebarFooter />
+      </Box>
+    </>
+  )
+}
+
 const useClasses = makeStyles({
   sidebar: {
     backgroundColor: 'var(--sidebar-bg) !important',
@@ -61,46 +102,5 @@ const useOverlayClasses = makeStyles({
     },
   },
 })
-
-type Props = {
-  threadId: string
-}
-
-function Sidebar({ threadId }: Props) {
-  const { isLeftSidebarOpen, setLeftSidebarOpen } = useSidebar()
-
-  const classes = useClasses()
-  const sidebarClassName = mergeClasses(
-    classes.sidebar,
-    'sidebar',
-    isLeftSidebarOpen && classes.sidebarOpen,
-    isLeftSidebarOpen && 'sidebarOpen'
-  )
-
-  const overlayClasses = useOverlayClasses()
-  const overlayClassName = mergeClasses(
-    overlayClasses.overlay,
-    isLeftSidebarOpen && overlayClasses.overlayOpen
-  )
-
-  const closeSidebar = () => {
-    setLeftSidebarOpen(false)
-  }
-
-  return (
-    <>
-      <Box className={overlayClassName} onClick={closeSidebar} />
-      <Box className={sidebarClassName}>
-        <SidebarHeader />
-        <ScrollArea className={classes.scrollArea}>
-          <Flex direction="column" px="3" py="2">
-            <SidebarThreads threadId={threadId} />
-          </Flex>
-        </ScrollArea>
-        <SidebarFooter />
-      </Box>
-    </>
-  )
-}
 
 export default Sidebar

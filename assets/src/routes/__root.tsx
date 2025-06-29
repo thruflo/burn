@@ -8,7 +8,7 @@ import {
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Flex } from '@radix-ui/themes'
 import { Providers } from '../components/Providers'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../db/auth'
 
 // The Root component renders the theme and handles redirecting
 // on and off the welcome page based on authentication state.
@@ -17,19 +17,8 @@ function Root() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  console.log('Root page', 'isAuthenticated', isAuthenticated)
-
   useEffect(() => {
-    console.log(
-      'Root.useEffect',
-      'isAuthenticated',
-      isAuthenticated,
-      location.pathname
-    )
-
     if (!isAuthenticated && location.pathname !== '/welcome') {
-      console.log('redirect to welcome ...')
-
       const path = location.pathname
       const hasPath = path !== undefined && path !== '/'
       const search = hasPath ? { next: path } : { next: undefined }
@@ -38,8 +27,6 @@ function Root() {
     }
 
     if (isAuthenticated && location.pathname === '/welcome') {
-      console.log('redirect to index ...')
-
       navigate({ to: '/', replace: true })
     }
   }, [isAuthenticated, location.pathname, location.search, navigate])

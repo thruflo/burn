@@ -65,7 +65,7 @@ type Props = {
   threadId: string
 }
 
-export default function RightSidebar({ threadId }: Props) {
+function RightSidebar({ threadId }: Props) {
   const { isRightSidebarOpen, setRightSidebarOpen } = useSidebar()
 
   const classes = useClasses()
@@ -93,10 +93,12 @@ export default function RightSidebar({ threadId }: Props) {
         <RightSidebarHeader />
         <ScrollArea className={classes.scrollArea}>
           <Flex direction="column">
-            <ComputerAccordion threadId={threadId} />
+            <ComputerAccordion key={threadId} threadId={threadId} />
           </Flex>
         </ScrollArea>
       </Box>
     </>
   )
 }
+
+export default RightSidebar
