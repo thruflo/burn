@@ -23,11 +23,12 @@ function matchesFilter(event: EventResult, text: string): boolean {
     return true
   }
 
-  if (type.toLowerCase().includes(text)) {
+  if (user_name ? user_name.toLowerCase().includes(text) : false) {
     return true
   }
 
-  if (user_name ? user_name.toLowerCase().includes(text) : false) {
+  const type_str = type === 'text' ? 'text message' : type.replace('_', ' ')
+  if (type_str.includes(text)) {
     return true
   }
 

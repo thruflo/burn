@@ -45,9 +45,16 @@ const headers = {
 }
 
 const parser = {
-  timestamp: (date: string) => ( // N.b.: https://github.com/TanStack/db/pull/201
-    new Date(date) as unknown as Value
-  )
+  timestamp: (dateStr: string) => {
+    // Timestamps sync in as naive datetime strings with no
+    // timezone info because they're all implicitly UTC.
+    const utcDateStr = dateStr.endsWith('Z') ? dateStr : `${dateStr}Z`
+    const date: Date = new Date(utcDateStr)
+
+    // Cast to `Value`` because we haven't fixed the typing yet
+    // https://github.com/TanStack/db/pull/201
+    return date as unknown as Value
+  }
 }
 
 function operationHandlers<Type extends object>() {
