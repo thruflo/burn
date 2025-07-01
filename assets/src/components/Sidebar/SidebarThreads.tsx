@@ -38,26 +38,27 @@ function SidebarThreads({ threadId }: Props) {
   const classes = useClasses()
   const navigate = useNavigate()
 
-  const { collection: baseQuery } = useLiveQuery(query =>
-    query
-      .from({ t: threadCollection })
-      .join({
-        type: `inner`,
-        from: { m: membershipCollection },
-        on: [`@t.id`, `=`, `@m.thread_id`],
-      })
-      .select('@t.id', '@t.name', '@t.inserted_at')
-      .where('@m.user_id', '=', currentUserId),
+  const { collection: baseQuery } = useLiveQuery(
+    (query) =>
+      query
+        .from({ t: threadCollection })
+        .join({
+          type: `inner`,
+          from: { m: membershipCollection },
+          on: [`@t.id`, `=`, `@m.thread_id`],
+        })
+        .select('@t.id', '@t.name', '@t.inserted_at')
+        .where('@m.user_id', '=', currentUserId),
     [currentUserId]
   )
-  const { data: nonSyncedThreads } = useLiveQuery(query =>
+  const { data: nonSyncedThreads } = useLiveQuery((query) =>
     query
       .from({ t: baseQuery })
       .where(({ t }) => t.inserted_at === undefined)
       .select('@t.id', '@t.name')
       .orderBy({ '@t.name': 'desc' })
   )
-  const { data: syncedThreads } = useLiveQuery(query =>
+  const { data: syncedThreads } = useLiveQuery((query) =>
     query
       .from({ t: baseQuery })
       .where(({ t }) => t.inserted_at !== undefined)
@@ -76,11 +77,11 @@ function SidebarThreads({ threadId }: Props) {
       threadCollection.insert({
         id: newThreadId,
         name: `Untitled thread ${numThreads + 1}`,
-        status: 'started'
+        status: 'started',
       })
-
       membershipCollection.insert({
         id: uuid4(),
+        role: 'owner',
         thread_id: newThreadId,
         user_id: userId,
       })

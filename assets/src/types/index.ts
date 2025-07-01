@@ -2,9 +2,11 @@ import type { Event, Fact, User } from '../db/schema'
 
 export type EventResult = Pick<
   Event,
-  'id' | 'assistant' | 'data' | 'role' | 'type' | 'inserted_at'
+  'id' | 'type' | 'data' | 'inserted_at'
 > & {
-  user_name: User['name'] | null
+  user_id: User['id']
+  user_name: User['name']
+  user_type: User['type']
 }
 
 export type FactResult = Pick<
@@ -20,6 +22,5 @@ export type FactResult = Pick<
   subject: User['name']
 }
 
-export type MessageResult = EventResult & {
-  user_id: User['id'] | null
-}
+export type EventTypeColor = 'green' | 'orange' | 'yellow'
+export type UserBadgeColor = 'blue' | 'purple'

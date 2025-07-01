@@ -4,6 +4,8 @@ import { Box, Flex, Text, Heading, Button, TextField } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
 import AboutSection from '../components/AboutSection'
 import ThemeToggle from '../components/ThemeToggle'
+import UserAvatar from '../components/UserAvatar'
+import { useGithubAvatar } from '../hooks/useGithubAvatar'
 import * as auth from '../db/auth'
 import * as api from '../api'
 
@@ -23,14 +25,15 @@ const useClasses = makeStyles({
 })
 
 function Welcome() {
-  const [username, setUsername] = useState(``)
-  const [error, setError] = useState(``)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
+  const classes = useClasses()
   const navigate = useNavigate()
   const search = useSearch({ from: '/welcome' })
 
-  const classes = useClasses()
+  const [username, setUsername] = useState(``)
+  const avatarUrl = useGithubAvatar(username)
+
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState(``)
 
   const signInUser = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,7 +47,7 @@ function Welcome() {
 
     setIsSubmitting(true)
 
-    const user_id = await api.signIn(trimmedUserName)
+    const user_id = await api.signIn(trimmedUserName, avatarUrl)
 
     setIsSubmitting(false)
 
@@ -76,17 +79,39 @@ function Welcome() {
           </Heading>
           <form onSubmit={signInUser}>
             <Flex direction="column" gap="4" width="100%">
-              <TextField.Root
-                type="text"
-                placeholder="Enter your username"
-                value={username}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setUsername(e.target.value)
-                  setError(``)
-                }}
-                disabled={isSubmitting}
-                size="3"
-              />
+              <Box>
+                <Text as="label" size="2" weight="medium">
+                  Enter your username
+                </Text>
+                <Box>
+                  <Text size="1" color="gray">
+                    Using your GitHub username will automatically pull in your
+                    avatar.
+                  </Text>
+                </Box>
+              </Box>
+              <Flex direction="row" gap="3" width="100%" align="center">
+                {avatarUrl !== undefined && (
+                  <UserAvatar
+                    username={username}
+                    imageUrl={avatarUrl}
+                    size="medium"
+                    showTooltip={false}
+                  />
+                )}
+                <TextField.Root
+                  type="text"
+                  placeholder="defunkt"
+                  value={username}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setUsername(e.target.value)
+                    setError(``)
+                  }}
+                  disabled={isSubmitting}
+                  size="3"
+                  style={{ flex: 1 }}
+                />
+              </Flex>
               {error && (
                 <Text color="red" size="2" align="center">
                   {error}

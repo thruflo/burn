@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { createContext, useContext, useState } from 'react'
 
 type SidebarContextType = {
@@ -16,7 +17,7 @@ type SidebarContextType = {
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined)
 
-export function SidebarProvider({ children }: { children: React.ReactNode }) {
+export function SidebarProvider({ children }: { children: ReactNode }) {
   const [isLeftSidebarOpen, setLeftSidebarOpen] = useState(false)
   const [isRightSidebarOpen, setRightSidebarOpen] = useState(false)
 

@@ -12,22 +12,6 @@ defmodule Burn.Accounts do
   ## Database getters
 
   @doc """
-  Gets a user by name.
-
-  ## Examples
-
-      iex> get_user_by_name("foo")
-      %User{}
-
-      iex> get_user_by_name("unknown")
-      nil
-
-  """
-  def get_user_by_name(name) when is_binary(name) do
-    Repo.get_by(User, name: name)
-  end
-
-  @doc """
   Gets a single user.
 
   ## Examples
@@ -57,6 +41,11 @@ defmodule Burn.Accounts do
   """
   def get_user!(id), do: Repo.get!(User, id)
 
+  def init_user(attrs) do
+    %User{}
+    |> User.changeset(attrs)
+  end
+
   @doc """
   Create a user.
 
@@ -70,9 +59,42 @@ defmodule Burn.Accounts do
 
   """
   def create_user(attrs) do
-    %User{}
-    |> User.changeset(attrs)
+    init_user(attrs)
     |> Repo.insert()
+  end
+
+  @doc """
+  Updates a user.
+
+  ## Examples
+
+      iex> update_user(user, %{field: new_value})
+      {:ok, %User{}}
+
+      iex> update_user(user, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_user(%User{} = user, attrs) do
+    user
+    |> User.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Gets a user by name.
+
+  ## Examples
+
+      iex> get_human_user_by_name("foo")
+      %User{}
+
+      iex> get_human_user_by_name("unknown")
+      nil
+
+  """
+  def get_human_user_by_name(name) when is_binary(name) do
+    Repo.get_by(User, name: name, type: :human)
   end
 
   @doc """
@@ -80,29 +102,46 @@ defmodule Burn.Accounts do
 
   ## Examples
 
-      iex> get_or_create_user("existing")
+      iex> get_or_create_human_user("existing")
       {:ok, %User{threads: [%Threads.Thread{}]}}
 
-      iex> get_or_create_user("not_existing")
+      iex> get_or_create_human_user("not_existing", nil)
       {:ok, %User{threads: [%Threads.Thread{}]}}
+
+      iex> get_or_create_human_user("existing", "https://github.com/thruflo.png?size=120")
+      {:ok, %User{avatar_url: "https://github.com/thruflo.png?size=120"}
+
+      iex> get_or_create_human_user("existing", "invalid")
+      {:error, %Ecto.Changeset{}}
 
   """
-  def get_or_create_user(name) when is_binary(name) do
+  def get_or_create_human_user(name, avatar_url \\ nil) when is_binary(name) do
     Repo.transact(fn ->
-      case get_user_by_name(name) do
-        %User{} = user ->
+      case get_human_user_by_name(name) do
+        %User{avatar_url: existing_avatar_url} = user
+        when is_nil(avatar_url) or avatar_url == existing_avatar_url ->
           {:ok, user}
 
+        %User{} = user ->
+          update_user(user, %{avatar_url: avatar_url})
+
         nil ->
-          bootstrap_user(name)
+          bootstrap_human_user(name, avatar_url)
       end
     end)
   end
 
-  def bootstrap_user(name) when is_binary(name) do
-    with {:ok, user} = create_user(%{name: name}),
+  def bootstrap_human_user(name, avatar_url \\ nil) when is_binary(name) do
+    attrs = %{
+      type: :human,
+      name: name,
+      avatar_url: avatar_url
+    }
+
+    with {:ok, user} = create_user(attrs),
          {:ok, thread} = Threads.create_new_thread(user),
-         {:ok, _membership} = Threads.create_membership(thread, user) do
+         {:ok, _membership} = Threads.create_membership(thread, user, :owner),
+         {:ok, _event} = Threads.create_user_created_thread_event(thread, user) do
       {:ok, user}
     end
   end

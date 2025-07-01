@@ -4,7 +4,6 @@ import { Box, ScrollArea } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
 
 import { eventCollection, userCollection } from '../db/collections'
-import type { Event, User } from '../db/schema'
 
 import ChatInput from './ChatArea/ChatInput'
 import ChatMessage from './ChatArea/ChatMessage'
@@ -25,14 +24,9 @@ const useStyles = makeStyles({
     width: '100%',
   },
   inputWrapper: {
-    flexShrink: 0
-  }
+    flexShrink: 0,
+  },
 })
-
-// XXX can filter events we don't want to display here.
-function whitelistMessageEvents(_event: Event, _user: User): boolean {
-  return true
-}
 
 type Props = {
   threadId: string
@@ -42,28 +36,30 @@ function ChatArea({ threadId }: Props) {
   const classes = useStyles()
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  const { data: events } = useLiveQuery(query => (
-    query
-      .from({ e: eventCollection })
-      .join({
-        type: 'left', // a left outer join because `user_id` can be null
-        from: { u: userCollection },
-        on: [`@u.id`, `=`, `@e.user_id`],
-      })
-      .where('@e.thread_id', '=', threadId)
-      .where(({ e, u }) => whitelistMessageEvents(e, u))
-      .select(
-        '@e.assistant',
-        '@e.data',
-        '@e.id',
-        '@e.inserted_at',
-        '@e.role',
-        '@e.type',
-        { user_id: '@u.id' },
-        { user_name: '@u.name' },
-      )
-      .orderBy({ '@e.inserted_at': 'asc' })
-  ), [threadId, whitelistMessageEvents])
+  const { data: events } = useLiveQuery(
+    (query) =>
+      query
+        .from({ e: eventCollection })
+        .join({
+          type: 'inner',
+          from: { u: userCollection },
+          on: [`@u.id`, `=`, `@e.user_id`],
+        })
+        .where('@e.thread_id', '=', threadId)
+        .select(
+          '@e.id',
+          '@e.type',
+          '@e.data',
+          '@e.inserted_at',
+          { user_id: '@u.id' },
+          { user_name: '@u.name' },
+          { user_type: '@u.type' }
+        )
+        .orderBy({ '@e.inserted_at': 'asc' }),
+    [threadId]
+  )
+
+  console.log('events.length', events.length)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -73,9 +69,9 @@ function ChatArea({ threadId }: Props) {
     <Box className={classes.container}>
       <ScrollArea className={classes.messagesContainer}>
         <Box className={classes.messagesInner}>
-          {events.map(event => (
+          {events.map((event) =>
             <ChatMessage key={event.id} event={event} />
-          ))}
+          )}
           <div ref={bottomRef} />
         </Box>
       </ScrollArea>

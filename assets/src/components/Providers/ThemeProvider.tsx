@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import {
   ThemeProvider as NextThemeProvider,
   useTheme as useNextTheme,
@@ -7,7 +8,7 @@ import { useEffect, useState } from 'react'
 import '@radix-ui/themes/styles.css'
 
 type ThemeProviderProps = {
-  children: React.ReactNode
+  children: ReactNode
   defaultTheme?: `light` | `dark` | `system`
 }
 

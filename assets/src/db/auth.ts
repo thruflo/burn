@@ -1,16 +1,16 @@
 import { authCollection } from './collections'
 import type { Auth } from './schema'
 
-type CurrentAuth = Auth | undefined;
+type CurrentAuth = Auth | undefined
 type AuthResult = {
   currentUserId: string | null
   isAuthenticated: boolean
-};
+}
 
 export async function signIn(user_id: string): Promise<void> {
   await authCollection.insert({
     key: 'current',
-    user_id: user_id
+    user_id: user_id,
   })
 }
 

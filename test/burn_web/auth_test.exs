@@ -23,7 +23,7 @@ defmodule BurnWeb.AuthTest do
     test "does not authenticate if user does not exist", %{conn: conn} do
       conn =
         conn
-        |> put_req_header("authorization", "Bearer unknown")
+        |> put_req_header("authorization", "Unknown")
         |> Auth.fetch_api_user([])
 
       refute conn.assigns.current_user

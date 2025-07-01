@@ -12,7 +12,9 @@ export const authSchema = z.object({
 
 export const userSchema = z.object({
   id: z.uuid(),
+  type: z.enum(['human', 'agent']),
   name: z.string(),
+  avatar_url: z.string().url(),
 
   ...timestamps,
 })
@@ -29,6 +31,7 @@ export const membershipSchema = z.object({
   id: z.uuid(),
   thread_id: z.uuid(),
   user_id: z.uuid(),
+  role: z.enum(['member', 'owner', 'producer', 'comedian']),
 
   ...timestamps,
 })
@@ -36,12 +39,9 @@ export const membershipSchema = z.object({
 export const eventSchema = z.object({
   id: z.uuid(),
   thread_id: z.uuid(),
-
-  role: z.enum(['assistant', 'user']),
-  assistant: z.string().optional(),
   user_id: z.uuid().optional(),
 
-  type: z.enum(['text', 'tool_use', 'tool_result']),
+  type: z.enum(['system', 'text', 'tool_use', 'tool_result']),
   data: z.record(z.string(), z.any()),
 
   ...timestamps,

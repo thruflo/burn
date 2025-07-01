@@ -4,22 +4,26 @@ import type { PendingMutation } from '@tanstack/db'
 import { authCollection } from './db/collections'
 import type { User } from './db/schema'
 
-type SignInResult = Pick<User, 'id' | 'name'>;
+type SignInResult = Pick<User, 'id' | 'name'>
 
 type IngestPayload = {
   mutations: Omit<PendingMutation, 'collection'>[]
-};
+}
 
 const authHeaders = () => {
   const auth = authCollection.get('current')
 
-  return auth !== undefined
-    ? { Authorization: `Bearer ${auth.user_id}` }
-    : {}
+  return auth !== undefined ? { Authorization: `Bearer ${auth.user_id}` } : {}
 }
 
-export async function signIn(username: string): Promise<string | undefined> {
-  const data = { username }
+export async function signIn(
+  username: string,
+  avatarUrl: string | undefined
+): Promise<string | undefined> {
+  const data = {
+    avatar_url: avatarUrl !== undefined ? avatarUrl : null,
+    username,
+  }
   const headers = authHeaders()
 
   try {

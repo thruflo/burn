@@ -30,8 +30,7 @@ if env!("PHX_SERVER", :string?, nil) do
   config :burn, BurnWeb.Endpoint, server: true
 end
 
-config :burn, Burn.Adapters.Anthropic,
-  api_key: env!("ANTHROPIC_KEY")
+config :burn, Burn.Adapters.Anthropic, api_key: env!("ANTHROPIC_KEY")
 
 if config_env() == :prod do
   database_url = env!("DATABASE_URL")

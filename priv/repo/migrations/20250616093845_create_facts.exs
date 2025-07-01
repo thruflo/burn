@@ -12,7 +12,10 @@ defmodule Burn.Repo.Migrations.CreateFacts do
       add :disputed, :boolean, default: false, null: false
 
       add :thread_id, references(:threads, on_delete: :delete_all, type: :binary_id), null: false
-      add :source_event_id, references(:events, on_delete: :delete_all, type: :binary_id), null: false
+
+      add :source_event_id, references(:events, on_delete: :delete_all, type: :binary_id),
+        null: false
+
       add :subject_id, references(:users, on_delete: :delete_all, type: :binary_id), null: false
 
       timestamps(type: :utc_datetime)

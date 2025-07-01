@@ -21,12 +21,14 @@ function SidebarFooter() {
   const { theme, setTheme } = useTheme()
   const { currentUserId, isAuthenticated } = useAuth()
 
-  const { data: users } = useLiveQuery(query => (
-    query
-      .from({ userCollection })
-      .select('@name')
-      .where('@id', '=', currentUserId)
-  ), [currentUserId])
+  const { data: users } = useLiveQuery(
+    (query) =>
+      query
+        .from({ userCollection })
+        .select('@name')
+        .where('@id', '=', currentUserId),
+    [currentUserId]
+  )
   const userName = users.length > 0 ? users[0].name : undefined
 
   const themeLabel =

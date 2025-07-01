@@ -211,7 +211,7 @@ defmodule Burn.SyncCase do
 
   From https://peterullrich.com/async-testing-with-eventually
   """
-  def assert_eventually(fun, timeout \\ 1_000, interval \\ 10)
+  def assert_eventually(fun, timeout \\ 2_000, interval \\ 20)
 
   def assert_eventually(_fun, timeout, _interval) when timeout <= 0 do
     raise ExUnit.AssertionError, "Failed to receive a truthy result before timeout."

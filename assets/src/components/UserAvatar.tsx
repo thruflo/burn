@@ -111,8 +111,6 @@ const UserAvatar = memo(
     const backgroundColor = stringToColor(username)
     const initials = getInitials(username)
 
-    const image = `https://i.pravatar.cc/150?u=${username}`
-
     const avatar = (
       <div
         className={mergeClasses(
@@ -121,11 +119,11 @@ const UserAvatar = memo(
           index > 0 && classes[`${size}.overlap`]
         )}
         style={{
-          backgroundColor: image ? 'transparent' : backgroundColor,
+          backgroundColor: imageUrl ? 'transparent' : backgroundColor,
         }}
       >
-        {image ? (
-          <img src={image} alt={username} className={classes.image} />
+        {imageUrl ? (
+          <img src={imageUrl} alt={username} className={classes.image} />
         ) : (
           initials
         )}

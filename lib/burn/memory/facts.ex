@@ -5,19 +5,21 @@ defmodule Burn.Memory.Fact do
   alias Burn.Accounts
   alias Burn.Threads
 
-  def fact_field_names, do: [
-    :predicate,
-    :object,
-    :category,
-    :confidence,
-    :disputed
-  ]
+  def fact_field_names,
+    do: [
+      :predicate,
+      :object,
+      :category,
+      :confidence,
+      :disputed
+    ]
 
-  def required_fact_field_names, do: [
-    :predicate,
-    :object,
-    :category
-  ]
+  def required_fact_field_names,
+    do: [
+      :predicate,
+      :object,
+      :category
+    ]
 
   # Used by `Burn.Tools.ExtractFacts`.
   defmodule Embedded do

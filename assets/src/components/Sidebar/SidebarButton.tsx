@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Button, Text } from '@radix-ui/themes'
 import { makeStyles, mergeClasses } from '@griffel/react'
 
@@ -27,7 +28,7 @@ const useClasses = makeStyles({
 
 type SidebarButtonProps = {
   label?: string
-  icon?: React.ReactNode
+  icon?: ReactNode
   isActive: boolean
   onClick: () => void
   className?: string

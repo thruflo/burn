@@ -13,7 +13,7 @@ import type {
   QueryCollectionUtils,
 } from '@tanstack/db-collections'
 
-type MutationData = Omit<PendingMutation, 'collection'>;
+type MutationData = Omit<PendingMutation, 'collection'>
 
 const ONE_HOUR = 60 * 60 * 1_000
 
@@ -25,10 +25,13 @@ function isQueryUtils(utils: UtilsRecord): utils is QueryCollectionUtils {
   return 'refetch' in utils && typeof (utils as any).refetch === 'function'
 }
 
-function patchRelationMetadata(result: MutationData, collection: Collection): MutationData {
+function patchRelationMetadata(
+  result: MutationData,
+  collection: Collection
+): MutationData {
   // Set the sync metadata from the collection id, because the default
   // implementation looks for a `table` param which we don't use.
-  const parts = collection.id.split(":")
+  const parts = collection.id.split(':')
   const relation = parts.length === 2 ? parts : ['public', parts[0]]
 
   result.syncMetadata = { relation }
@@ -85,9 +88,7 @@ export const ingestMutations: MutationFn = async ({ transaction }) => {
 
   await hasSyncedBack(transaction, txid)
 
-  await new Promise((resolve) => (
-    window.setTimeout(resolve, 500)
-  ))
+  await new Promise((resolve) => window.setTimeout(resolve, 500))
 
   return { txid }
 }

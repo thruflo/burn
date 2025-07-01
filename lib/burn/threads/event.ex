@@ -14,9 +14,26 @@ defmodule Burn.Threads.Event do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Burn.Accounts
-  alias Burn.Agents
-  alias Burn.Threads
+  alias Burn.{
+    Accounts,
+    Threads
+  }
+
+  defmodule SystemData do
+    use Ecto.Schema
+
+    @primary_key false
+    embedded_schema do
+      field :action, Ecto.Enum, values: [:created, :joined, :left, :closed]
+      field :target, Ecto.Enum, values: [:thread]
+    end
+
+    def changeset(text_data, attrs) do
+      text_data
+      |> cast(attrs, [:action, :target])
+      |> validate_required([:action, :target])
+    end
+  end
 
   defmodule TextData do
     use Ecto.Schema
@@ -70,52 +87,33 @@ defmodule Burn.Threads.Event do
     end
   end
 
-  @agent_names [
-    Agents.Sarah.agent_name(),
-    # ...
-  ]
-
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "events" do
-    field :role, Ecto.Enum, values: [:assistant, :user] # required
-    field :assistant, Ecto.Enum, values: @agent_names # optional, required if role is :assistant
-
-    field :type, Ecto.Enum, values: [:text, :tool_use, :tool_result] # required, :image, :document
-    field :data, :map # required, conditional validation
+    field :type, Ecto.Enum, values: [:system, :text, :tool_use, :tool_result]
+    field :data, :map
 
     belongs_to :thread, Threads.Thread
-    belongs_to :user, Accounts.User # optional, required if role is :user
+    belongs_to :user, Accounts.User
 
     timestamps(type: :utc_datetime)
   end
 
   @doc false
-  def changeset(event, attrs) do
-    event
-    |> cast(attrs, [:id, :assistant, :data, :role, :type, :thread_id, :user_id])
-    |> validate_required([:data, :role, :type])
-    |> assoc_constraint(:thread)
-    |> validate_role()
-    |> validate_type()
+  def changeset(event, attrs, user_type \\ nil)
+  def changeset(event, attrs, user_type) when user_type in [:insert, :update, :delete] do
+    changeset(event, attrs, nil)
   end
+  def changeset(event, attrs, user_type) do
+    IO.inspect {:event, :changeset, event, attrs, user_type}
 
-  defp validate_role(changeset) do
-    role = get_field(changeset, :role)
-
-    case role do
-      :assistant ->
-        changeset
-        |> validate_required(:assistant)
-
-      :user ->
-        changeset
-        |> assoc_constraint(:user)
-
-      _alt ->
-        changeset
-        |> add_error(:role, "unable to perform conditional validation")
-    end
+    event
+    |> cast(attrs, [:id, :data, :type, :thread_id, :user_id])
+    |> validate_required([:data, :type])
+    |> validate_type()
+    |> prepare_changes(&validate_user_type(&1, user_type))
+    |> assoc_constraint(:thread)
+    |> assoc_constraint(:user)
   end
 
   defp validate_type(changeset) do
@@ -123,6 +121,7 @@ defmodule Burn.Threads.Event do
 
     schema_module =
       case type do
+        :system -> SystemData
         :text -> TextData
         :tool_use -> ToolUseData
         :tool_result -> ToolResultData
@@ -137,6 +136,7 @@ defmodule Burn.Threads.Event do
     changeset
     |> add_error(:data, "unable to perform conditional validation")
   end
+
   defp validate_data(changeset, schema_module) do
     data = get_field(changeset, :data)
     schema = struct(schema_module)
@@ -155,4 +155,51 @@ defmodule Burn.Threads.Event do
         |> add_error(:data, "validation failed: #{error_message}")
     end
   end
+
+  defp validate_user_type(changeset, nil) do
+    IO.inspect {:validate_user_type_nil}
+
+    user_id = get_field(changeset, :user_id)
+
+    IO.inspect {:user_id, user_id}
+
+    case Accounts.get_user(user_id) do
+      %Accounts.User{type: user_type} ->
+        IO.inspect {:found_user}
+
+        validate_user_type(changeset, user_type)
+
+      nil ->
+        IO.inspect {:user_not_found}
+
+        add_error(changeset, :user_id, "user can't be loaded")
+    end
+  end
+
+  defp validate_user_type(changeset, user_type) when user_type in [:human, :agent] do
+    IO.inspect {:validate_user_type, user_type, changeset}
+
+    event_type = get_field(changeset, :type)
+
+    IO.inspect {:event_type, event_type}
+
+    case validate_types_match(user_type, event_type) do
+      :ok ->
+        IO.inspect {:ok}
+
+        changeset
+
+      {:error, :mismatch} ->
+        IO.inspect {:mismatch}
+
+        changeset
+        |> add_error(:type, "Can't be made by an: #{user_type}")
+    end
+  end
+
+  defp validate_types_match(:human, :text), do: :ok
+  defp validate_types_match(:agent, :tool_use), do: :ok
+  defp validate_types_match(:agent, :tool_result), do: :ok
+  defp validate_types_match(_user_type, :system), do: :ok
+  defp validate_types_match(_user_type, _event_type), do: {:error, :mismatch}
 end

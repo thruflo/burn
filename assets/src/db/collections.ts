@@ -1,5 +1,8 @@
 import { createCollection } from '@tanstack/db'
-import { electricCollectionOptions, localStorageCollectionOptions } from '@tanstack/db-collections'
+import {
+  electricCollectionOptions,
+  localStorageCollectionOptions,
+} from '@tanstack/db-collections'
 
 import { ingestMutations } from './mutations'
 import {
@@ -11,19 +14,16 @@ import {
   userSchema,
 } from './schema'
 
-import type { InsertMutationFn, UpdateMutationFn, DeleteMutationFn } from '@tanstack/db'
+import type {
+  InsertMutationFn,
+  UpdateMutationFn,
+  DeleteMutationFn,
+} from '@tanstack/db'
 import type { ElectricCollectionUtils } from '@tanstack/db-collections'
 import type { Value } from '@electric-sql/client'
-import type {
-  Auth,
-  Event,
-  Fact,
-  Membership,
-  Thread,
-  User
-} from './schema'
+import type { Auth, Event, Fact, Membership, Thread, User } from './schema'
 
-type CollectionKey = string | number;
+type CollectionKey = string | number
 
 export const authCollection = createCollection<Auth>(
   localStorageCollectionOptions({
@@ -54,7 +54,7 @@ const parser = {
     // Cast to `Value`` because we haven't fixed the typing yet
     // https://github.com/TanStack/db/pull/201
     return date as unknown as Value
-  }
+  },
 }
 
 function operationHandlers<Type extends object>() {

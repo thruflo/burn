@@ -1,9 +1,20 @@
-import { Box, Flex, Text, Badge } from '@radix-ui/themes'
+// import type { ReactNode } from 'react'
+import { Box } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
-//import { useAuth } from '../../db/auth'
-import { useRelativeTime } from '../../hooks/useRelativeTime'
-import type { MessageResult } from '../../types'
-import UserAvatar from '../UserAvatar'
+import { useAuth } from '../../db/auth'
+import type { EventResult } from '../../types'
+
+import SystemMessage from './SystemMessage'
+import TextMessage from './TextMessage'
+import ToolUseMessage from './ToolUseMessage'
+import ToolResultMessage from './ToolResultMessage'
+
+const messageComponents = {
+  system: SystemMessage,
+  text: TextMessage,
+  tool_use: ToolUseMessage,
+  tool_result: ToolResultMessage,
+}
 
 const useStyles = makeStyles({
   message: {
@@ -34,49 +45,30 @@ const useStyles = makeStyles({
     display: 'inline',
     verticalAlign: 'middle',
     paddingTop: '1.5px',
-    paddingBottom: '2px'
-  }
+    paddingBottom: '2px',
+  },
 })
 
 interface Props {
-  event: MessageResult
+  event: EventResult
 }
 
 function ChatMessage({ event }: Props) {
   const classes = useStyles()
-  const timeStr = useRelativeTime(event.inserted_at)
-  //const { currentUserId } = useAuth()
+  const { currentUserId } = useAuth()
 
-  const isUser = event.role === 'user'
-  //const isCurrentUser = isUser && currentUserId && event.user_id === currentUserId
-  const userName = (isUser ? event.user_name : event.assistant) as string
-  const userBadgeColor = isUser ? 'blue' : 'purple'
+  const userName = event.user_id === currentUserId ? 'you' : event.user_name
+  const userBadgeColor = event.user_type === 'human' ? 'blue' : 'purple'
 
-  // XXX todo more formatting
-  const messageContent = (
-    event.type === 'text'
-      ? event.data.text
-      : JSON.stringify(event.data)
-  ) as string
+  const MessageComponent = messageComponents[event.type]!
 
   return (
     <Box className={classes.message}>
-      <Box className={classes.avatar}>
-        <UserAvatar username={userName} imageUrl={undefined} size="medium" showTooltip={false} />
-      </Box>
-      <Box className={classes.content}>
-        <Flex align="center" gap="2" mb="1">
-          <Badge size="2" variant="soft" color={userBadgeColor} className={classes.userBadge}>
-            { userName }
-          </Badge>
-          <Text size="1" className={classes.timestamp}>
-            { timeStr }
-          </Text>
-        </Flex>
-        <Text size="2" className={classes.messageText}>
-          { messageContent }
-        </Text>
-      </Box>
+      <MessageComponent
+        event={event}
+        userName={userName}
+        userBadgeColor={userBadgeColor}
+      />
     </Box>
   )
 }

@@ -37,7 +37,9 @@ function MainThread({ threadId }: Props) {
       ) : (
         <>
           <Box>
-            <ThreadTopBar key={threadId} threadId={threadId}
+            <ThreadTopBar
+              key={threadId}
+              threadId={threadId}
               onEditClick={() => setIsEditing(true)}
             />
           </Box>

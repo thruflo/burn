@@ -64,8 +64,9 @@ function ThreadPage() {
         })
         .select('@t.id', '@t.name')
         .where('@t.id', '=', threadId)
-        .where('@m.user_id', '=', currentUserId
-  ), [threadId, currentUserId])
+        .where('@m.user_id', '=', currentUserId),
+    [threadId, currentUserId]
+  )
   const activeThread = threads.length === 1 ? threads[0] : undefined
 
   useEffect(() => {

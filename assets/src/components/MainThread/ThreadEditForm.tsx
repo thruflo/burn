@@ -60,10 +60,7 @@ function ThreadEditForm({ threadId }: Props) {
   const { currentUserId } = useAuth()
 
   const { data: threads } = useLiveQuery(
-    (query) =>
-      query
-        .from({ threadCollection })
-        .where('@id', '=', threadId),
+    (query) => query.from({ threadCollection }).where('@id', '=', threadId),
     [threadId]
   )
   const thread = threads[0]!

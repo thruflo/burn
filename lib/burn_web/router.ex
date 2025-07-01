@@ -41,11 +41,11 @@ defmodule BurnWeb.Router do
   scope "/sync" do
     pipe_through [:api, :auth]
 
-    sync "/users", Accounts.User
-    sync "/threads", Threads.Thread
-    sync "/memberships", Threads.Membership
-    sync "/events", Threads.Event
-    sync "/facts", Memory.Fact
+    sync("/users", Accounts.User)
+    sync("/threads", Threads.Thread)
+    sync("/memberships", Threads.Membership)
+    sync("/events", Threads.Event)
+    sync("/facts", Memory.Fact)
   end
 
   scope "/", BurnWeb do

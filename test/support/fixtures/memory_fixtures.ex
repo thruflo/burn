@@ -19,13 +19,14 @@ defmodule Burn.MemoryFixtures do
         %Accounts.User{} = subject,
         attrs \\ %{}
       ) do
-    attrs = Enum.into(attrs, %{
-      predicate: "works_as",
-      object: "software_developer",
-      category: "work",
-      confidence: "0.9",
-      disputed: false
-    })
+    attrs =
+      Enum.into(attrs, %{
+        predicate: "works_as",
+        object: "software_developer",
+        category: "work",
+        confidence: "0.9",
+        disputed: false
+      })
 
     {:ok, fact} = Memory.create_fact(thread, source_event, subject, attrs)
 

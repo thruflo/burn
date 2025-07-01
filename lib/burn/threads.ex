@@ -3,8 +3,8 @@ defmodule Burn.Threads do
   The Threads context.
   """
 
-  alias Ecto.Changeset
   import Ecto.Query, warn: false
+  alias Ecto.Changeset
 
   alias Burn.Accounts
   alias Burn.Repo
@@ -44,6 +44,11 @@ defmodule Burn.Threads do
   """
   def get_thread!(id), do: Repo.get!(Thread, id)
 
+  def init_thread(attrs \\ %{}) do
+    %Thread{}
+    |> Thread.changeset(attrs)
+  end
+
   @doc """
   Creates a thread.
 
@@ -57,19 +62,19 @@ defmodule Burn.Threads do
 
   """
   def create_thread(attrs \\ %{}) do
-    %Thread{}
-    |> Thread.changeset(attrs)
+    init_thread(attrs)
     |> Repo.insert()
   end
 
   def create_new_thread(%Accounts.User{id: user_id}) do
-    num_existing_threads = Repo.one(
-      from(
-        m in Membership,
+    num_existing_threads =
+      Repo.one(
+        from(
+          m in Membership,
           where: m.user_id == ^user_id,
           select: count(m.thread_id)
+        )
       )
-    )
 
     name =
       case num_existing_threads do
@@ -163,8 +168,9 @@ defmodule Burn.Threads do
     query =
       from(
         e in Event,
-        where: (e.thread_id == ^thread_id) and
-               (e.id == ^event_id)
+        where:
+          e.thread_id == ^thread_id and
+            e.id == ^event_id
       )
 
     Repo.exists?(query)
@@ -175,23 +181,53 @@ defmodule Burn.Threads do
 
   ## Examples
 
-      iex> create_event(%{field: value})
+      iex> create_event(thread, user, %{field: value})
       {:ok, %Event{}}
 
-      iex> create_event(%{field: bad_value})
+      iex> create_event(thread, user, %{field: bad_value})
       {:error, %Changeset{}}
 
   """
-  def create_event(%Thread{} = thread, attrs \\ %{}) do
+  def create_event(%Thread{} = thread, %Accounts.User{} = user, attrs \\ %{}) do
     thread
-    |> init_event(attrs)
+    |> init_event(user, attrs)
     |> insert_event()
   end
 
-  def init_event(%Thread{id: thread_id}, attrs \\ %{}) do
+  def init_event(
+        %Thread{id: thread_id},
+        %Accounts.User{id: user_id, type: user_type},
+        attrs \\ %{}
+      ) do
+    init_event(thread_id, user_id, user_type, attrs)
+  end
+
+  def init_event(thread_id, user_id, user_type, %{} = attrs)
+      when is_binary(thread_id) and is_binary(user_id) and user_type in [:human, :agent] do
     %Event{}
-    |> Changeset.cast(%{thread_id: thread_id}, [:thread_id])
-    |> Event.changeset(attrs)
+    |> Changeset.cast(%{thread_id: thread_id, user_id: user_id}, [:thread_id, :user_id])
+    |> Event.changeset(attrs, user_type)
+  end
+
+  def init_user_created_thread_event(thread_id, user_id, user_type)
+      when is_binary(thread_id) and is_binary(user_id) and user_type in [:human, :agent] do
+    attrs = %{
+      type: :system,
+      data: %{
+        action: :created,
+        target: :thread
+      }
+    }
+
+    init_event(thread_id, user_id, user_type, attrs)
+  end
+
+  def create_user_created_thread_event(
+        %Thread{id: thread_id},
+        %Accounts.User{id: user_id, type: user_type}
+      ) do
+    init_user_created_thread_event(thread_id, user_id, user_type)
+    |> insert_event()
   end
 
   def insert_event(%Changeset{} = changeset) do
@@ -285,8 +321,9 @@ defmodule Burn.Threads do
     query =
       from(
         m in Membership,
-        where: (m.thread_id == ^thread_id) and
-               (m.user_id == ^user_id)
+        where:
+          m.thread_id == ^thread_id and
+            m.user_id == ^user_id
       )
 
     Repo.exists?(query)
@@ -297,17 +334,19 @@ defmodule Burn.Threads do
 
   ## Examples
 
-      iex> create_membership(thread, user)
-      {:ok, %Membership{}}
+      iex> create_membership(thread, user, role)
+      {:ok, %Membership{role: ^role}}
 
-      iex> create_membership(thread, user)
+      iex> create_membership(thread, user, role)
       {:error, %Changeset{}}
 
   """
-  def create_membership(%Thread{id: thread_id}, %Accounts.User{id: user_id}) do
+  def create_membership(%Thread{id: thread_id}, %Accounts.User{id: user_id}, role)
+      when is_atom(role) do
     attrs = %{
       thread_id: thread_id,
-      user_id: user_id
+      user_id: user_id,
+      role: role
     }
 
     %Membership{}

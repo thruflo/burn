@@ -4,6 +4,7 @@ defmodule Burn.Agents do
   """
 
   alias Burn.{
+    Accounts,
     Context,
     Repo,
     Threads,
@@ -20,13 +21,14 @@ defmodule Burn.Agents do
   @default_adapter Burn.Adapters.Anthropic
   @max_retries 3
 
-  def shared_system_rules, do: """
-  IDs are always expressed as binary ids in UUID v4 format.
+  def shared_system_rules,
+    do: """
+    IDs are always expressed as binary ids in UUID v4 format.
 
-  If you're writing the ID of a resource like a user or an event, that user or
-  event MUST be in the current thread. Never invent or generate an ID that is
-  not in the context data.
-  """
+    If you're writing the ID of a resource like a user or an event, that user or
+    event MUST be in the current thread. Never invent or generate an ID that is
+    not in the context data.
+    """
 
   @doc """
   Prompt the agent to determine the next tool use.
@@ -38,6 +40,7 @@ defmodule Burn.Agents do
           | {:error, atom(), any()}
   def instruct(thread, messages, system, tools, model, opts \\ [])
   def instruct(_thread, [], _system, _tools, _model, _opts), do: {:ok, nil}
+
   def instruct(thread, messages, system, tools, model, opts) do
     adapter = Keyword.get(opts, :adapter, @default_adapter)
     max_retries = Keyword.get(opts, :max_retries, @max_retries)
@@ -72,16 +75,22 @@ defmodule Burn.Agents do
   @doc """
   Perform the agent's chosen tool use.
   """
-  @spec perform(Threads.Thread.t(), ToolCall.t() | nil, atom()) :: {:ok, map()} | Multi.failure()
-  def perform(_thread, nil, _agent_name), do: {:ok, %{}}
-  def perform(thread, %{tool_module: tool_module} = tool_call, agent_name) do
+  @spec perform(Threads.Thread.t(), Accounts.User.t(), ToolCall.t() | nil) ::
+          {:ok, map()} | Multi.failure()
+  def perform(_thread, _agent, nil), do: {:ok, %{}}
+
+  def perform(
+        %Threads.Thread{} = thread,
+        %Accounts.User{type: :agent} = agent,
+        %{tool_module: tool_module} = tool_call
+      ) do
+    attrs = %{
+      type: :tool_use,
+      data: ToolCall.to_event_data(tool_call)
+    }
+
     Multi.new()
-    |> Multi.insert(:event, Threads.init_event(thread, %{
-        role: :assistant,
-        assistant: agent_name,
-        type: :tool_use,
-        data: ToolCall.to_event_data(tool_call)
-    }))
+    |> Multi.insert(:event, Threads.init_event(thread, agent, attrs))
     |> tool_module.perform(tool_call)
     |> Repo.transaction()
   end

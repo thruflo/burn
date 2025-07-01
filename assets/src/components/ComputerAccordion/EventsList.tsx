@@ -17,17 +17,19 @@ const useStyles = makeStyles({
 })
 
 function matchesFilter(event: EventResult, text: string): boolean {
-  const { assistant, data, type, user_name } = event
+  const { data, type, user_name } = event
 
-  if (assistant ? assistant.toLowerCase().includes(text) : false) {
+  if (user_name.toLowerCase().includes(text)) {
     return true
   }
 
-  if (user_name ? user_name.toLowerCase().includes(text) : false) {
-    return true
-  }
+  const type_str =
+    type === 'system'
+      ? 'system action'
+      : type === 'text'
+        ? 'text message'
+        : type.replace('_', ' ')
 
-  const type_str = type === 'text' ? 'text message' : type.replace('_', ' ')
   if (type_str.includes(text)) {
     return true
   }
@@ -44,28 +46,27 @@ function EventsList({ threadId, filter }: Props) {
   const classes = useStyles()
   const filterText = filter.trim().toLowerCase()
 
-  // First filter the events by threadId,
-  // joining to users to get the user name.
-
-  // XXX n.b.: can refactor to skip materialization when that lands
+  // First filter the events by threadId, joining to
+  // users to get the user name.
+  // XXX N.b.: refactor to skip materialization.
   const { collection: eventResults } = useLiveQuery(
     (query) =>
       query
         .from({ e: eventCollection })
         .join({
-          type: 'left', // a left outer join because `user_id` can be null
+          type: 'inner',
           from: { u: userCollection },
           on: [`@u.id`, `=`, `@e.user_id`],
         })
         .where('@e.thread_id', '=', threadId)
         .select(
-          '@e.assistant',
           '@e.data',
           '@e.id',
           '@e.inserted_at',
-          '@e.role',
           '@e.type',
-          { user_name: '@u.name' }
+          { user_id: '@u.id' },
+          { user_name: '@u.name' },
+          { user_type: '@u.type' }
         ),
     [threadId]
   )

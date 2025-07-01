@@ -2,7 +2,7 @@ defmodule Burn.Agents.Sarah do
   use GenServer
 
   alias Burn.{
-    # Accounts,
+    Accounts,
     Agents,
     Consumer,
     Context,
@@ -80,8 +80,6 @@ defmodule Burn.Agents.Sarah do
     Tools.ExtractFacts
   ]
 
-  def agent_name, do: :sarah
-
   defmodule State do
     defstruct [
       # Internal
@@ -90,6 +88,7 @@ defmodule Burn.Agents.Sarah do
       :mode,
 
       # Data
+      :agent,
       :events,
       :thread,
       :users
@@ -98,9 +97,9 @@ defmodule Burn.Agents.Sarah do
 
   # Client
 
-  @spec start_link(Threads.Thread.t()) :: GenServer.on_start()
-  def start_link(%Threads.Thread{} = thread, mode \\ :auto) do
-    GenServer.start_link(__MODULE__, {thread, mode}, name: process_name(thread))
+  @spec start_link(Threads.Thread.t(), Accounts.User.t()) :: GenServer.on_start()
+  def start_link(%Threads.Thread{} = thread, %Accounts.User{type: :agent} = agent, mode \\ :auto) do
+    GenServer.start_link(__MODULE__, {thread, agent, mode}, name: process_name(thread))
   end
 
   @doc """
@@ -135,7 +134,7 @@ defmodule Burn.Agents.Sarah do
   # Server
 
   @impl true
-  def init({%Threads.Thread{} = thread, mode}) do
+  def init({%Threads.Thread{} = thread, %Accounts.User{type: :agent} = agent, mode}) do
     {:ok, supervisor} = Task.Supervisor.start_link()
     pid = self()
 
@@ -155,6 +154,7 @@ defmodule Burn.Agents.Sarah do
       tasks: tasks,
       mode: mode,
       thread: thread,
+      agent: agent,
       users: [],
       events: []
     }
@@ -226,11 +226,11 @@ defmodule Burn.Agents.Sarah do
     {:reply, state, state}
   end
 
-  defp handle_instruct(%{events: events, thread: thread} = state) do
+  defp handle_instruct(%{events: events, thread: thread, agent: agent} = state) do
     messages = Context.to_messages(events)
 
     {:ok, tool_call} = Agents.instruct(thread, messages, @system_prompt, @tools, @default_model)
-    {:ok, events} = Agents.perform(thread, tool_call, agent_name())
+    {:ok, events} = Agents.perform(thread, agent, tool_call)
 
     {:ok, {tool_call, events}, state}
   end

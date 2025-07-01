@@ -3,12 +3,17 @@ defmodule Burn.Context do
   Optimise what goes in the LLM context window.
   """
   require Logger
-  alias Burn.Threads
+
+  alias Burn.{
+    Repo,
+    Threads
+  }
 
   @type message :: %{name: String.t(), data: map()}
 
   @spec to_messages([Threads.Event.t()]) :: [Burn.Message.t()]
   def to_messages([]), do: []
+
   def to_messages([%Threads.Event{} | _] = events) do
     summary = """
     Here's everything that happened so far:
@@ -32,7 +37,28 @@ defmodule Burn.Context do
   end
 
   @spec format_event(Threads.Event.t()) :: binary()
-  def format_event(%Threads.Event{type: :text, role: :user, data: data, id: id} = event) do
+  def format_event(%Threads.Event{type: :system, data: data} = event) do
+    %{user: %{id: user_id, name: user_name, type: user_type}} = Repo.preload(event, :user)
+
+    user_type_label =
+      case user_type do
+        :human -> "user"
+        :agent -> "agent"
+      end
+
+    content =
+      data
+      |> Map.put(user_type_label, %{"id" => user_id, "name" => user_name})
+
+    """
+    <system_message>
+    #{to_yaml(content)}
+    </system_message>
+    """
+  end
+
+  @spec format_event(Threads.Event.t()) :: binary()
+  def format_event(%Threads.Event{type: :text, data: data, id: id} = event) do
     content =
       data
       |> Map.put("id", id)
@@ -44,6 +70,7 @@ defmodule Burn.Context do
     </user_message>
     """
   end
+
   def format_event(%Threads.Event{type: :tool_use, data: %{"name" => name} = data} = event) do
     content = Map.put(data, "from", author(event))
 
@@ -53,6 +80,7 @@ defmodule Burn.Context do
     </#{name}>
     """
   end
+
   def format_event(%Threads.Event{type: :tool_result, data: data}) do
     {tool_name, content} = Map.pop(data, "tool_name")
 
@@ -63,8 +91,7 @@ defmodule Burn.Context do
     """
   end
 
-  defp author(%Threads.Event{role: :user, user_id: user_id}), do: user_id
-  defp author(%Threads.Event{role: :assistant, assistant: assistant}), do: assistant
+  defp author(%Threads.Event{user_id: user_id}), do: user_id
 
   defp to_yaml(data) when is_map(data) do
     data

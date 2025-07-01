@@ -28,8 +28,10 @@ config :burn, BurnWeb.Endpoint,
     pnpm: [
       "vite",
       "build",
-      "--config", "vite.config.js",
-      "--mode", "development",
+      "--config",
+      "vite.config.js",
+      "--mode",
+      "development",
       "--watch",
       cd: Path.expand("../assets", __DIR__)
     ]

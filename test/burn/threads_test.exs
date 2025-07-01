@@ -62,65 +62,64 @@ defmodule Burn.ThreadsTest do
   describe "events" do
     alias Burn.Threads.Event
 
+    import Burn.AccountsFixtures
     import Burn.ThreadsFixtures
 
-    @invalid_attrs %{role: :banana, data: nil}
+    @invalid_attrs %{data: nil}
 
     setup do
-      %{thread: thread_fixture()}
+      %{thread: thread_fixture(), user: user_fixture()}
     end
 
-    test "list_events/0 returns all events", %{thread: thread} do
-      event = event_fixture(thread)
+    test "list_events/0 returns all events", %{thread: thread, user: user} do
+      event = event_fixture(thread, user)
       assert Threads.list_events() == [event]
     end
 
-    test "get_event!/1 returns the event with given id", %{thread: thread} do
-      event = event_fixture(thread)
+    test "get_event!/1 returns the event with given id", %{thread: thread, user: user} do
+      event = event_fixture(thread, user)
       assert Threads.get_event!(event.id) == event
     end
 
-    test "create_event/1 with valid data creates a event", %{thread: thread} do
+    test "create_event/1 with valid data creates a event", %{thread: thread, user: user} do
       valid_attrs = %{
-        role: :assistant,
-        assistant: :sarah,
         type: :text,
         data: %{
           text: "Lorem ipsum"
         }
       }
 
-      assert {:ok, %Event{} = event} = Threads.create_event(thread, valid_attrs)
+      assert {:ok, %Event{} = event} = Threads.create_event(thread, user, valid_attrs)
       assert :text = event.type
       assert %{text: "Lorem ipsum"} = event.data
     end
 
-    test "create_event/1 with invalid data returns error changeset", %{thread: thread} do
-      assert {:error, %Ecto.Changeset{}} = Threads.create_event(thread, @invalid_attrs)
+    test "create_event/1 with invalid data returns error changeset", %{thread: thread, user: user} do
+      assert {:error, %Ecto.Changeset{}} = Threads.create_event(thread, user, @invalid_attrs)
     end
 
-    test "update_event/2 with valid data updates the event", %{thread: thread} do
-      event = event_fixture(thread)
+    test "update_event/2 with valid data updates the event", %{thread: thread, user: user} do
+      event = event_fixture(thread, user)
       update_attrs = %{data: %{"text" => "Lala"}}
 
       assert {:ok, %Event{} = event} = Threads.update_event(event, update_attrs)
       assert event.data == %{"text" => "Lala"}
     end
 
-    test "update_event/2 with invalid data returns error changeset", %{thread: thread} do
-      event = event_fixture(thread)
+    test "update_event/2 with invalid data returns error changeset", %{thread: thread, user: user} do
+      event = event_fixture(thread, user)
       assert {:error, %Ecto.Changeset{}} = Threads.update_event(event, @invalid_attrs)
       assert event == Threads.get_event!(event.id)
     end
 
-    test "delete_event/1 deletes the event", %{thread: thread} do
-      event = event_fixture(thread)
+    test "delete_event/1 deletes the event", %{thread: thread, user: user} do
+      event = event_fixture(thread, user)
       assert {:ok, %Event{}} = Threads.delete_event(event)
       assert_raise Ecto.NoResultsError, fn -> Threads.get_event!(event.id) end
     end
 
-    test "change_event/1 returns a event changeset", %{thread: thread} do
-      event = event_fixture(thread)
+    test "change_event/1 returns a event changeset", %{thread: thread, user: user} do
+      event = event_fixture(thread, user)
       assert %Ecto.Changeset{} = Threads.change_event(event)
     end
   end
@@ -151,7 +150,7 @@ defmodule Burn.ThreadsTest do
     end
 
     test "create_membership/1 with valid data creates a membership", %{thread: thread, user: user} do
-      assert {:ok, %Membership{}} = Threads.create_membership(thread, user)
+      assert {:ok, %Membership{}} = Threads.create_membership(thread, user, :owner)
     end
 
     test "update_membership/2 with valid data updates the membership", %{

@@ -33,6 +33,7 @@ function JoinPage() {
         id: uuid4(),
         thread_id: threadId,
         user_id: userId,
+        role: 'member',
       })
 
       navigate({ to: `/threads/${threadId}` })

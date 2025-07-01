@@ -13,13 +13,13 @@ defmodule Burn.MemoryTest do
     setup do
       user = user_fixture()
       thread = thread_fixture()
-      event = event_fixture(thread, %{
-        role: :user,
-        user_id: user.id,
-        data: %{
-          "text" => "Some information about the user"
-        }
-      })
+
+      event =
+        event_fixture(thread, user, %{
+          data: %{
+            "text" => "Some information about the user"
+          }
+        })
 
       %{thread: thread, source_event: event, subject: user}
     end
@@ -46,18 +46,32 @@ defmodule Burn.MemoryTest do
       disputed: nil
     }
 
-    test "list_facts/0 returns all facts", %{thread: thread, source_event: source_event, subject: subject} do
+    test "list_facts/0 returns all facts", %{
+      thread: thread,
+      source_event: source_event,
+      subject: subject
+    } do
       fact = fact_fixture(thread, source_event, subject)
       assert Memory.list_facts() == [fact]
     end
 
-    test "get_fact!/1 returns the fact with given id", %{thread: thread, source_event: source_event, subject: subject} do
+    test "get_fact!/1 returns the fact with given id", %{
+      thread: thread,
+      source_event: source_event,
+      subject: subject
+    } do
       fact = fact_fixture(thread, source_event, subject)
       assert Memory.get_fact!(fact.id) == fact
     end
 
-    test "create_fact/1 with valid data creates a fact", %{thread: thread, source_event: source_event, subject: subject} do
-      assert {:ok, %Fact{} = fact} = Memory.create_fact(thread, source_event, subject, @valid_attrs)
+    test "create_fact/1 with valid data creates a fact", %{
+      thread: thread,
+      source_event: source_event,
+      subject: subject
+    } do
+      assert {:ok, %Fact{} = fact} =
+               Memory.create_fact(thread, source_event, subject, @valid_attrs)
+
       assert fact.category == "some category"
       assert fact.object == "some object"
       assert fact.predicate == "some predicate"
@@ -65,11 +79,20 @@ defmodule Burn.MemoryTest do
       assert fact.disputed == false
     end
 
-    test "create_fact/1 with invalid data returns error changeset", %{thread: thread, source_event: source_event, subject: subject} do
-      assert {:error, %Ecto.Changeset{}} = Memory.create_fact(thread, source_event, subject, @invalid_attrs)
+    test "create_fact/1 with invalid data returns error changeset", %{
+      thread: thread,
+      source_event: source_event,
+      subject: subject
+    } do
+      assert {:error, %Ecto.Changeset{}} =
+               Memory.create_fact(thread, source_event, subject, @invalid_attrs)
     end
 
-    test "update_fact/2 with valid data updates the fact", %{thread: thread, source_event: source_event, subject: subject} do
+    test "update_fact/2 with valid data updates the fact", %{
+      thread: thread,
+      source_event: source_event,
+      subject: subject
+    } do
       fact = fact_fixture(thread, source_event, subject)
 
       assert {:ok, %Fact{} = fact} = Memory.update_fact(fact, @valid_update_attrs)
@@ -80,14 +103,22 @@ defmodule Burn.MemoryTest do
       assert fact.disputed == true
     end
 
-    test "update_fact/2 with invalid data returns error changeset", %{thread: thread, source_event: source_event, subject: subject} do
+    test "update_fact/2 with invalid data returns error changeset", %{
+      thread: thread,
+      source_event: source_event,
+      subject: subject
+    } do
       fact = fact_fixture(thread, source_event, subject)
 
       assert {:error, %Ecto.Changeset{}} = Memory.update_fact(fact, @invalid_attrs)
       assert fact == Memory.get_fact!(fact.id)
     end
 
-    test "update_fact/2 validates confidence must be between 0 and 1", %{thread: thread, source_event: source_event, subject: subject} do
+    test "update_fact/2 validates confidence must be between 0 and 1", %{
+      thread: thread,
+      source_event: source_event,
+      subject: subject
+    } do
       fact = fact_fixture(thread, source_event, subject)
 
       attrs = Map.put(@valid_attrs, :confidence, Decimal.new("1.1"))
@@ -95,25 +126,35 @@ defmodule Burn.MemoryTest do
       assert {:error, %Ecto.Changeset{errors: errors}} = Memory.update_fact(fact, attrs)
 
       max_value = Decimal.new("1.0")
+
       assert [
-        confidence: {
-          "must be less than or equal to %{number}", [
-            validation: :number,
-            kind: :less_than_or_equal_to,
-            number: ^max_value
-          ]
-        }
-      ] = errors
+               confidence: {
+                 "must be less than or equal to %{number}",
+                 [
+                   validation: :number,
+                   kind: :less_than_or_equal_to,
+                   number: ^max_value
+                 ]
+               }
+             ] = errors
     end
 
-    test "delete_fact/1 deletes the fact", %{thread: thread, source_event: source_event, subject: subject} do
+    test "delete_fact/1 deletes the fact", %{
+      thread: thread,
+      source_event: source_event,
+      subject: subject
+    } do
       fact = fact_fixture(thread, source_event, subject)
 
       assert {:ok, %Fact{}} = Memory.delete_fact(fact)
       assert_raise Ecto.NoResultsError, fn -> Memory.get_fact!(fact.id) end
     end
 
-    test "change_fact/1 returns a fact changeset", %{thread: thread, source_event: source_event, subject: subject} do
+    test "change_fact/1 returns a fact changeset", %{
+      thread: thread,
+      source_event: source_event,
+      subject: subject
+    } do
       fact = fact_fixture(thread, source_event, subject)
 
       assert %Ecto.Changeset{} = Memory.change_fact(fact)

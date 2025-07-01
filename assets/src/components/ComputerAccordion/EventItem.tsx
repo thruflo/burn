@@ -3,7 +3,7 @@ import { makeStyles } from '@griffel/react'
 import { User as UserIcon, Bot } from 'lucide-react'
 import { JsonView, darkStyles } from 'react-json-view-lite'
 
-import type { EventResult } from '../../types'
+import type { EventResult, EventTypeColor, UserBadgeColor } from '../../types'
 
 const useStyles = makeStyles({
   eventItem: {
@@ -79,12 +79,12 @@ const useStyles = makeStyles({
     wordBreak: 'break-word',
     display: 'inline',
     color: 'var(--gray-12)',
-  }
+  },
 })
 
 const customDarkStyles = {
   ...darkStyles,
-  container: `inline-json-view`, //${classes.jsonViewContainer}
+  container: `inline-json-view`,
   punctuation: 'json-punctuation',
   label: 'json-label',
   clickableLabel: 'json-clickable-label',
@@ -96,6 +96,13 @@ const customDarkStyles = {
   undefinedValue: 'json-undefined-value',
 }
 
+const typeColors = {
+  system: 'yellow',
+  text: 'green',
+  tool_use: 'orange',
+  tool_result: 'orange'
+}
+
 type Props = {
   event: EventResult
 }
@@ -105,17 +112,20 @@ function EventItem({ event }: Props) {
 
   console.log('EventItem', event)
 
-  const toolTypes = ['tool_use', 'tool_result']
-  const typeColor = toolTypes.includes(event.type) ? 'orange' : 'green'
-  const typeLabel = event.type === 'text' ? 'message' : event.type
+  const typeColor = typeColors[event.type] as EventTypeColor
+  const typeLabel =
+    event.type === 'system'
+      ? 'action'
+      : event.type === 'text'
+        ? 'message'
+        : event.type
 
-  const attrColor = event.role === 'assistant' ? 'purple' : 'blue'
+  const isHuman = event.user_type === 'human'
+  const IconComponent = isHuman ? UserIcon : Bot
+
+  const attrColor: UserBadgeColor = isHuman ? 'blue' : 'purple'
   const attrLabel = event.type === 'text' ? 'from' : 'by'
-  const attrName = (
-    event.role === 'user' ? event.user_name : event.assistant
-  ) as string
-
-  const IconComponent = event.role === 'user' ? UserIcon : Bot
+  const attrName = event.user_name
 
   console.log('typeLabel', typeLabel)
   console.log('attrName', attrName)

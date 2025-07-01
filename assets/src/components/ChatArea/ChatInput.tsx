@@ -27,8 +27,8 @@ const useStyles = makeStyles({
     zIndex: 1,
   },
   sendButton: {
-    color: '#fff'
-  }
+    color: '#fff',
+  },
 })
 
 type Props = {
@@ -39,7 +39,7 @@ function ChatInput({ threadId }: Props) {
   const classes = useStyles()
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const { currentUserId } = useAuth()
-  const [ message, setMessage ] = useState('')
+  const [message, setMessage] = useState('')
 
   const focus = () => {
     if (inputRef.current) {
@@ -76,11 +76,10 @@ function ChatInput({ threadId }: Props) {
       id: uuid4(),
       thread_id: threadId,
       user_id: currentUserId!,
-      role: 'user',
       type: 'text',
       data: {
-        text: trimmedMessage as string
-      }
+        text: trimmedMessage as string,
+      },
     })
 
     setMessage('')
@@ -118,7 +117,12 @@ function ChatInput({ threadId }: Props) {
             className={classes.textarea}
             onKeyDown={handleKeyDown}
           />
-          <Flex direction="row" gap="2" align="center" className={classes.sendWrapper}>
+          <Flex
+            direction="row"
+            gap="2"
+            align="center"
+            className={classes.sendWrapper}
+          >
             <IconButton
               type="submit"
               size="2"

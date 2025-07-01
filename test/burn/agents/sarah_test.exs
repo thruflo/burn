@@ -19,12 +19,22 @@ defmodule Burn.Agents.SarahTest do
 
     setup do
       thread = thread_fixture()
+
       user = user_fixture()
-      membership = membership_fixture(thread, user)
+      membership = membership_fixture(thread, user, :owner)
 
-      {:ok, _pid} = Sarah.start_link(thread, :manual)
+      agent = agent_fixture()
+      agent_membership = membership_fixture(thread, agent, :producer)
 
-      %{thread: thread, user: user, membership: membership}
+      {:ok, _pid} = Sarah.start_link(thread, agent, :manual)
+
+      %{
+        agent: agent,
+        agent_membership: agent_membership,
+        membership: membership,
+        thread: thread,
+        user: user
+      }
     end
 
     test "initializes state", %{thread: %{id: thread_id} = thread} do
@@ -42,10 +52,10 @@ defmodule Burn.Agents.SarahTest do
       end)
     end
 
-    test "subscribes to events", %{thread: thread} do
+    test "subscribes to events", %{thread: thread, user: user} do
       assert %State{events: []} = Sarah.get_state(thread)
 
-      %{id: event_id} = event_fixture(thread)
+      %{id: event_id} = event_fixture(thread, user)
 
       assert_eventually(fn ->
         assert %State{events: [%{id: ^event_id}]} = Sarah.get_state(thread)
@@ -54,7 +64,7 @@ defmodule Burn.Agents.SarahTest do
 
     test "subscribes to memberships", %{thread: thread, user: %{id: user_id}} do
       assert_eventually(fn ->
-        assert %State{users: [%{id: ^user_id}]} = Sarah.get_state(thread)
+        assert %State{users: [%{id: ^user_id} | _rest]} = Sarah.get_state(thread)
       end)
     end
 
@@ -62,8 +72,12 @@ defmodule Burn.Agents.SarahTest do
       {nil, %{}} = Sarah.instruct(thread)
     end
 
-    test "asks the user for information", %{thread: thread, user: %{id: user_id} = user} do
-      %Threads.Event{id: event_id} = user_joined_event_fixture(thread, user)
+    test "asks the user for information", %{
+      thread: thread,
+      user: %{id: user_id} = user,
+      agent: %{id: agent_id}
+    } do
+      %Threads.Event{id: event_id} = user_created_event_fixture(thread, user)
 
       assert_eventually(fn ->
         assert %State{events: [%{id: ^event_id}]} = Sarah.get_state(thread)
@@ -75,22 +89,25 @@ defmodule Burn.Agents.SarahTest do
         %State{events: events} = Sarah.get_state(thread)
 
         assert %{
-          role: :assistant,
-          assistant: :sarah,
-          type: :tool_use,
-          data: %{
-            "id" => ^tool_use_id
-          }
-        } = Enum.at(events, -1)
+                 type: :tool_use,
+                 data: %{
+                   "id" => ^tool_use_id
+                 },
+                 user_id: ^agent_id
+               } = Enum.at(events, -1)
       end)
     end
 
-    test "extracts facts to be stored", %{thread: thread, user: %{id: user_id} = user} do
+    test "extracts facts to be stored", %{
+      thread: thread,
+      user: %{id: user_id} = user,
+      agent: agent
+    } do
       %Threads.Event{} =
-        user_joined_event_fixture(thread, user)
+        user_created_event_fixture(thread, user)
 
       %Threads.Event{} =
-        ask_user_about_themselves_fixture(thread, user)
+        ask_user_about_themselves_fixture(thread, agent, user)
 
       %Threads.Event{id: event_id} =
         user_provides_information_fixture(thread, user)
@@ -108,19 +125,19 @@ defmodule Burn.Agents.SarahTest do
       end)
 
       assert [
-        %Burn.Memory.Fact{
-          source_event_id: ^event_id,
-          subject_id: ^user_id,
-          object: "horse riding",
-          disputed: false
-        },
-        %Burn.Memory.Fact{
-          source_event_id: ^event_id,
-          subject_id: ^user_id,
-          object: "biscuits",
-          disputed: false
-        }
-      ] = Memory.list_facts()
+               %Burn.Memory.Fact{
+                 source_event_id: ^event_id,
+                 subject_id: ^user_id,
+                 object: "horse riding",
+                 disputed: false
+               },
+               %Burn.Memory.Fact{
+                 source_event_id: ^event_id,
+                 subject_id: ^user_id,
+                 object: "biscuits",
+                 disputed: false
+               }
+             ] = Memory.list_facts()
     end
   end
 end

@@ -8,7 +8,10 @@ defmodule Burn.Accounts.User do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "users" do
+    field :type, Ecto.Enum, values: [:human, :agent]
+
     field :name, :string
+    field :avatar_url, :string
 
     many_to_many :threads, Threads.Thread, join_through: Threads.Membership
 
@@ -17,10 +20,49 @@ defmodule Burn.Accounts.User do
 
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:name])
-    |> validate_required([:name])
+    |> cast(attrs, [:name, :type, :avatar_url])
+    |> validate_required([:name, :type])
+    |> update_change(:name, &String.downcase/1)
     |> validate_length(:name, min: 2, max: 16)
     |> validate_format(:name, ~r/^[\w-]+$/)
     |> unique_constraint(:name)
+    |> validate_url(:avatar_url)
+  end
+
+  defp validate_url(changeset, field) do
+    validate_change(changeset, field, fn field, value ->
+      with true <- is_https_url(value),
+           true <- is_image_url(value) do
+        :ok
+      else
+        {:error, message} -> [{field, message}]
+      end
+    end)
+  end
+
+  defp is_https_url(url) do
+    uri = URI.parse(url)
+
+    if uri.scheme == "https" and uri.host do
+      true
+    else
+      {:error, "must be a valid HTTPS URL"}
+    end
+  end
+
+  defp is_image_url(url) do
+    with {:ok, %Req.Response{status: 200} = response} <- Req.get(url, receive_timeout: 5_000),
+         ["image/" <> _rest] <- Req.Response.get_header(response, "content-type") do
+      true
+    else
+      {:ok, %Req.Response{status: status}} ->
+        {:error, "URL returned status #{status}, expected 200"}
+
+      {:error, exception} ->
+        {:error, "URL request failed: #{Exception.message(exception)}"}
+
+      headers ->
+        {:error, "Invalid content type: #{inspect(headers)}"}
+    end
   end
 end
