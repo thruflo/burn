@@ -7,13 +7,6 @@ defmodule Burn.Shapes do
   alias Burn.Threads
 
   @doc """
-  Sync all of the changes to a thread.
-  """
-  def thread(%Threads.Thread{id: id}) do
-    from(t in Threads.Thread, where: t.id == ^id)
-  end
-
-  @doc """
   Sync all of the events in a thread.
   """
   def events(%Threads.Thread{id: thread_id}) do
@@ -25,5 +18,12 @@ defmodule Burn.Shapes do
   """
   def memberships(%Threads.Thread{id: thread_id}) do
     from(m in Threads.Membership, where: m.thread_id == ^thread_id)
+  end
+
+  @doc """
+  Sync all of the changes to a thread.
+  """
+  def thread(%Threads.Thread{id: id}) do
+    from(t in Threads.Thread, where: t.id == ^id)
   end
 end

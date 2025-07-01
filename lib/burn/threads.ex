@@ -317,6 +317,21 @@ defmodule Burn.Threads do
   """
   def get_membership!(id), do: Repo.get!(Membership, id)
 
+  @doc """
+  Get a membership for a specific thread and agent name.
+  Returns the membership preloaded with thread and user, or nil if not found.
+  """
+  def get_membership_for(thread_id, agent_name) when is_binary(thread_id) and is_binary(agent_name) do
+    query = from(m in Membership,
+      join: u in assoc(m, :user),
+      join: t in assoc(m, :thread),
+      where: m.thread_id == ^thread_id and u.name == ^agent_name and u.type == :agent,
+      preload: [user: u, thread: t]
+    )
+
+    Repo.one(query)
+  end
+
   def is_member?(thread_id, user_id) do
     query =
       from(

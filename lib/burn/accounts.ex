@@ -97,6 +97,10 @@ defmodule Burn.Accounts do
     Repo.get_by(User, name: name, type: :human)
   end
 
+  def get_agent_by_name(name) when is_binary(name) do
+    Repo.get_by(User, name: name, type: :agent)
+  end
+
   @doc """
   Get or create a user. If creating, also create their first thread.
 

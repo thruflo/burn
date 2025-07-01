@@ -25,8 +25,23 @@ defmodule Burn.Accounts.User do
     |> update_change(:name, &String.downcase/1)
     |> validate_length(:name, min: 2, max: 16)
     |> validate_format(:name, ~r/^[\w-]+$/)
-    |> unique_constraint(:name)
+    |> validate_name_uniqueness()
     |> validate_url(:avatar_url)
+  end
+
+  defp validate_name_uniqueness(changeset) do
+    changeset
+    |> get_field(:type)
+    |> validate_name_uniqueness(changeset)
+  end
+
+  defp validate_name_uniqueness(:human, changeset) do
+    changeset
+    |> unique_constraint(:name, name: :users_human_name_unique_idx)
+  end
+
+  defp validate_name_uniqueness(:agent, changeset) do
+    changeset
   end
 
   defp validate_url(changeset, field) do
