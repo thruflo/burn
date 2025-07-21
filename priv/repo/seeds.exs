@@ -9,3 +9,17 @@
 #
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
+
+alias Burn.{Accounts, Repo}
+
+# Create Sarah agent user
+case Accounts.get_agent_by_name("sarah") do
+  nil ->
+    %Accounts.User{}
+    |> Accounts.User.changeset(%{type: :agent, name: "sarah"})
+    |> Repo.insert!()
+    |> IO.inspect(label: "Created Sarah agent")
+
+  sarah ->
+    IO.inspect(sarah, label: "Sarah agent already exists")
+end

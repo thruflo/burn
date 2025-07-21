@@ -14,7 +14,6 @@ defmodule Burn.Agents.Supervisor do
     Consumer,
     Messages,
     Repo,
-    Shapes,
     Threads
   }
 
@@ -78,8 +77,13 @@ defmodule Burn.Agents.Supervisor do
   end
 
   @impl true
-  def handle_info({:DOWN, _ref, :process, pid, reason}, state) when pid in state.tasks do
-    IO.puts("Task completed with reason: #{inspect(reason)}, #{Map.get(state.tasks, pid)}")
+  def handle_call(:get_state, _from, state) do
+    {:reply, state, state}
+  end
+
+  @impl true
+  def handle_info({:DOWN, _ref, :process, pid, reason}, %{tasks: tasks} = state) when is_map_key(tasks, pid) do
+    IO.puts("Task completed with reason: #{inspect(reason)}, #{Map.get(tasks, pid)}")
 
     # XXX Implement task restart logic
     raise "NotImplemented - need to wipe and restart pid"
@@ -87,7 +91,7 @@ defmodule Burn.Agents.Supervisor do
     {:noreply, state}
   end
 
-  def handle_info({:DOWN, _ref, :process, pid, reason}, %{pids: pids} = state) do
+  def handle_info({:DOWN, _ref, :process, pid, _reason}, %{pids: pids} = state) do
     case Map.pop(pids, pid) do
       {nil, _pids} ->
         {:noreply, state}
@@ -100,11 +104,6 @@ defmodule Burn.Agents.Supervisor do
   end
 
   @impl true
-  def handle_call(:get_state, _from, state) do
-    {:reply, state, state}
-  end
-
-  @impl true
   def handle_info({:stream, :memberships, []}, state), do: {:noreply, state}
   def handle_info({:stream, :memberships, messages}, %{data: data, pids: pids} = state) do
     # When a membership is deleted, stop the agent.
@@ -112,14 +111,14 @@ defmodule Burn.Agents.Supervisor do
       messages
       |> Enum.filter(&Messages.is_delete/1)
       |> Enum.map(&Messages.get_value/1)
-      |> Enum.reduce(&stop_agent/2, {:ok, data, pids})
+      |> Enum.reduce({:ok, data, pids}, &stop_agent/2)
 
     # When a membership is inserted, start Sarah.
     {:ok, data, pids} =
       messages
       |> Enum.filter(&Messages.is_insert/1)
       |> Enum.map(&Messages.get_value/1)
-      |> Enum.reduce(&start_agent/2, {:ok, data, pids})
+      |> Enum.reduce({:ok, data, pids}, &start_agent/2)
 
     {:noreply, %State{state | data: data, pids: pids}}
   end
@@ -131,7 +130,7 @@ defmodule Burn.Agents.Supervisor do
       messages
       |> Enum.filter(&Messages.is_delete/1)
       |> Enum.map(&Messages.get_value/1)
-      |> Enum.reduce(&pop_and_stop_agents/2, {:ok, data, pids})
+      |> Enum.reduce({:ok, data, pids}, &pop_and_stop_agents/2)
 
     {:noreply, %State{state | data: data, pids: pids}}
   end
@@ -173,7 +172,7 @@ defmodule Burn.Agents.Supervisor do
       user: %Accounts.User{
         name: user_name,
         type: user_type
-      } = user
+      }
     } = Repo.preload(membership, :user)
 
     case user_type do
@@ -199,18 +198,18 @@ defmodule Burn.Agents.Supervisor do
     end
   end
 
-  defp pop_and_stop_agents(%Threads.Thread{id: thread_id} = thread, {:ok, data, pids}) do
+  defp pop_and_stop_agents(%Threads.Thread{id: thread_id}, {:ok, data, pids}) do
     with {agents_map, remaining_data} when not is_nil(agents_map) <- Map.pop(data, thread_id) do
       remaining_pids =
         agents_map
         |> Map.values()
         |> Enum.reduce(
+          pids,
           fn pid, pids ->
             GenServer.stop(pid, :normal)
 
             Map.delete(pids, pid)
-          end,
-          pids
+          end
         )
 
       {:ok, remaining_data, remaining_pids}
@@ -221,21 +220,13 @@ defmodule Burn.Agents.Supervisor do
     end
   end
 
-  defp restart_agent(thread_id, agent_name, remaining_pids, %{data: data} = state) do
+  defp restart_agent(thread_id, agent_name, remaining_pids, %{data: data}) do
     case Threads.get_membership_for(thread_id, agent_name) do
       nil ->
         {:ok, cleanup_agent(thread_id, agent_name, data), remaining_pids}
 
       %Threads.Membership{} = membership ->
-        case start_agent(membership, {:ok, data, remaining_pids}) do
-          {:ok, new_data, new_pids} ->
-            {:ok, new_data, new_pids}
-
-         {:error, reason} ->
-           IO.puts("Failed to restart #{agent_name} in thread #{thread_id}: #{inspect(reason)}")
-
-           {:ok, cleanup_agent(thread_id, agent_name, data), remaining_pids}
-        end
+        start_agent(membership, {:ok, data, remaining_pids})
     end
   end
 

@@ -344,6 +344,11 @@ defmodule Burn.Threads do
     Repo.exists?(query)
   end
 
+  def init_membership(attrs \\ %{}) do
+    %Membership{}
+    |> Membership.changeset(attrs)
+  end
+
   @doc """
   Creates a membership.
 
@@ -364,8 +369,8 @@ defmodule Burn.Threads do
       role: role
     }
 
-    %Membership{}
-    |> Membership.changeset(attrs)
+    attrs
+    |> init_membership()
     |> Repo.insert()
   end
 

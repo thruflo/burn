@@ -181,7 +181,9 @@ defmodule Burn.Agents.Sarah do
         {:noreply, state}
 
       new_events ->
-        if mode == :auto do
+        %{user: %{name: name}} = Repo.preload(List.last(new_events), :user)
+
+        if mode == :auto and name != "sarah" do
           Process.send(self(), :instruct, [])
         end
 

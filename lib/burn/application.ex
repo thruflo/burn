@@ -14,6 +14,7 @@ defmodule Burn.Application do
       {Phoenix.PubSub, name: Burn.PubSub},
       {Finch, name: Burn.Finch},
       {Registry, keys: :unique, name: Burn.Agents},
+      Burn.Agents.Supervisor,
       {BurnWeb.Endpoint, phoenix_sync: Phoenix.Sync.plug_opts()}
     ]
 

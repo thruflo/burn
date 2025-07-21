@@ -107,8 +107,6 @@ defmodule Burn.Threads.Event do
   end
 
   def changeset(event, attrs, user_type) do
-    IO.inspect({:event, :changeset, event, attrs, user_type})
-
     event
     |> cast(attrs, [:id, :data, :type, :thread_id, :user_id])
     |> validate_required([:data, :type])
@@ -159,41 +157,25 @@ defmodule Burn.Threads.Event do
   end
 
   defp validate_user_type(changeset, nil) do
-    IO.inspect({:validate_user_type_nil})
-
     user_id = get_field(changeset, :user_id)
-
-    IO.inspect({:user_id, user_id})
 
     case Accounts.get_user(user_id) do
       %Accounts.User{type: user_type} ->
-        IO.inspect({:found_user})
-
         validate_user_type(changeset, user_type)
 
       nil ->
-        IO.inspect({:user_not_found})
-
         add_error(changeset, :user_id, "user can't be loaded")
     end
   end
 
   defp validate_user_type(changeset, user_type) when user_type in [:human, :agent] do
-    IO.inspect({:validate_user_type, user_type, changeset})
-
     event_type = get_field(changeset, :type)
-
-    IO.inspect({:event_type, event_type})
 
     case validate_types_match(user_type, event_type) do
       :ok ->
-        IO.inspect({:ok})
-
         changeset
 
       {:error, :mismatch} ->
-        IO.inspect({:mismatch})
-
         changeset
         |> add_error(:type, "Can't be made by an: #{user_type}")
     end

@@ -70,6 +70,7 @@ function FactsList({ threadId, filter }: Props) {
       const baseQuery = query
         .from({ f: factResults })
         .orderBy({ '@f.inserted_at': 'asc' })
+        .select('@*')
 
       return filterText
         ? baseQuery.where(({ f }) => matchesFilter(f, filterText))

@@ -145,8 +145,29 @@ defmodule Burn.Accounts do
     with {:ok, user} = create_user(attrs),
          {:ok, thread} = Threads.create_new_thread(user),
          {:ok, _membership} = Threads.create_membership(thread, user, :owner),
-         {:ok, _event} = Threads.create_user_created_thread_event(thread, user) do
+         {:ok, _event} = Threads.create_user_created_thread_event(thread, user),
+         {:ok, _sarah_membership} = add_sarah_to_thread(thread) do
       {:ok, user}
+    end
+  end
+
+  @doc """
+  Add Sarah agent to a thread by creating a membership.
+  Assumes Sarah agent user already exists (created in seeds).
+  """
+  def add_sarah_to_thread(%Threads.Thread{} = thread) do
+    with %User{type: :agent} = sarah <- get_agent_by_name("sarah") do
+      Threads.create_membership(thread, sarah, :producer)
+    end
+  end
+
+  def init_sarah_membership(thread_id) do
+    with %User{type: :agent, id: user_id} <- get_agent_by_name("sarah") do
+      Threads.init_membership(%{
+        thread_id: thread_id,
+        user_id: user_id,
+        role: :producer
+      })
     end
   end
 end

@@ -78,8 +78,6 @@ defmodule Burn.Adapters.Anthropic do
       {:ok, %{status: 200, body: body}} ->
         t2 = System.monotonic_time(:millisecond)
 
-        IO.inspect({:request_time, t2 - t1})
-
         {:ok, body}
 
       {:ok, response} ->

@@ -56,9 +56,11 @@ type Props = {
 }
 
 function FactItem({ fact }: Props) {
+  console.log(fact)
+
   const classes = useStyles()
   const { color, fill, level } = confidenceConfig(fact.confidence)
-  const tooltipContent = `${level} (${fact.confidence.toFixed(2)})`
+  const tooltipContent = `${level} (${fact.confidence})`
   const textClassName = mergeClasses(classes.badge, classes.predicate)
 
   return (
