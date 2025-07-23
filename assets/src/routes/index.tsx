@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
+import { useLiveQuery, eq } from '@tanstack/react-db'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useLiveQuery } from '@tanstack/react-db'
 import { useAuth } from '../db/auth'
 import { membershipCollection, threadCollection } from '../db/collections'
 
@@ -10,18 +10,18 @@ function Index() {
   const { currentUserId, isAuthenticated } = useAuth()
 
   const { data: threads } = useLiveQuery(
-    (query) =>
+    (query) => (
       query
-        .from({ t: threadCollection })
-        .join({
-          type: `inner`,
-          from: { m: membershipCollection },
-          on: [`@t.id`, `=`, `@m.thread_id`],
-        })
-        .select('@t.id')
-        .where('@m.user_id', '=', currentUserId)
-        .orderBy({ '@inserted_at': 'desc' })
-        .limit(1),
+        .from({ thread: threadCollection })
+        .innerJoin(
+          { membership: membershipCollection },
+          ({ thread, membership }) => eq(thread.id, membership.thread_id)
+        )
+        .limit(1)
+        .orderBy(({ thread }) => thread.inserted_at, 'desc')
+        .select(({ thread }) => ({ id: thread.id }))
+        .where(({ membership }) => eq(membership.user_id, currentUserId))
+    ),
     [currentUserId]
   )
   const latestThreadId = threads.length > 0 ? threads[0].id : undefined
@@ -37,4 +37,12 @@ function Index() {
   return null
 }
 
-export const Route = createFileRoute(`/`)({ component: Index })
+export const Route = createFileRoute(`/`)({
+  component: Index,
+  loader: async () => {
+    await Promise.all([
+      membershipCollection.preload(),
+      threadCollection.preload()
+    ])
+  }
+})

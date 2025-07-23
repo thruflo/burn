@@ -1,7 +1,5 @@
-import uuid4 from 'uuid4'
-
 import { useEffect } from 'react'
-import { useLiveQuery } from '@tanstack/react-db'
+import { useLiveQuery, eq } from '@tanstack/react-db'
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 
 import { useAuth } from '../../db/auth'
@@ -14,12 +12,13 @@ function JoinPage() {
   const { threadId } = useParams({ from: '/join/$threadId' })
 
   const { data: memberships } = useLiveQuery(
-    (query) =>
+    (query) => (
       query
-        .from({ membershipCollection })
-        .where('@thread_id', '=', threadId)
-        .where('@user_id', '=', currentUserId)
-        .select('@id'),
+        .from({ membership: membershipCollection })
+        .select(({ membership }) => ({ id: membership.id }))
+        .where(({ membership }) => eq(membership.thread_id, threadId))
+        .where(({ membership }) => eq(membership.user_id, currentUserId))
+    ),
     [threadId, currentUserId]
   )
   const hasMembership = memberships.length > 0
@@ -30,7 +29,7 @@ function JoinPage() {
       const userId = currentUserId as string
 
       membershipCollection.insert({
-        id: uuid4(),
+        id: crypto.randomUUID(),
         thread_id: threadId,
         user_id: userId,
         role: 'member',
@@ -45,4 +44,7 @@ function JoinPage() {
 
 export const Route = createFileRoute(`/join/$threadId`)({
   component: JoinPage,
+  loader: async () => {
+    await membershipCollection.preload()
+  }
 })

@@ -2,7 +2,10 @@ import type { Event, Fact, User } from '../db/schema'
 
 export type EventResult = Pick<
   Event,
-  'id' | 'type' | 'data' | 'inserted_at'
+  | 'id'
+  | 'type'
+  | 'data'
+  | 'inserted_at'
 > & {
   user_id: User['id']
   user_name: User['name']

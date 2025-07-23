@@ -1,4 +1,3 @@
-import uuid4 from 'uuid4'
 import { useState, useRef, useEffect } from 'react'
 import { Box, Flex, IconButton, TextArea } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
@@ -73,7 +72,7 @@ function ChatInput({ threadId }: Props) {
     }
 
     eventCollection.insert({
-      id: uuid4(),
+      id: crypto.randomUUID(),
       thread_id: threadId,
       user_id: currentUserId!,
       type: 'text',

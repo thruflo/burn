@@ -38,7 +38,7 @@ defmodule Burn.MixProject do
       {:ecto_sql, "~> 3.10"},
       {:electric_client,
        path: "../../electric-sql/electric/packages/elixir-client", override: true},
-      {:electric, "~> 1.0.19", override: true},
+      {:electric, "~> 1.1.0", override: true},
       {:finch, "~> 0.13"},
       {:floki, ">= 0.30.0", only: :test},
       {:gettext, "~> 0.26"},

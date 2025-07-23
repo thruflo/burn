@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { useLiveQuery } from '@tanstack/react-db'
+import { useLiveQuery, eq } from '@tanstack/react-db'
 import { Flex, IconButton, Tooltip } from '@radix-ui/themes'
 import { Edit, Plus, User as UserIcon, Bot } from 'lucide-react'
 import { makeStyles, mergeClasses } from '@griffel/react'
@@ -77,16 +77,19 @@ function ThreadTopBar({ threadId, onEditClick }: Props) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const { data: users } = useLiveQuery(
-    (query) =>
+    (query) => (
       query
-        .from({ u: userCollection })
-        .join({
-          type: 'inner',
-          from: { m: membershipCollection },
-          on: [`@u.id`, `=`, `@m.user_id`],
-        })
-        .select('@u.id', '@u.name')
-        .where('@m.thread_id', '=', threadId),
+        .from({ user: userCollection })
+        .innerJoin(
+          { membership: membershipCollection },
+          ({ user, membership }) => eq(user.id, membership.user_id)
+        )
+        .select(({ user }) => ({
+          id: user.id,
+          name: user.name
+        }))
+        .where(({ membership }) => eq(membership.thread_id, threadId))
+    ),
     [threadId]
   )
 

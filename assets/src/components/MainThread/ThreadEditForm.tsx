@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useLiveQuery } from '@tanstack/react-db'
+import { useLiveQuery, eq } from '@tanstack/react-db'
 import {
   Box,
   Flex,
@@ -60,7 +60,11 @@ function ThreadEditForm({ threadId }: Props) {
   const { currentUserId } = useAuth()
 
   const { data: threads } = useLiveQuery(
-    (query) => query.from({ threadCollection }).where('@id', '=', threadId),
+    (query) => (
+      query
+        .from({ thread: threadCollection })
+        .where(({ thread }) => eq(thread.id, threadId))
+    ),
     [threadId]
   )
   const thread = threads[0]!
@@ -72,17 +76,21 @@ function ThreadEditForm({ threadId }: Props) {
   const [threadNameSaved, setThreadNameSaved] = useState(false)
 
   const { data: users } = useLiveQuery(
-    (query) =>
+    (query) => (
       query
-        .from({ u: userCollection })
-        .join({
-          type: 'inner',
-          from: { m: membershipCollection },
-          on: [`@u.id`, `=`, `@m.user_id`],
-        })
-        .orderBy({ '@u.name': 'asc' })
-        .select('@u.id', '@u.name', { membership_id: '@m.id' })
-        .where('@m.thread_id', '=', threadId),
+        .from({ user: userCollection })
+        .innerJoin(
+          { membership: membershipCollection },
+          ({ user, membership }) => eq(user.id, membership.user_id)
+        )
+        .orderBy(({ user }) => user.name, 'asc')
+        .select(({ user, membership }) => ({
+          id: user.id,
+          name: user.name,
+          membership_id: membership.id
+        }))
+        .where(({ membership }) => eq(membership.thread_id, threadId))
+    ),
     [threadId]
   )
 

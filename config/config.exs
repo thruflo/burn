@@ -40,6 +40,7 @@ config :phoenix, :json_library, Jason
 
 # Run Electric in embedded mode.
 config :phoenix_sync,
+  env: config_env(),
   mode: :embedded,
   repo: Burn.Repo
 

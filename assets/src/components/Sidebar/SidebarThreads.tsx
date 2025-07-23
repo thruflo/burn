@@ -1,7 +1,5 @@
-import uuid4 from 'uuid4'
-
 import { useNavigate } from '@tanstack/react-router'
-import { useLiveQuery } from '@tanstack/react-db'
+import { useLiveQuery, eq, not } from '@tanstack/react-db'
 import { makeStyles } from '@griffel/react'
 
 import { Button, Flex, Text } from '@radix-ui/themes'
@@ -38,37 +36,47 @@ function SidebarThreads({ threadId }: Props) {
   const classes = useClasses()
   const navigate = useNavigate()
 
-  const { collection: baseQuery } = useLiveQuery(
-    (query) =>
+  const { collection: resultCollection } = useLiveQuery(
+    (query) => (
       query
-        .from({ t: threadCollection })
-        .join({
-          type: `inner`,
-          from: { m: membershipCollection },
-          on: [`@t.id`, `=`, `@m.thread_id`],
-        })
-        .select('@t.id', '@t.name', '@t.inserted_at')
-        .where('@m.user_id', '=', currentUserId),
+        .from({ thread: threadCollection })
+        .innerJoin(
+          { membership: membershipCollection },
+          ({ thread, membership }) => eq(thread.id, membership.thread_id)
+        )
+        .fn.select(({ thread }) => ({
+          id: thread.id,
+          name: thread.name,
+          inserted_at: thread.inserted_at
+        }))
+        .where(({ membership }) => eq(membership.user_id, currentUserId))
+    ),
     [currentUserId]
   )
   const { data: nonSyncedThreads } = useLiveQuery((query) =>
     query
-      .from({ t: baseQuery })
-      .where(({ t }) => t.inserted_at === undefined)
-      .select('@t.id', '@t.name')
-      .orderBy({ '@t.name': 'desc' })
+      .from({ result: resultCollection })
+      .orderBy(({ result }) => result.name, 'desc')
+      .select(({ result }) => ({
+        id: result.id,
+        name: result.name,
+      }))
+      .where(({ result }) => eq(result.inserted_at, undefined))
   )
   const { data: syncedThreads } = useLiveQuery((query) =>
     query
-      .from({ t: baseQuery })
-      .where(({ t }) => t.inserted_at !== undefined)
-      .select('@t.id', '@t.name')
-      .orderBy({ '@t.inserted_at': 'desc' })
+      .from({ result: resultCollection })
+      .orderBy(({ result }) => result.inserted_at, 'desc')
+      .select(({ result }) => ({
+        id: result.id,
+        name: result.name,
+      }))
+      .where(({ result }) => not(eq(result.inserted_at, undefined)))
   )
   const threads = nonSyncedThreads.concat(syncedThreads)
 
   const createNewThread = () => {
-    const newThreadId = uuid4()
+    const newThreadId = crypto.randomUUID()
     const userId = currentUserId as string
     const numThreads = threads.length
 
@@ -80,7 +88,7 @@ function SidebarThreads({ threadId }: Props) {
         status: 'started',
       })
       membershipCollection.insert({
-        id: uuid4(),
+        id: crypto.randomUUID(),
         role: 'owner',
         thread_id: newThreadId,
         user_id: userId,

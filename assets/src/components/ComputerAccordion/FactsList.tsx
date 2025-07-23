@@ -1,4 +1,4 @@
-import { useLiveQuery } from '@tanstack/react-db'
+import { useLiveQuery, eq } from '@tanstack/react-db'
 import { Box } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
 import { factCollection, userCollection } from '../../db/collections'
@@ -15,9 +15,7 @@ const useStyles = makeStyles({
   },
 })
 
-function matchesFilter(fact: FactResult, text: string): boolean {
-  const { subject, predicate, object } = fact
-
+function matchesFilter({ subject, predicate, object }: FactResult, text: string): boolean {
   return (
     subject.toLowerCase().includes(text) ||
     predicate.toLowerCase().includes(text) ||
@@ -36,44 +34,36 @@ function FactsList({ threadId, filter }: Props) {
 
   // First filter the facts by threadId,
   // joining to users to get the subject name.
-
-  // XXX n.b.: can refactor to skip materialization when that lands
   const { collection: factResults } = useLiveQuery(
-    (query) =>
+    (query) => (
       query
-        .from({ f: factCollection })
-        .join({
-          type: `inner`,
-          from: { u: userCollection },
-          on: [`@u.id`, `=`, `@f.subject_id`],
-        })
-        .where('@f.thread_id', '=', threadId)
-        .select(
-          '@f.id',
-          { subject: '@u.name' },
-          '@f.object',
-          '@f.predicate',
-          '@f.category',
-          '@f.confidence',
-          '@f.disputed',
-          '@f.inserted_at'
-        ),
+        .from({ fact: factCollection })
+        .innerJoin({ user: userCollection }, ({ fact, user }) => eq(fact.subject_id, user.id))
+        .orderBy(({ fact }) => fact.inserted_at, 'asc')
+        .select(({ fact, user }) => ({
+          id: fact.id,
+          subject: user.name,
+          predicate: fact.predicate,
+          object: fact.object,
+          category: fact.category,
+          confidence: fact.confidence,
+          disputed: fact.disputed,
+          // inserted_at: fact.inserted_at,
+        }))
+        .where(({ fact }) => eq(fact.thread_id, threadId))
+    ),
     [threadId]
   )
 
-  // Then filter by the typeahead filter text, if provided.
-  // Defining this as a seperate live query minimises the
-  // pipeline re-establishment cost when the text changes.
-
+  // Then filter by the typeahead filter text.
   const { data: facts } = useLiveQuery(
     (query) => {
       const baseQuery = query
-        .from({ f: factResults })
-        .orderBy({ '@f.inserted_at': 'asc' })
-        .select('@*')
+        .from({ result: factResults })
+        // .orderBy(({ fact }) => fact.inserted_at, 'asc')
 
       return filterText
-        ? baseQuery.where(({ f }) => matchesFilter(f, filterText))
+        ? baseQuery.fn.where(({ result }) => matchesFilter(result, filterText))
         : baseQuery
     },
     [filterText]

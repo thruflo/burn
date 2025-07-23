@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useLiveQuery } from '@tanstack/react-db'
+import { useLiveQuery, eq } from '@tanstack/react-db'
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { Box, Flex, IconButton } from '@radix-ui/themes'
 import { Menu, Cpu } from 'lucide-react'
@@ -13,7 +13,13 @@ import MainThread from '../../components/MainThread'
 import ThreadHeading from '../../components/MainThread/ThreadHeading'
 
 import { useAuth } from '../../db/auth'
-import { membershipCollection, threadCollection } from '../../db/collections'
+import {
+  eventCollection,
+  factCollection,
+  membershipCollection,
+  threadCollection,
+  userCollection
+} from '../../db/collections'
 
 const useClasses = makeStyles({
   scrollArea: {
@@ -54,17 +60,20 @@ function ThreadPage() {
   const { toggleLeftSidebar, toggleRightSidebar } = useSidebar()
 
   const { data: threads } = useLiveQuery(
-    (query) =>
+    (query) => (
       query
-        .from({ t: threadCollection })
-        .join({
-          type: `inner`,
-          from: { m: membershipCollection },
-          on: [`@t.id`, `=`, `@m.thread_id`],
-        })
-        .select('@t.id', '@t.name')
-        .where('@t.id', '=', threadId)
-        .where('@m.user_id', '=', currentUserId),
+        .from({ thread: threadCollection })
+        .innerJoin(
+          { membership: membershipCollection },
+          ({ thread, membership }) => eq(thread.id, membership.thread_id)
+        )
+        .select(({ thread }) => ({
+          id: thread.id,
+          name: thread.name
+        }))
+        .where(({ thread }) => eq(thread.id, threadId))
+        .where(({ membership }) => eq(membership.user_id, currentUserId))
+    ),
     [threadId, currentUserId]
   )
   const activeThread = threads.length === 1 ? threads[0] : undefined
@@ -120,4 +129,13 @@ function ThreadPage() {
 
 export const Route = createFileRoute(`/threads/$threadId`)({
   component: ThreadPage,
+  loader: async () => {
+    await Promise.all([
+      eventCollection.preload(),
+      factCollection.preload(),
+      membershipCollection.preload(),
+      threadCollection.preload(),
+      userCollection.preload()
+    ])
+  }
 })

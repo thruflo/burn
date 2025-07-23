@@ -1,4 +1,4 @@
-import { useLiveQuery } from '@tanstack/react-db'
+import { useLiveQuery, eq } from '@tanstack/react-db'
 import { useNavigate } from '@tanstack/react-router'
 import { makeStyles } from '@griffel/react'
 import { Box, Flex, Text, IconButton, Tooltip } from '@radix-ui/themes'
@@ -22,11 +22,12 @@ function SidebarFooter() {
   const { currentUserId, isAuthenticated } = useAuth()
 
   const { data: users } = useLiveQuery(
-    (query) =>
+    (query) => (
       query
-        .from({ userCollection })
-        .select('@name')
-        .where('@id', '=', currentUserId),
+        .from({ user: userCollection })
+        .select(({ user }) => ({ name: user.name }))
+        .where(({ user }) => eq(user.id, currentUserId))
+    ),
     [currentUserId]
   )
   const userName = users.length > 0 ? users[0].name : undefined

@@ -1,4 +1,4 @@
-import { useLiveQuery } from '@tanstack/react-db'
+import { useLiveQuery, eq } from '@tanstack/react-db'
 import { Box } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
 import { extractSearchableText } from '../../utils/extract'
@@ -16,9 +16,7 @@ const useStyles = makeStyles({
   },
 })
 
-function matchesFilter(event: EventResult, text: string): boolean {
-  const { data, type, user_name } = event
-
+function matchesFilter({ data, type, user_name }: EventResult, text: string): boolean {
   if (user_name.toLowerCase().includes(text)) {
     return true
   }
@@ -46,47 +44,38 @@ function EventsList({ threadId, filter }: Props) {
   const classes = useStyles()
   const filterText = filter.trim().toLowerCase()
 
-  // First filter the events by threadId, joining to
-  // users to get the user name.
-  // XXX N.b.: refactor to skip materialization.
+  // First filter the events by threadId.
   const { collection: eventResults } = useLiveQuery(
-    (query) =>
+    (query) => (
       query
-        .from({ e: eventCollection })
-        .join({
-          type: 'inner',
-          from: { u: userCollection },
-          on: [`@u.id`, `=`, `@e.user_id`],
-        })
-        .where('@e.thread_id', '=', threadId)
-        .select(
-          '@e.data',
-          '@e.id',
-          '@e.inserted_at',
-          '@e.type',
-          { user_id: '@u.id' },
-          { user_name: '@u.name' },
-          { user_type: '@u.type' }
-        ),
+        .from({ event: eventCollection })
+        .innerJoin({ user: userCollection }, ({ event, user }) => eq(user.id, event.user_id))
+        .orderBy(({ event }) => event.inserted_at, 'asc')
+        .select(({ event, user }) => ({
+          data: event.data,
+          id: event.id,
+          inserted_at: event.inserted_at!,
+          type: event.type,
+          user_id: user.id,
+          user_name: user.name,
+          user_type: user.type
+        }))
+        .where(({ event }) => eq(event.thread_id, threadId))
+    ),
     [threadId]
   )
 
-  // Then filter by the typeahead filter text, if provided.
-  // Defining this as a seperate live query minimises the
-  // pipeline re-establishment cost when the text changes.
-
+  // Then filter by the typeahead filter text.
   const { data: events } = useLiveQuery(
     (query) => {
       const baseQuery = query
-        .from({ e: eventResults })
-        .select('@*')
-        .orderBy({ '@e.inserted_at': 'asc' })
+        .from({ result: eventResults })
 
       return filterText
-        ? baseQuery.where(({ e }) => matchesFilter(e, filterText))
+        ? baseQuery.fn.where(({ result }) => matchesFilter(result, filterText))
         : baseQuery
     },
-    [filterText]
+    [eventResults, filterText]
   )
 
   return (
