@@ -28,6 +28,7 @@ defmodule BurnWeb.ConnCase do
       import Plug.Conn
       import Phoenix.ConnTest
       import BurnWeb.ConnCase
+      import Burn.DataCase
     end
   end
 
