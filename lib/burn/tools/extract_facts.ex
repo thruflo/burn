@@ -1,5 +1,6 @@
 defmodule Burn.Tools.ExtractFacts do
   use Burn.Tool
+  alias Ecto.Multi
 
   # We want the embedded module to be called `Fact` as that results
   # in clearer naming in the JSON Schema provided to the LLM.
@@ -67,14 +68,17 @@ defmodule Burn.Tools.ExtractFacts do
   defp insert(thread_id, {attrs, index}, multi) do
     with {source_event_id, attrs} <- Map.pop!(attrs, "source_event"),
          {subject_id, attrs} = Map.pop!(attrs, "subject") do
-      assoc_attrs = %{
-        thread_id: thread_id,
-        source_event_id: source_event_id,
-        subject_id: subject_id
-      }
-
       multi
-      |> Ecto.Multi.insert({:fact, index}, Memory.init_fact(assoc_attrs, attrs))
+      |> Multi.insert({:fact, index}, fn %{event: %{id: tool_use_event_id}} ->
+        assoc_attrs = %{
+          thread_id: thread_id,
+          source_event_id: source_event_id,
+          tool_use_event_id: tool_use_event_id,
+          subject_id: subject_id
+        }
+
+        Memory.init_fact(assoc_attrs, attrs)
+      end)
     end
   end
 end

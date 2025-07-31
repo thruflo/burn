@@ -110,8 +110,6 @@ type Props = {
 function EventItem({ event }: Props) {
   const classes = useStyles()
 
-  console.log('EventItem', event)
-
   const typeColor = typeColors[event.type] as EventTypeColor
   const typeLabel =
     event.type === 'system'
@@ -126,9 +124,6 @@ function EventItem({ event }: Props) {
   const attrColor: UserBadgeColor = isHuman ? 'blue' : 'purple'
   const attrLabel = event.type === 'text' ? 'from' : 'by'
   const attrName = event.user_name
-
-  console.log('typeLabel', typeLabel)
-  console.log('attrName', attrName)
 
   return (
     <Box className={classes.eventItem}>

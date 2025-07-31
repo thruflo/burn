@@ -26,7 +26,7 @@ defmodule Burn.Accounts.User do
     |> validate_length(:name, min: 2, max: 16)
     |> validate_format(:name, ~r/^[\w-]+$/)
     |> validate_name_uniqueness()
-    |> validate_url(:avatar_url)
+    |> validate_image_url(:avatar_url)
   end
 
   defp validate_name_uniqueness(changeset) do
@@ -44,28 +44,40 @@ defmodule Burn.Accounts.User do
     changeset
   end
 
-  defp validate_url(changeset, field) do
+  defp validate_image_url(changeset, field) do
     validate_change(changeset, field, fn field, value ->
-      with true <- is_https_url(value),
-           true <- is_image_url(value) do
-        :ok
+      with true <- is_https_url_or_path(value),
+           true <- is_valid_image(value) do
+        []
       else
         {:error, message} -> [{field, message}]
       end
     end)
   end
 
-  defp is_https_url(url) do
+  defp is_https_url_or_path(url) do
     uri = URI.parse(url)
 
-    if uri.scheme == "https" and uri.host do
+    is_valid =
+      case {uri.scheme, uri.host, uri.path} do
+        {"https", host, _path} when not is_nil(host) ->
+          true
+
+        {nil, nil, path} ->
+          String.starts_with?(path, "/")
+
+        _alt ->
+          false
+      end
+
+    if is_valid do
       true
     else
-      {:error, "must be a valid HTTPS URL"}
+      {:error, "must be a path starting with `/` or an HTTPS URL"}
     end
   end
 
-  defp is_image_url(url) do
+  defp is_valid_image("https://" <> _rest = url) do
     with {:ok, %Req.Response{status: 200} = response} <- Req.get(url, receive_timeout: 5_000),
          ["image/" <> _rest] <- Req.Response.get_header(response, "content-type") do
       true
@@ -80,4 +92,5 @@ defmodule Burn.Accounts.User do
         {:error, "Invalid content type: #{inspect(headers)}"}
     end
   end
+  defp is_valid_image(_path), do: true
 end

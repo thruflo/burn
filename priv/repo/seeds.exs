@@ -15,8 +15,14 @@ alias Burn.{Accounts, Repo}
 # Create Sarah agent user
 case Accounts.get_agent_by_name("sarah") do
   nil ->
+    attrs = %{
+      type: :agent,
+      name: "sarah",
+      avatar_url: "/images/agents/sarah.jpg"
+    }
+
     %Accounts.User{}
-    |> Accounts.User.changeset(%{type: :agent, name: "sarah"})
+    |> Accounts.User.changeset(attrs)
     |> Repo.insert!()
     |> IO.inspect(label: "Created Sarah agent")
 

@@ -1,3 +1,4 @@
+import { FetchError } from '@electric-sql/client'
 import { electricCollectionOptions } from '@tanstack/electric-db-collection'
 import { createCollection, localStorageCollectionOptions } from '@tanstack/react-db'
 import { ingestMutations } from './mutations'
@@ -10,9 +11,9 @@ import {
   userSchema,
 } from './schema'
 
+import type { Value } from '@electric-sql/client'
 import type { ElectricCollectionUtils } from '@tanstack/electric-db-collection'
 import type { InsertMutationFn, UpdateMutationFn, DeleteMutationFn } from '@tanstack/react-db'
-import type { Value } from '@electric-sql/client'
 import type { Auth, Event, Fact, Membership, Thread, User } from './schema'
 
 type CollectionKey = string | number
@@ -36,7 +37,7 @@ const headers = {
   },
 }
 
-async function onError (error) {
+async function onError (error: Error) {
   if (error instanceof FetchError) {
     const status = error.status
 

@@ -49,14 +49,17 @@ function EventsList({ threadId, filter }: Props) {
     (query) => (
       query
         .from({ event: eventCollection })
-        .innerJoin({ user: userCollection }, ({ event, user }) => eq(user.id, event.user_id))
-        .orderBy(({ event }) => event.inserted_at, 'asc')
+        .innerJoin(
+          { user: userCollection },
+          ({ event, user }) => eq(user.id, event.user_id)
+        )
         .select(({ event, user }) => ({
           data: event.data,
           id: event.id,
           inserted_at: event.inserted_at!,
           type: event.type,
           user_id: user.id,
+          user_avatar: user.avatar_url,
           user_name: user.name,
           user_type: user.type
         }))
@@ -70,6 +73,10 @@ function EventsList({ threadId, filter }: Props) {
     (query) => {
       const baseQuery = query
         .from({ result: eventResults })
+        .orderBy(
+          ({ result }) => result.inserted_at,
+          { direction: 'asc', nulls: 'last' }
+        )
 
       return filterText
         ? baseQuery.fn.where(({ result }) => matchesFilter(result, filterText))

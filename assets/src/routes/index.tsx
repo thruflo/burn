@@ -17,8 +17,11 @@ function Index() {
           { membership: membershipCollection },
           ({ thread, membership }) => eq(thread.id, membership.thread_id)
         )
+        .orderBy(
+          ({ thread }) => thread.inserted_at,
+          { direction: 'desc', nulls: 'first' }
+        )
         .limit(1)
-        .orderBy(({ thread }) => thread.inserted_at, 'desc')
         .select(({ thread }) => ({ id: thread.id }))
         .where(({ membership }) => eq(membership.user_id, currentUserId))
     ),

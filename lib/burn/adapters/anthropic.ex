@@ -72,12 +72,8 @@ defmodule Burn.Adapters.Anthropic do
       {"anthropic-version", api_version}
     ]
 
-    t1 = System.monotonic_time(:millisecond)
-
     case Req.post(api_url, json: params, headers: headers, receive_timeout: 30_000) do
       {:ok, %{status: 200, body: body}} ->
-        t2 = System.monotonic_time(:millisecond)
-
         {:ok, body}
 
       {:ok, response} ->

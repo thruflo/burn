@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import { useLiveQuery, eq, not } from '@tanstack/react-db'
+import { useLiveQuery, eq } from '@tanstack/react-db'
 import { makeStyles } from '@griffel/react'
 
 import { Button, Flex, Text } from '@radix-ui/themes'
@@ -36,7 +36,7 @@ function SidebarThreads({ threadId }: Props) {
   const classes = useClasses()
   const navigate = useNavigate()
 
-  const { collection: resultCollection } = useLiveQuery(
+  const { data: threads } = useLiveQuery(
     (query) => (
       query
         .from({ thread: threadCollection })
@@ -44,36 +44,18 @@ function SidebarThreads({ threadId }: Props) {
           { membership: membershipCollection },
           ({ thread, membership }) => eq(thread.id, membership.thread_id)
         )
-        .fn.select(({ thread }) => ({
+        .orderBy(
+          ({ thread }) => thread.inserted_at,
+          { direction: 'desc', nulls: 'first' }
+        )
+        .select(({ thread }) => ({
           id: thread.id,
-          name: thread.name,
-          inserted_at: thread.inserted_at
+          name: thread.name
         }))
         .where(({ membership }) => eq(membership.user_id, currentUserId))
     ),
     [currentUserId]
   )
-  const { data: nonSyncedThreads } = useLiveQuery((query) =>
-    query
-      .from({ result: resultCollection })
-      .orderBy(({ result }) => result.name, 'desc')
-      .select(({ result }) => ({
-        id: result.id,
-        name: result.name,
-      }))
-      .where(({ result }) => eq(result.inserted_at, undefined))
-  )
-  const { data: syncedThreads } = useLiveQuery((query) =>
-    query
-      .from({ result: resultCollection })
-      .orderBy(({ result }) => result.inserted_at, 'desc')
-      .select(({ result }) => ({
-        id: result.id,
-        name: result.name,
-      }))
-      .where(({ result }) => not(eq(result.inserted_at, undefined)))
-  )
-  const threads = nonSyncedThreads.concat(syncedThreads)
 
   const createNewThread = () => {
     const newThreadId = crypto.randomUUID()

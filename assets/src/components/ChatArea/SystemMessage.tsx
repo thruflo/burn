@@ -1,8 +1,16 @@
-import { Badge, Flex, Text } from '@radix-ui/themes'
-import { makeStyles } from '@griffel/react'
+import type { ReactNode } from 'react'
 import type { EventResult, UserBadgeColor } from '../../types'
 
+import { Badge, Box, Flex, Text } from '@radix-ui/themes'
+import { makeStyles } from '@griffel/react'
+
 const useStyles = makeStyles({
+  message: {
+    display: 'flex',
+    gap: 'var(--space-4)',
+    marginBottom: 'var(--space-4)',
+    maxWidth: '100%',
+  },
   messageInner: {
     marginBottom: 'var(--space-1)',
     marginLeft: 'auto',
@@ -30,16 +38,14 @@ interface Props {
   event: EventResult
   userBadgeColor: UserBadgeColor
   userName: string
+  children?: ReactNode
 }
 
-function SystemMessage({ event, userBadgeColor, userName }: Props) {
+function SystemMessage({ children, event, userBadgeColor, userName }: Props) {
   const classes = useStyles()
 
-  const { action, target } = event.data
-  const messageContent = `${action} the ${target}`
-
   return (
-    <>
+    <Box className={classes.message}>
       <Flex align="center" gap="1" className={classes.messageInner}>
         <Badge
           size="2"
@@ -50,10 +56,10 @@ function SystemMessage({ event, userBadgeColor, userName }: Props) {
           {userName}
         </Badge>
         <Text size="2" className={classes.messageText}>
-          {messageContent}
+          {children || `${event.data.action} the ${event.data.target}`}
         </Text>
       </Flex>
-    </>
+    </Box>
   )
 }
 

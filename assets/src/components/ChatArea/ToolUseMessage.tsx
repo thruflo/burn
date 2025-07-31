@@ -1,34 +1,26 @@
-import { Badge, Box, Flex, Text } from '@radix-ui/themes'
-import { makeStyles } from '@griffel/react'
+import type { FC } from 'react'
 import type { EventResult, UserBadgeColor } from '../../types'
-import UserAvatar from '../UserAvatar'
 
-const useStyles = makeStyles({
-  avatar: {
-    flexShrink: 0,
-  },
-  content: {
-    flex: 1,
-    minWidth: 0,
-  },
-  messageText: {
-    wordWrap: 'break-word',
-    whiteSpace: 'pre-wrap',
-    fontSize: '13px',
-  },
-  timestamp: {
-    fontSize: '10px',
-    opacity: 0.7,
-  },
-  userBadge: {
-    whiteSpace: 'normal',
-    wordBreak: 'break-word',
-    display: 'inline',
-    verticalAlign: 'middle',
-    paddingTop: '1.5px',
-    paddingBottom: '2px',
-  },
-})
+import SystemMessage from './SystemMessage'
+import TextMessage from './TextMessage'
+
+import AskUserAboutThemselves from './ToolUseMessages/AskUserAboutThemselves'
+import ExtractFacts from './ToolUseMessages/ExtractFacts'
+
+type ComponentProps = {
+  event: EventResult
+}
+type ComponentMapping = Record<string, FC<ComponentProps>>
+
+const textMessageMapping: ComponentMapping = {
+  ask_user_about_themselves: AskUserAboutThemselves
+}
+
+// XXX include the `extract_facts` component for an example of
+// a component using a live query with groupBy and aggregation.
+const systemMessageMapping: ComponentMapping = {
+  // extract_facts: ExtractFacts
+}
 
 interface Props {
   event: EventResult
@@ -36,51 +28,28 @@ interface Props {
   userName: string
 }
 
-function ToolUseMessage({ event }: Props) {
-  const classes = useStyles()
-  const data = event.data
-  // const userId = data.input.subject
-  const question = data.input.question
-  const messageContent = `Hi thruflo, ${question}`
+function ToolUseMessage({ event, userName, userBadgeColor }: Props) {
+  const tool_use = event.data.name as string
 
-  if (!question) {
-    return null
+  const TextMessageContents = textMessageMapping[tool_use]
+  if (TextMessageContents !== undefined) {
+    return (
+      <TextMessage event={event} label={tool_use} userName={userName} userBadgeColor={userBadgeColor}>
+        <TextMessageContents event={ event } />
+      </TextMessage>
+    )
   }
 
-  return (
-    <>
-      <Box className={classes.avatar}>
-        <UserAvatar
-          username={event.user_name}
-          imageUrl={undefined}
-          size="medium"
-          showTooltip={false}
-        />
-      </Box>
-      <Box className={classes.content}>
-        <Flex align="center" gap="2" mb="1">
-          <Badge
-            size="2"
-            variant="soft"
-            color={'purple'}
-            className={classes.userBadge}
-          >
-            {event.user_name}
-          </Badge>
-          <Badge
-            size="1"
-            variant="soft"
-            color={'yellow'}
-            className={classes.timestamp}>
-            {event.data.name}
-          </Badge>
-        </Flex>
-        <Text size="2" className={classes.messageText}>
-          {messageContent}
-        </Text>
-      </Box>
-    </>
-  )
+  const SystemMessageContents = systemMessageMapping[tool_use]
+  if (SystemMessageContents !== undefined) {
+    return (
+      <SystemMessage event={event} userName={userName} userBadgeColor={userBadgeColor}>
+        <SystemMessageContents event={ event } />
+      </SystemMessage>
+    )
+  }
+
+  return null
 }
 
 export default ToolUseMessage

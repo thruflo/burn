@@ -70,7 +70,7 @@ defmodule Burn.MemoryTest do
       subject: subject
     } do
       assert {:ok, %Fact{} = fact} =
-               Memory.create_fact(thread, source_event, subject, @valid_attrs)
+               Memory.create_fact(thread, source_event, source_event, subject, @valid_attrs)
 
       assert fact.category == "some category"
       assert fact.object == "some object"
@@ -85,7 +85,7 @@ defmodule Burn.MemoryTest do
       subject: subject
     } do
       assert {:error, %Ecto.Changeset{}} =
-               Memory.create_fact(thread, source_event, subject, @invalid_attrs)
+               Memory.create_fact(thread, source_event, source_event, subject, @invalid_attrs)
     end
 
     test "update_fact/2 with valid data updates the fact", %{

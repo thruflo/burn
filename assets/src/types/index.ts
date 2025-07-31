@@ -8,6 +8,7 @@ export type EventResult = Pick<
   | 'inserted_at'
 > & {
   user_id: User['id']
+  user_avatar: User['avatar_url'],
   user_name: User['name']
   user_type: User['type']
 }

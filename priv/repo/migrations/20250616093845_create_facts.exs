@@ -15,6 +15,8 @@ defmodule Burn.Repo.Migrations.CreateFacts do
 
       add :source_event_id, references(:events, on_delete: :delete_all, type: :binary_id),
         null: false
+      add :tool_use_event_id, references(:events, on_delete: :delete_all, type: :binary_id),
+        null: false
 
       add :subject_id, references(:users, on_delete: :delete_all, type: :binary_id), null: false
 
@@ -23,6 +25,7 @@ defmodule Burn.Repo.Migrations.CreateFacts do
 
     create index(:facts, [:thread_id])
     create index(:facts, [:source_event_id])
+    create index(:facts, [:tool_use_event_id])
     create index(:facts, [:subject_id])
   end
 end

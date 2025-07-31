@@ -58,13 +58,10 @@ async function hasSyncedBack(tx: Transaction, txid: number, timeout: number = ON
 }
 
 export const ingestMutations: MutationFn = async ({ transaction }) => {
+  // await new Promise((resolve) => window.setTimeout(resolve, 2000))
+
   const payload = buildPayload(transaction)
-
-  console.log('ingesting', payload)
-
   const txid = await api.ingest(payload)
-
-  console.log('ingested', txid)
 
   if (txid === undefined) {
     return
@@ -72,9 +69,7 @@ export const ingestMutations: MutationFn = async ({ transaction }) => {
 
   await hasSyncedBack(transaction, txid)
 
-  console.log('hasSyncedBack', txid)
-
-  // await new Promise((resolve) => window.setTimeout(resolve, 500))
+  // await new Promise((resolve) => window.setTimeout(resolve, 2000))
 
   return { txid }
 }

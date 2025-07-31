@@ -39,7 +39,6 @@ function FactsList({ threadId, filter }: Props) {
       query
         .from({ fact: factCollection })
         .innerJoin({ user: userCollection }, ({ fact, user }) => eq(fact.subject_id, user.id))
-        .orderBy(({ fact }) => fact.inserted_at, 'asc')
         .select(({ fact, user }) => ({
           id: fact.id,
           subject: user.name,
@@ -48,7 +47,7 @@ function FactsList({ threadId, filter }: Props) {
           category: fact.category,
           confidence: fact.confidence,
           disputed: fact.disputed,
-          // inserted_at: fact.inserted_at,
+          inserted_at: fact.inserted_at!
         }))
         .where(({ fact }) => eq(fact.thread_id, threadId))
     ),
@@ -60,7 +59,10 @@ function FactsList({ threadId, filter }: Props) {
     (query) => {
       const baseQuery = query
         .from({ result: factResults })
-        // .orderBy(({ fact }) => fact.inserted_at, 'asc')
+        .orderBy(
+          ({ result }) => result.inserted_at,
+          { direction: 'asc', nulls: 'last' }
+        )
 
       return filterText
         ? baseQuery.fn.where(({ result }) => matchesFilter(result, filterText))

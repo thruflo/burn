@@ -1,8 +1,14 @@
-import { /* Badge, */ Flex, Text } from '@radix-ui/themes'
+import { Box, Flex, Text } from '@radix-ui/themes'
 import { makeStyles } from '@griffel/react'
 import type { EventResult, UserBadgeColor } from '../../types'
 
 const useStyles = makeStyles({
+  message: {
+    display: 'flex',
+    gap: 'var(--space-4)',
+    marginBottom: 'var(--space-4)',
+    maxWidth: '100%',
+  },
   messageInner: {
     marginBottom: 'var(--space-1)',
     marginLeft: 'auto',
@@ -37,7 +43,7 @@ function ToolResultMessage({ event }: Props) {
   const messageContent = JSON.stringify(event.data)
 
   return (
-    <>
+    <Box className={classes.message}>
       <Flex align="center" gap="1" className={classes.messageInner}>
         {/*<Badge size="2" variant="soft" color={userBadgeColor} className={classes.userBadge}>
           {userName}
@@ -46,7 +52,7 @@ function ToolResultMessage({ event }: Props) {
           tool result: {messageContent}
         </Text>
       </Flex>
-    </>
+    </Box>
   )
 }
 

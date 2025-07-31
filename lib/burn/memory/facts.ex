@@ -43,6 +43,7 @@ defmodule Burn.Memory.Fact do
   schema "facts" do
     belongs_to :thread, Threads.Thread
     belongs_to :source_event, Threads.Event
+    belongs_to :tool_use_event, Threads.Event
     belongs_to :subject, Accounts.User
 
     field :predicate, :string
@@ -57,11 +58,12 @@ defmodule Burn.Memory.Fact do
   @doc false
   def changeset(fact, attrs) do
     fact
-    |> cast(attrs, [:id, :source_event_id, :subject_id, :thread_id])
-    |> validate_required([:source_event_id, :subject_id, :thread_id])
+    |> cast(attrs, [:id, :source_event_id, :subject_id, :thread_id, :tool_use_event_id])
+    |> validate_required([:source_event_id, :subject_id, :thread_id, :tool_use_event_id])
     |> validate_fact_fields(attrs)
     |> assoc_constraint(:thread)
     |> assoc_constraint(:source_event)
+    |> assoc_constraint(:tool_use_event)
     |> assoc_constraint(:subject)
   end
 

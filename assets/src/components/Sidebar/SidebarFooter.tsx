@@ -19,18 +19,21 @@ function SidebarFooter() {
   const classes = useClasses()
   const navigate = useNavigate()
   const { theme, setTheme } = useTheme()
-  const { currentUserId, isAuthenticated } = useAuth()
+  const { currentUserId } = useAuth()
 
   const { data: users } = useLiveQuery(
     (query) => (
       query
         .from({ user: userCollection })
-        .select(({ user }) => ({ name: user.name }))
+        .select(({ user }) => ({
+          name: user.name,
+          avatarUrl: user.avatar_url
+        }))
         .where(({ user }) => eq(user.id, currentUserId))
     ),
     [currentUserId]
   )
-  const userName = users.length > 0 ? users[0].name : undefined
+  const currentUser = users.length > 0 ? users[0] : undefined
 
   const themeLabel =
     theme === `dark`
@@ -66,7 +69,7 @@ function SidebarFooter() {
     navigate({ to: '/welcome', search: { next: undefined } })
   }
 
-  if (!isAuthenticated || userName === undefined) {
+  if (currentUser === undefined) {
     return null
   }
 
@@ -74,8 +77,13 @@ function SidebarFooter() {
     <Box p="2" className={classes.footer}>
       <Flex align="center" justify="between" px="2">
         <Flex align="center" gap="2">
-          <UserAvatar username={userName} size="small" showTooltip={false} />
-          <Text size="1">{userName}</Text>
+          <UserAvatar
+            username={currentUser.name}
+            imageUrl={currentUser.avatarUrl}
+            size="small"
+            showTooltip={false}
+          />
+          <Text size="1">{currentUser.name}</Text>
         </Flex>
         <Flex gap="3">
           <Tooltip content={themeLabel}>

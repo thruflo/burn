@@ -76,7 +76,7 @@ function ThreadTopBar({ threadId, onEditClick }: Props) {
   const [showTooltip, setShowTooltip] = useState(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  const { data: users } = useLiveQuery(
+  const { collection: threadUsers } = useLiveQuery(
     (query) => (
       query
         .from({ user: userCollection })
@@ -86,20 +86,29 @@ function ThreadTopBar({ threadId, onEditClick }: Props) {
         )
         .select(({ user }) => ({
           id: user.id,
-          name: user.name
+          avatar_url: user.avatar_url,
+          name: user.name,
+          type: user.type
         }))
         .where(({ membership }) => eq(membership.thread_id, threadId))
     ),
     [threadId]
   )
 
-  // XXX
-  const agents = [
-    {
-      name: 'sarah',
-      imageUrl: 'https://i.pravatar.cc/150?u=sarah',
-    },
-  ]
+  // XXX seperate producer from comedians
+  const { data: agents } = useLiveQuery((query) =>
+    query
+      .from({ result: threadUsers })
+      .where(({ result }) => eq(result.type, 'agent'))
+      .orderBy(({ result }) => result.name, 'asc')
+  )
+
+  const { data: users } = useLiveQuery((query) =>
+    query
+      .from({ result: threadUsers })
+      .where(({ result }) => eq(result.type, 'human'))
+      .orderBy(({ result }) => result.name, 'asc')
+  )
 
   const handleInviteClick = useCallback(() => {
     copyInviteLink(threadId)
@@ -144,6 +153,7 @@ function ThreadTopBar({ threadId, onEditClick }: Props) {
               <UserAvatar
                 key={user.id}
                 username={user.name}
+                imageUrl={user.avatar_url}
                 size="medium"
                 index={index}
               />
@@ -164,9 +174,9 @@ function ThreadTopBar({ threadId, onEditClick }: Props) {
             <Flex className={classes.usersList}>
               {agents.map((agent, index) => (
                 <UserAvatar
-                  key={agent.name}
+                  key={agent.id}
                   username={agent.name}
-                  imageUrl={agent.imageUrl}
+                  imageUrl={agent.avatar_url}
                   size="medium"
                   index={index}
                 />

@@ -15,7 +15,7 @@ defmodule Burn.MemoryFixtures do
   """
   def fact_fixture(
         %Threads.Thread{} = thread,
-        %Threads.Event{} = source_event,
+        %Threads.Event{} = event,
         %Accounts.User{} = subject,
         attrs \\ %{}
       ) do
@@ -28,7 +28,7 @@ defmodule Burn.MemoryFixtures do
         disputed: false
       })
 
-    {:ok, fact} = Memory.create_fact(thread, source_event, subject, attrs)
+    {:ok, fact} = Memory.create_fact(thread, event, event, subject, attrs)
 
     fact
   end

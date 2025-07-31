@@ -58,12 +58,14 @@ defmodule Burn.Memory do
   def create_fact(
         %Threads.Thread{id: thread_id},
         %Threads.Event{id: source_event_id},
+        %Threads.Event{id: tool_use_event_id},
         %Accounts.User{id: subject_id},
         attrs \\ %{}
       ) do
     assoc_attrs = %{
       thread_id: thread_id,
       source_event_id: source_event_id,
+      tool_use_event_id: tool_use_event_id,
       subject_id: subject_id
     }
 
