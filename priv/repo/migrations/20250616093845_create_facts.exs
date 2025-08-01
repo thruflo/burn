@@ -15,6 +15,7 @@ defmodule Burn.Repo.Migrations.CreateFacts do
 
       add :source_event_id, references(:events, on_delete: :delete_all, type: :binary_id),
         null: false
+
       add :tool_use_event_id, references(:events, on_delete: :delete_all, type: :binary_id),
         null: false
 

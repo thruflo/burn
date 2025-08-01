@@ -9,16 +9,6 @@ defmodule Burn.Consumer do
   @type shape :: Phoenix.Sync.shape_definition()
   @type opts :: Electric.Client.stream_options()
 
-  @spec start_async(pid(), pid(), key(), shape(), opts()) :: {key(), pid()}
-  def start_async(supervisor, pid, key, shape, opts \\ []) do
-    %Task{pid: task_pid} =
-      Task.Supervisor.async(supervisor, fn ->
-        consume(pid, key, shape, opts)
-      end)
-
-    {task_pid, key}
-  end
-
   @doc """
   Consumes a stream, emitting batches of messages.
 
@@ -28,7 +18,7 @@ defmodule Burn.Consumer do
 
   This function will run until the stream is exhausted or an error occurs.
   """
-  @spec consume(pid(), atom(), shape(), opts()) :: :ok
+  @spec consume(pid(), key(), shape(), opts()) :: :ok
   def consume(pid, key, shape, opts \\ []) do
     shape
     |> Phoenix.Sync.Client.stream(opts)

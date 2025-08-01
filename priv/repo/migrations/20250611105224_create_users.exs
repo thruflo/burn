@@ -13,6 +13,7 @@ defmodule Burn.Repo.Migrations.CreateUsersAuthTables do
     end
 
     create index(:users, [:type])
+
     create unique_index(:users, [:name],
              where: "type = 'human'",
              name: :users_human_name_unique_idx

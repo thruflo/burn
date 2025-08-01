@@ -1,13 +1,13 @@
 defmodule Burn.Agents.Supervisor do
   @moduledoc """
-  Supervisor that manages agent GenServer processes across all threads.
-  
-  Uses Electric shapes to reactively monitor threads and memberships,
-  ensuring that every agent in every thread has their GenServer process running.
+  DynamicSupervisor that manages agent processes.
+
+  Uses Electric to monitor thread memberships. Ensuring that every
+  agent in every thread is running as a GenServer process.
   """
-  
   use GenServer
-  
+  require Logger
+
   alias Burn.{
     Accounts,
     Agents,
@@ -17,19 +17,8 @@ defmodule Burn.Agents.Supervisor do
     Threads
   }
 
-  defmodule State do
-    defstruct [
-      # Internal
-      :supervisor,
-      :tasks,
-
-      # State
-      :data, # %{thread_id => %{agent_name => pid}}
-      :pids # %{pid => {agent_name, thread_id}}
-    ]
-  end
-
   @agents %{
+    "frankie" => Agents.Frankie,
     "sarah" => Agents.Sarah,
     # ...
   }
@@ -41,202 +30,106 @@ defmodule Burn.Agents.Supervisor do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
-  @doc """
-  Get the current supervisor state. Useful for testing and debugging.
-  """
-  @spec get_state() :: State.t()
-  def get_state do
-    GenServer.call(__MODULE__, :get_state)
-  end
-
   # Server callbacks
 
   @impl true
   def init(_opts) do
-    {:ok, supervisor} = Task.Supervisor.start_link()
     pid = self()
 
-    shapes = [
-      {:memberships, Threads.Membership},
-      {:threads, Threads.Thread}
-    ]
+    {:ok, supervisor} = DynamicSupervisor.start_link(strategy: :one_for_one)
 
-    tasks =
-      shapes
-      |> Enum.map(fn {key, shape} -> Consumer.start_async(supervisor, pid, key, shape) end)
-      |> Enum.into(%{})
+    {:ok, _} = DynamicSupervisor.start_child(supervisor, %{
+      id: :membership_consumer,
+      start: {Task, :start_link, [fn -> Consumer.consume(pid, :memberships, Threads.Membership) end]},
+      restart: :permanent
+    })
 
-    state = %State{
-      supervisor: supervisor,
-      tasks: tasks,
-      data: %{},
-      pids: %{}
-    }
-
-    {:ok, state}
-  end
-
-  @impl true
-  def handle_call(:get_state, _from, state) do
-    {:reply, state, state}
-  end
-
-  @impl true
-  def handle_info({:DOWN, _ref, :process, pid, reason}, %{tasks: tasks} = state) when is_map_key(tasks, pid) do
-    IO.puts("Task completed with reason: #{inspect(reason)}, #{Map.get(tasks, pid)}")
-
-    # XXX Implement task restart logic
-    raise "NotImplemented - need to wipe and restart pid"
-
-    {:noreply, state}
-  end
-
-  def handle_info({:DOWN, _ref, :process, pid, _reason}, %{pids: pids} = state) do
-    case Map.pop(pids, pid) do
-      {nil, _pids} ->
-        {:noreply, state}
-
-      {{agent_name, thread_id}, remaining_pids} ->
-        {:ok, new_data, new_pids} = restart_agent(thread_id, agent_name, remaining_pids, state)
-
-        {:noreply, %State{state | data: new_data, pids: new_pids}}
-    end
+    {:ok, %{supervisor: supervisor}}
   end
 
   @impl true
   def handle_info({:stream, :memberships, []}, state), do: {:noreply, state}
-  def handle_info({:stream, :memberships, messages}, %{data: data, pids: pids} = state) do
-    # When a membership is deleted, stop the agent.
-    {:ok, data, pids} =
-      messages
-      |> Enum.filter(&Messages.is_delete/1)
-      |> Enum.map(&Messages.get_value/1)
-      |> Enum.reduce({:ok, data, pids}, &stop_agent/2)
 
-    # When a membership is inserted, start Sarah.
-    {:ok, data, pids} =
-      messages
-      |> Enum.filter(&Messages.is_insert/1)
-      |> Enum.map(&Messages.get_value/1)
-      |> Enum.reduce({:ok, data, pids}, &start_agent/2)
+  @doc """
+  When agents join a thread, start their process. When they leave, stop it.
 
-    {:noreply, %State{state | data: data, pids: pids}}
-  end
-
+  Note that thread and user deletion cascades. So if the thread is deleted
+  or the user is deleted, the membership is also deleted.
+  """
   @impl true
-  def handle_info({:stream, :threads, []}, state), do: {:noreply, state}
-  def handle_info({:stream, :threads, messages}, %{data: data, pids: pids} = state) do
-    {:ok, data, pids} =
-      messages
-      |> Enum.filter(&Messages.is_delete/1)
-      |> Enum.map(&Messages.get_value/1)
-      |> Enum.reduce({:ok, data, pids}, &pop_and_stop_agents/2)
+  def handle_info({:stream, :memberships, messages}, state) do
+    # Stop process when agent membership deleted
+    messages
+    |> Enum.filter(&Messages.is_delete/1)
+    |> Enum.map(&Messages.get_value/1)
+    |> Enum.map(&preload_associations/1)
+    |> Enum.filter(&is_agent_membership?/1)
+    |> Enum.each(&stop_agent(&1, state))
 
-    {:noreply, %State{state | data: data, pids: pids}}
+    # Start process when agent membership inserted
+    messages
+    |> Enum.filter(&Messages.is_insert/1)
+    |> Enum.map(&Messages.get_value/1)
+    |> Enum.map(&preload_associations/1)
+    |> Enum.filter(&is_agent_membership?/1)
+    |> Enum.each(&start_agent(&1, state))
+
+    {:noreply, state}
   end
 
   # Private functions
 
-  defp start_agent(%Threads.Membership{} = membership, {:ok, data, pids}) do
-    %{
-      thread: %Threads.Thread{id: thread_id} = thread,
-      user: %Accounts.User{name: user_name, type: user_type} = user
-    } = Repo.preload(membership, [:thread, :user])
+  defp preload_associations(%Threads.Membership{} = membership) do
+    Repo.preload(membership, [:thread, :user])
+  end
 
-    case user_type do
-      :human ->
-        {:ok, data, pids}
+  defp is_agent_membership?(%Threads.Membership{user: %Accounts.User{type: :agent, name: agent_name}}) do
+    Map.has_key?(@agents, agent_name)
+  end
+  defp is_agent_membership?(_), do: false
 
-      :agent ->
-        agent_name = user_name
-        agent_module = Map.fetch!(@agents, agent_name)
+  defp start_agent(
+        %Threads.Membership{
+          thread: %Threads.Thread{id: thread_id} = thread,
+          user: %Accounts.User{name: agent_name} = user
+        },
+        %{supervisor: supervisor}
+      ) do
+    agent_module = Map.fetch!(@agents, agent_name)
 
-        {:ok, agent_pid} = agent_module.start_link(thread, user)
+    child_spec = %{
+      id: agent_module.process_name(thread),
+      start: {agent_module, :start_link, [thread, user]},
+      restart: :permanent
+    }
 
-        Process.monitor(agent_pid)
+    case DynamicSupervisor.start_child(supervisor, child_spec) do
+      {:ok, _pid} -> :ok
+      {:error, {:already_started, _pid}} -> :ok
+      {:error, reason} ->
+        Logger.error("Failed to start agent #{agent_name} for thread #{thread_id}: #{inspect(reason)}")
 
-        agents_map =
-          data
-          |> Map.get(thread_id, %{})
-          |> Map.put(agent_name, agent_pid)
-
-        new_data = Map.put(data, thread_id, agents_map)
-        new_pids = Map.put(pids, agent_pid, {agent_name, thread_id})
-
-        {:ok, new_data, new_pids}
+        :error
     end
   end
 
-  defp stop_agent(%Threads.Membership{thread_id: thread_id} = membership, {:ok, data, pids}) do
-    %{
-      user: %Accounts.User{
-        name: user_name,
-        type: user_type
-      }
-    } = Repo.preload(membership, :user)
+  defp stop_agent(
+        %Threads.Membership{
+          thread: %Threads.Thread{id: thread_id} = thread,
+          user: %Accounts.User{name: agent_name}
+        },
+        %{supervisor: supervisor}
+      ) do
+    agent_module = Map.fetch!(@agents, agent_name)
+    child_id = agent_module.process_name(thread)
 
-    case user_type do
-      :human ->
-        {:ok, data, pids}
+    case DynamicSupervisor.terminate_child(supervisor, child_id) do
+      :ok -> :ok
+      {:error, :not_found} -> :ok
+      {:error, reason} ->
+        Logger.error("Failed to stop agent #{agent_name} for thread #{thread_id}: #{inspect(reason)}")
 
-      :agent ->
-        {agents_map, remaining_data} = Map.pop(data, thread_id, %{})
-        {agent_pid, remaining_agents} = Map.pop(agents_map, user_name)
-
-        case agent_pid do
-          nil ->
-            {:ok, data, pids}
-
-          pid ->
-            GenServer.stop(pid, :normal)
-
-            new_data = Map.put(remaining_data, thread_id, remaining_agents)
-            new_pids = Map.delete(pids, pid)
-
-            {:ok, new_data, new_pids}
-        end
-    end
-  end
-
-  defp pop_and_stop_agents(%Threads.Thread{id: thread_id}, {:ok, data, pids}) do
-    with {agents_map, remaining_data} when not is_nil(agents_map) <- Map.pop(data, thread_id) do
-      remaining_pids =
-        agents_map
-        |> Map.values()
-        |> Enum.reduce(
-          pids,
-          fn pid, pids ->
-            GenServer.stop(pid, :normal)
-
-            Map.delete(pids, pid)
-          end
-        )
-
-      {:ok, remaining_data, remaining_pids}
-
-    else
-      {nil, _data} ->
-        {:ok, data, pids}
-    end
-  end
-
-  defp restart_agent(thread_id, agent_name, remaining_pids, %{data: data}) do
-    case Threads.get_membership_for(thread_id, agent_name) do
-      nil ->
-        {:ok, cleanup_agent(thread_id, agent_name, data), remaining_pids}
-
-      %Threads.Membership{} = membership ->
-        start_agent(membership, {:ok, data, remaining_pids})
-    end
-  end
-
-  defp cleanup_agent(thread_id, agent_name, data) do
-    data
-    |> Map.get(thread_id, %{})
-    |> Map.delete(agent_name)
-    |> case do
-      empty_map when map_size(empty_map) == 0 -> Map.delete(data, thread_id)
-      agents_map -> Map.put(data, thread_id, agents_map)
+        :error
     end
   end
 end

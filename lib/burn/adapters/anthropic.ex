@@ -13,12 +13,12 @@ defmodule Burn.Adapters.Anthropic do
   Requires an array of `tools` in the params. The model is told to respond
   with a tool call using one of these tools.
   """
-  def initial_prompt(messages, system, tools, model \\ @default_model, max_tokens \\ 512) do
+  def initial_prompt(messages, prompt, tools, model \\ @default_model, max_tokens \\ 512) do
     %{
       max_tokens: max_tokens,
       messages: messages,
       model: full_model_name(model),
-      system: system,
+      system: prompt,
       tool_choice: %{
         type: "any",
         disable_parallel_tool_use: true

@@ -6,6 +6,7 @@ import TextMessage from './TextMessage'
 
 import AskUserAboutThemselves from './ToolUseMessages/AskUserAboutThemselves'
 import ExtractFacts from './ToolUseMessages/ExtractFacts'
+import RoastUser from './ToolUseMessages/RoastUser'
 
 type ComponentProps = {
   event: EventResult
@@ -13,13 +14,12 @@ type ComponentProps = {
 type ComponentMapping = Record<string, FC<ComponentProps>>
 
 const textMessageMapping: ComponentMapping = {
-  ask_user_about_themselves: AskUserAboutThemselves
+  ask_user_about_themselves: AskUserAboutThemselves,
+  roast_user: RoastUser
 }
 
-// XXX include the `extract_facts` component for an example of
-// a component using a live query with groupBy and aggregation.
 const systemMessageMapping: ComponentMapping = {
-  // extract_facts: ExtractFacts
+  extract_facts: ExtractFacts
 }
 
 interface Props {

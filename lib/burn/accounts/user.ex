@@ -92,5 +92,6 @@ defmodule Burn.Accounts.User do
         {:error, "Invalid content type: #{inspect(headers)}"}
     end
   end
+
   defp is_valid_image(_path), do: true
 end

@@ -38,14 +38,14 @@ defmodule Burn.Agents do
           | {:error, Changeset.t()}
           | {:error, any()}
           | {:error, atom(), any()}
-  def instruct(thread, messages, system, tools, model, opts \\ [])
-  def instruct(_thread, [], _system, _tools, _model, _opts), do: {:ok, nil}
+  def instruct(thread, messages, model, prompt, tools, opts \\ [])
+  def instruct(_thread, [], _model, _prompt, _tools, _opts), do: {:ok, nil}
 
-  def instruct(thread, messages, system, tools, model, opts) do
+  def instruct(thread, messages, model, prompt, tools, opts) do
     adapter = Keyword.get(opts, :adapter, @default_adapter)
     max_retries = Keyword.get(opts, :max_retries, @max_retries)
 
-    params = adapter.initial_prompt(messages, system, tools, model)
+    params = adapter.initial_prompt(messages, prompt, tools, model)
     do_instruct(thread, params, adapter, tools, max_retries)
   end
 

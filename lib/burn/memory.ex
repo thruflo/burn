@@ -44,6 +44,45 @@ defmodule Burn.Memory do
   def get_fact!(id), do: Repo.get!(Fact, id)
 
   @doc """
+  Checks if the thread contains enough facts about any single subject.
+
+  Returns `true` if there exists at least one subject in the thread that has
+  a number of facts equal to or greater than the specified threshold. Uses
+  efficient querying by grouping facts by subject and stopping at the first
+  subject that meets the criteria.
+
+  ## Parameters
+
+    * `thread` - A `%Threads.Thread{}` struct to check for facts
+    * `threshold` - The minimum number of facts required per subject (defaults to 3)
+
+  ## Examples
+
+      iex> thread = %Threads.Thread{id: 1}
+      iex> has_enough_facts(thread)
+      true
+
+      iex> has_enough_facts(thread, 5)
+      false
+
+  ## Returns
+
+    * `true` if any subject in the thread has at least `threshold` facts
+    * `false` if no subject meets the threshold requirement
+  """
+  def has_enough_facts(%Threads.Thread{id: thread_id}, threshold \\ 3) do
+    query =
+      from(f in Fact,
+        where: f.thread_id == ^thread_id,
+        group_by: f.subject_id,
+        having: count(f.id) >= ^threshold,
+        limit: 1
+      )
+
+    Repo.exists?(query)
+  end
+
+  @doc """
   Creates a fact.
 
   ## Examples

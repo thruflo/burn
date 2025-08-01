@@ -12,20 +12,33 @@
 
 alias Burn.{Accounts, Repo}
 
-# Create Sarah agent user
-case Accounts.get_agent_by_name("sarah") do
-  nil ->
-    attrs = %{
-      type: :agent,
-      name: "sarah",
-      avatar_url: "/images/agents/sarah.jpg"
-    }
+# Seed the system agents
 
-    %Accounts.User{}
-    |> Accounts.User.changeset(attrs)
-    |> Repo.insert!()
-    |> IO.inspect(label: "Created Sarah agent")
+producers = [
+  "sarah"
+]
 
-  sarah ->
-    IO.inspect(sarah, label: "Sarah agent already exists")
-end
+comedians = [
+  "frankie",
+]
+
+Enum.each(producers ++ comedians, fn name ->
+  display_name = String.capitalize(name)
+
+  case Accounts.get_agent_by_name(name) do
+    nil ->
+      attrs = %{
+        type: :agent,
+        name: name,
+        avatar_url: "/images/agents/#{name}.jpg"
+      }
+
+      %Accounts.User{}
+      |> Accounts.User.changeset(attrs)
+      |> Repo.insert!()
+      |> IO.inspect(label: "Created #{display_name} agent")
+
+    agent ->
+      IO.inspect(agent, label: "#{display_name} agent already exists")
+  end
+end)

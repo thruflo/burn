@@ -209,12 +209,15 @@ defmodule Burn.Threads do
     |> Event.changeset(attrs, user_type)
   end
 
-  def init_user_created_thread_event(thread_id, user_id, user_type)
-      when is_binary(thread_id) and is_binary(user_id) and user_type in [:human, :agent] do
+  def init_user_thread_event(thread_id, user_id, user_type, action)
+      when is_binary(thread_id) and
+             is_binary(user_id) and
+             user_type in [:human, :agent] and
+             is_atom(action) do
     attrs = %{
       type: :system,
       data: %{
-        action: :created,
+        action: action,
         target: :thread
       }
     }
@@ -226,7 +229,7 @@ defmodule Burn.Threads do
         %Thread{id: thread_id},
         %Accounts.User{id: user_id, type: user_type}
       ) do
-    init_user_created_thread_event(thread_id, user_id, user_type)
+    init_user_thread_event(thread_id, user_id, user_type, :created)
     |> insert_event()
   end
 
@@ -321,13 +324,15 @@ defmodule Burn.Threads do
   Get a membership for a specific thread and agent name.
   Returns the membership preloaded with thread and user, or nil if not found.
   """
-  def get_membership_for(thread_id, agent_name) when is_binary(thread_id) and is_binary(agent_name) do
-    query = from(m in Membership,
-      join: u in assoc(m, :user),
-      join: t in assoc(m, :thread),
-      where: m.thread_id == ^thread_id and u.name == ^agent_name and u.type == :agent,
-      preload: [user: u, thread: t]
-    )
+  def get_membership_for(thread_id, agent_name)
+      when is_binary(thread_id) and is_binary(agent_name) do
+    query =
+      from(m in Membership,
+        join: u in assoc(m, :user),
+        join: t in assoc(m, :thread),
+        where: m.thread_id == ^thread_id and u.name == ^agent_name and u.type == :agent,
+        preload: [user: u, thread: t]
+      )
 
     Repo.one(query)
   end

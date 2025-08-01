@@ -15,7 +15,12 @@ defmodule BurnWeb.IngestController do
     {:ok, txid, _changes} =
       Writer.new()
       |> Writer.allow(Threads.Event)
-      |> Writer.allow(Threads.Membership)
+      |> Writer.allow(
+        Threads.Membership,
+        insert: [
+          post_apply: &Ingest.on_insert_membership(&1, &2, &3, user)
+        ]
+      )
       |> Writer.allow(
         Threads.Thread,
         insert: [

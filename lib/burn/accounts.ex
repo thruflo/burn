@@ -41,6 +41,33 @@ defmodule Burn.Accounts do
   """
   def get_user!(id), do: Repo.get!(User, id)
 
+  @doc """
+  Returns all users who are members of the given thread.
+
+  ## Parameters
+   * `thread` - A `%Threads.Thread{}` struct
+
+  ## Returns
+   * List of `%User{}` structs, empty list if no members found
+
+  ## Example
+
+       iex> get_users_for_thread(%Threads.Thread{id: 123})
+       [%User{}, %User{}, ...]
+
+  """
+  def get_users_for_thread(%Threads.Thread{id: thread_id}) do
+    query =
+      from(u in User,
+        join: m in Threads.Membership,
+        on: u.id == m.user_id,
+        where: m.thread_id == ^thread_id,
+        order_by: u.name
+      )
+
+    Repo.all(query)
+  end
+
   def init_user(attrs) do
     %User{}
     |> User.changeset(attrs)
@@ -144,29 +171,30 @@ defmodule Burn.Accounts do
 
     with {:ok, user} = create_user(attrs),
          {:ok, thread} = Threads.create_new_thread(user),
-         {:ok, _membership} = Threads.create_membership(thread, user, :owner),
          {:ok, _event} = Threads.create_user_created_thread_event(thread, user),
-         {:ok, _sarah_membership} = add_sarah_to_thread(thread) do
+         {:ok, _user_membership} = Threads.create_membership(thread, user, :owner),
+         {:ok, _sarah_membership} = add_agent_to_thread(thread, "sarah", :producer),
+         {:ok, _frankie_membership} = add_agent_to_thread(thread, "frankie", :comedian) do
       {:ok, user}
     end
   end
 
   @doc """
-  Add Sarah agent to a thread by creating a membership.
-  Assumes Sarah agent user already exists (created in seeds).
+  Add agent to a thread by creating a membership.
+  Assumes the agent user already exists (created in seeds).
   """
-  def add_sarah_to_thread(%Threads.Thread{} = thread) do
-    with %User{type: :agent} = sarah <- get_agent_by_name("sarah") do
-      Threads.create_membership(thread, sarah, :producer)
+  def add_agent_to_thread(%Threads.Thread{} = thread, name, role) do
+    with %User{type: :agent} = agent <- get_agent_by_name(name) do
+      Threads.create_membership(thread, agent, role)
     end
   end
 
-  def init_sarah_membership(thread_id) do
-    with %User{type: :agent, id: user_id} <- get_agent_by_name("sarah") do
+  def init_agent_membership(thread_id, name, role) do
+    with %User{type: :agent, id: user_id} <- get_agent_by_name(name) do
       Threads.init_membership(%{
         thread_id: thread_id,
         user_id: user_id,
-        role: :producer
+        role: role
       })
     end
   end
