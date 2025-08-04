@@ -23,7 +23,7 @@ defmodule Burn.Context do
     What's the next step?
     """
 
-    # IO.puts("\n\n#{summary}")
+    Logger.info("\n\n#{summary}\n")
 
     [%{role: :user, content: summary}]
   end

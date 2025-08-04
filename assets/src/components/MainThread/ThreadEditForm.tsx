@@ -57,6 +57,8 @@ function ThreadEditForm({ threadId }: Props) {
   const classes = useClasses()
   const { currentUserId } = useAuth()
 
+  // Get the current thread.
+
   const { data: threads } = useLiveQuery(
     (query) =>
       query
@@ -67,10 +69,10 @@ function ThreadEditForm({ threadId }: Props) {
   const thread = threads[0]!
 
   const [threadName, setThreadName] = useState(thread.name)
+  const [threadNameSaved, setThreadNameSaved] = useState(false)
   const [showRemoveModal, setShowRemoveModal] = useState(false)
   const [userToRemove, setUserToRemove] = useState<UserResult | null>(null)
   const [inviteCopied, setInviteCopied] = useState(false)
-  const [threadNameSaved, setThreadNameSaved] = useState(false)
 
   // All the users and agents in the thread.
 
@@ -168,6 +170,7 @@ function ThreadEditForm({ threadId }: Props) {
 
   const handleRemoveUser = (user: UserResult) => {
     setUserToRemove(user)
+
     setShowRemoveModal(true)
   }
 
@@ -182,24 +185,8 @@ function ThreadEditForm({ threadId }: Props) {
 
   const cancelRemoveUser = () => {
     setShowRemoveModal(false)
+
     setUserToRemove(null)
-  }
-
-  const handleAgentToggle = (agentName: string, isEnabled: boolean) => {
-    setAllAgents((prev) =>
-      prev.map((agent) =>
-        agent.name === agentName ? { ...agent, isEnabled } : agent
-      )
-    )
-
-    // XXX
-    console.log('Actually toggle agent:', agentName, isEnabled)
-  }
-
-  const handleAgentRowClick = (agent: Agent) => {
-    if (!agent.isProducer) {
-      handleAgentToggle(agent.name, !agent.isEnabled)
-    }
   }
 
   const handleUserRowClick = (user: UserResult) => {
@@ -210,7 +197,9 @@ function ThreadEditForm({ threadId }: Props) {
 
   const handleCopyInvite = () => {
     copyInviteLink(threadId)
+
     setInviteCopied(true)
+
     setTimeout(() => setInviteCopied(false), 2000)
   }
 
@@ -247,7 +236,6 @@ function ThreadEditForm({ threadId }: Props) {
             </Text>
           </Box>
           <Flex direction="column">
-            {console.log(threadUsers)}
             {threadUsers.map((user, index) => (
               <Flex
                 align="center"

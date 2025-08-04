@@ -23,8 +23,6 @@ function MainThread({ threadId }: Props) {
   const classes = useClasses()
   const [isEditing, setIsEditing] = useState(false)
 
-  console.log('MainThread render', threadId)
-
   return (
     <Flex direction="column" height="100%">
       {isEditing ? (

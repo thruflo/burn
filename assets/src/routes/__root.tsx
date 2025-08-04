@@ -24,14 +24,10 @@ function Root() {
       const hasPath = path !== undefined && path !== '/'
       const search = hasPath ? { next: path } : { next: undefined }
 
-      console.log('root redirecting to /welcome')
-
       navigate({ to: '/welcome', replace: true, search })
     }
 
     if (isAuthenticated && location.pathname === '/welcome') {
-      console.log('root redirecting to /')
-
       navigate({ to: '/', replace: true })
     }
   }, [isAuthenticated, location.pathname, location.search, navigate])

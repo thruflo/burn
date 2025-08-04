@@ -104,8 +104,6 @@ defmodule Burn.Agents.Supervisor do
       restart: :permanent
     }
 
-    IO.inspect {:START_AGENT, agent_name, thread_id}
-
     result =
       case DynamicSupervisor.start_child(supervisor, child_spec) do
         {:ok, _pid} -> :ok
@@ -115,8 +113,6 @@ defmodule Burn.Agents.Supervisor do
 
           :error
       end
-
-    IO.inspect {:WHICH_CHILDREN, DynamicSupervisor.which_children(supervisor)}
 
     result
   end

@@ -153,8 +153,6 @@ defmodule Burn.SyncCase do
       SQL.query!(Burn.Repo, """
         SELECT pg_replication_slot_advance('#{slot_name}', pg_current_wal_lsn());
       """)
-
-      # IO.inspect {:after, replication_slot_status(slot_name)}
     end)
   end
 

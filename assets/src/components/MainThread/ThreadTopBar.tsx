@@ -76,8 +76,6 @@ function ThreadTopBar({ threadId, onEditClick }: Props) {
   const [showTooltip, setShowTooltip] = useState(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  console.log('ThreadTopBar render', threadId)
-
   const { collection: threadUsers } = useLiveQuery(
     (query) =>
       query
@@ -96,7 +94,6 @@ function ThreadTopBar({ threadId, onEditClick }: Props) {
     [threadId]
   )
 
-  // XXX seperate producer from comedians
   const { data: agents } = useLiveQuery(
     (query) => (
       query

@@ -55,10 +55,6 @@ defmodule Burn.Agents.Jerry do
   def handle_instruct(%{events: events, thread: thread, agent: agent} = state) do
     messages = Context.to_messages(events)
 
-    IO.puts "\n"
-    IO.inspect {:INSTRUCTING, agent.name, self()}
-    IO.puts "\n"
-
     {:ok, tool_call} = Agents.instruct(thread, messages, @model, @prompt, @tools)
     {:ok, events} = Agents.perform(thread, agent, tool_call)
 
@@ -73,22 +69,10 @@ defmodule Burn.Agents.Jerry do
         reversed_new_events = Enum.reverse(new_events)
         reversed_events = reversed_new_events ++ Enum.reverse(old_events)
 
-        IO.puts "\n\n"
-        IO.inspect {:SHOULD_INSTRUCT, :jerry}
-        IO.inspect {:new_events, new_events}
-
         {is_my_turn, last_joke} = did_not_tell_the_last_joke(reversed_events, agent)
 
-        IO.inspect {:is_my_turn, is_my_turn}
-        IO.inspect {:last_joke, last_joke}
-        IO.inspect {:contains_fact_extraction_since, contains_fact_extraction_since(reversed_new_events, last_joke)}
-
-        result = is_my_turn and contains_fact_extraction_since(reversed_new_events, last_joke)
-
-        IO.inspect {:SHOULD_INSTRUCT_RESULT, result}
-        IO.puts "\n\n"
-
-        result
+        is_my_turn and
+        contains_fact_extraction_since(reversed_new_events, last_joke)
 
       false ->
         false

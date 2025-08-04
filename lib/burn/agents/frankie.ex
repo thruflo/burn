@@ -66,10 +66,6 @@ defmodule Burn.Agents.Frankie do
   def handle_instruct(%{events: events, thread: thread, agent: agent} = state) do
     messages = Context.to_messages(events)
 
-    IO.puts "\n"
-    IO.inspect {:INSTRUCTING, agent.name, self()}
-    IO.puts "\n"
-
     {:ok, tool_call} = Agents.instruct(thread, messages, @model, @prompt, @tools)
     {:ok, events} = Agents.perform(thread, agent, tool_call)
 
@@ -84,6 +80,7 @@ defmodule Burn.Agents.Frankie do
         events = Enum.reverse(old_events ++ new_events)
 
         {is_my_turn, last_joke} = did_not_tell_the_last_joke(events, agent)
+
         is_my_turn and
         joke_has_been_told(events) and
         contains_fact_extraction_since(events, last_joke)

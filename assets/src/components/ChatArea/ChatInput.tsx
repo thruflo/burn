@@ -87,8 +87,8 @@ function ChatInput({ threadId }: Props) {
   }
 
   // Auto-resize textarea as content grows
-  // XXX throttle
-  // XXX windoe resize
+  // XXX todo: throttle
+  // XXX todo: handle window resize
   const adjustTextareaHeight = () => {
     if (!inputRef.current) return
 

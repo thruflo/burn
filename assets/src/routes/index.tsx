@@ -28,28 +28,13 @@ function Index() {
   )
   const latestThreadId = threads.length > 0 ? threads[0].id : undefined
 
-  console.log(
-    'currentUserId',
-    currentUserId,
-    'isAuthenticated',
-    isAuthenticated,
-    'latestThreadId',
-    latestThreadId
-  )
-
   useEffect(() => {
     if (!isAuthenticated || latestThreadId === undefined) {
-      console.log('index not redirecting')
-
       return
     }
 
-    console.log('index redirecting to thread', latestThreadId)
-
     navigate({ to: '/threads/$threadId', params: { threadId: latestThreadId } })
   }, [isAuthenticated, latestThreadId, navigate])
-
-  console.log('index rendering null')
 
   return null
 }

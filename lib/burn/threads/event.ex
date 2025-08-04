@@ -1,16 +1,4 @@
 defmodule Burn.Threads.Event do
-  # XXX so ... you need to change this to capture the info
-  # necessary to represent messages.
-
-  # Messages need `role` and `content`. The Context module can
-  # extend the way we format events. But we need:
-  #
-  # 1. to be able to convert tool use results into events
-  # 2. and convert user events like natural messages and test messages
-  # 3. and then we need to represent these out again in the format context window step
-  #
-  # The API spec is kinda here: https://docs.anthropic.com/en/api/messages
-
   use Ecto.Schema
   import Ecto.Changeset
 
