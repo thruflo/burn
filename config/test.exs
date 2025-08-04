@@ -6,6 +6,11 @@ config :burn, Burn.Adapters.Anthropic,
     sonnet: "claude-3-5-haiku-20241022"
   ]
 
+config :phoenix_sync,
+  env: :test,
+  mode: :sandbox,
+  repo: Burn.Repo
+
 # Configure your database
 #
 # The MIX_TEST_PARTITION environment variable can be used

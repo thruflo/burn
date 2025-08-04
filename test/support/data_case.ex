@@ -38,6 +38,41 @@ defmodule Burn.DataCase do
   def setup_sandbox(tags) do
     pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Burn.Repo, shared: not tags[:async])
     on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
+    Phoenix.Sync.Sandbox.start!(Burn.Repo, pid, shared: not tags[:async])
+
+    # {:ok, sup_pid} = Burn.Agents.Supervisor.start_link()
+
+    on_exit(fn ->
+      # if Process.alive?(sup_pid) do
+      #   Supervisor.stop(sup_pid, :normal)
+      # end
+
+      Ecto.Adapters.SQL.Sandbox.stop_owner(pid)
+    end)
+  end
+
+  @doc """
+  Helper for asserting that a function will return
+  a truthy value eventually within a given time frame.
+  From https://peterullrich.com/async-testing-with-eventually
+  """
+  def assert_eventually(fun, timeout \\ 2_000, interval \\ 20)
+
+  def assert_eventually(_fun, timeout, _interval) when timeout <= 0 do
+    raise ExUnit.AssertionError, "Failed to receive a truthy result before timeout."
+  end
+
+  def assert_eventually(fun, timeout, interval) do
+    result = fun.()
+
+    ExUnit.Assertions.assert(result)
+
+    result
+  rescue
+    ExUnit.AssertionError ->
+      Process.sleep(interval)
+
+      assert_eventually(fun, timeout - interval, interval)
   end
 
   @doc """

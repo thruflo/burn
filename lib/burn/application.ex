@@ -14,7 +14,7 @@ defmodule Burn.Application do
       {Phoenix.PubSub, name: Burn.PubSub},
       {Finch, name: Burn.Finch},
       {Registry, keys: :unique, name: Burn.Agents},
-      Burn.Agents.Supervisor,
+    ] ++ sync_spawning_children(Mix.env()) ++ [
       {BurnWeb.Endpoint, phoenix_sync: Phoenix.Sync.plug_opts()}
     ]
 
@@ -23,6 +23,9 @@ defmodule Burn.Application do
     opts = [strategy: :one_for_one, name: Burn.Supervisor]
     Supervisor.start_link(children, opts)
   end
+
+  defp sync_spawning_children(:test), do: []
+  defp sync_spawning_children(_), do: [Burn.Agents.Supervisor]
 
   # Tell Phoenix to update the endpoint configuration
   # whenever the application is updated.

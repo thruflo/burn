@@ -1,5 +1,5 @@
 defmodule Burn.Agents.SarahTest do
-  use Burn.SyncCase
+  use Burn.DataCase
 
   import Burn.{
     AccountsFixtures,
