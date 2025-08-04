@@ -100,7 +100,7 @@ const typeColors = {
   system: 'yellow',
   text: 'green',
   tool_use: 'orange',
-  tool_result: 'orange'
+  tool_result: 'orange',
 }
 
 type Props = {

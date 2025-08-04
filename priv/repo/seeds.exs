@@ -19,7 +19,8 @@ producers = [
 ]
 
 comedians = [
-  "frankie",
+  "jerry",
+  "frankie"
 ]
 
 Enum.each(producers ++ comedians, fn name ->

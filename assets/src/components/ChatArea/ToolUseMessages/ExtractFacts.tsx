@@ -10,17 +10,18 @@ function ExtractFacts({ event }: Props) {
   const eventId = event.id
 
   const { data: results } = useLiveQuery(
-    (query) => (
+    (query) =>
       query
         .from({ fact: factCollection })
-        .join({ user: userCollection }, ({ fact, user }) => eq(fact.subject_id, user.id))
+        .join({ user: userCollection }, ({ fact, user }) =>
+          eq(fact.subject_id, user.id)
+        )
         .groupBy(({ user }) => user.name)
         .select(({ fact, user }) => ({
           subject: user.name,
-          count: count(fact.id)
+          count: count(fact.id),
         }))
-        .where(({ fact }) => eq(fact.tool_use_event_id, eventId))
-    ),
+        .where(({ fact }) => eq(fact.tool_use_event_id, eventId)),
     [eventId]
   )
 
@@ -29,29 +30,18 @@ function ExtractFacts({ event }: Props) {
 
   return (
     <>
-      extracted
-      {' '}
+      extracted{' '}
       {results.map(({ subject, count }, index) => {
         const [countStr, label] =
-          count > 1
-          ? [`${count}`, 'facts']
-          : ['a', 'fact']
+          count > 1 ? [`${count}`, 'facts'] : ['a', 'fact']
 
         const divider =
-          index === lastEntry
-          ? ''
-          : (
-            index === secondLastEntry
-            ? ' and '
-            : ', '
-          )
+          index === lastEntry ? '' : index === secondLastEntry ? ' and ' : ', '
 
         return (
           <>
-            {countStr} {label} about
-            {' '}
-            <span style={{color: 'rgb(125, 184, 255)'}}>
-              @{subject}</span>
+            {countStr} {label} about{' '}
+            <span style={{ color: 'rgb(125, 184, 255)' }}>@{subject}</span>
             {divider}
           </>
         )

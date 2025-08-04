@@ -37,29 +37,28 @@ function ChatArea({ threadId }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null)
 
   const { data: events } = useLiveQuery(
-    (query) => (
+    (query) =>
       query
         .from({ event: eventCollection })
-        .innerJoin(
-          { user: userCollection },
-          ({ event, user }) => eq(user.id, event.user_id)
+        .innerJoin({ user: userCollection }, ({ event, user }) =>
+          eq(user.id, event.user_id)
         )
-        .orderBy(
-          ({ event }) => event.inserted_at,
-          { direction: 'asc', nulls: 'last' }
-        )
+        .orderBy(({ event }) => event.inserted_at, {
+          direction: 'asc',
+          nulls: 'last',
+        })
         .select(({ event, user }) => ({
           data: event.data,
           id: event.id,
           inserted_at: event.inserted_at!,
+          thread_id: event.thread_id,
           type: event.type,
           user_id: user.id,
           user_avatar: user.avatar_url,
           user_name: user.name,
-          user_type: user.type
+          user_type: user.type,
         }))
-        .where(({ event }) => eq(event.thread_id, threadId))
-    ),
+        .where(({ event }) => eq(event.thread_id, threadId)),
     [threadId]
   )
 
@@ -71,9 +70,9 @@ function ChatArea({ threadId }: Props) {
     <Box className={classes.container}>
       <ScrollArea className={classes.messagesContainer}>
         <Box className={classes.messagesInner}>
-          {events.map((event) =>
+          {events.map((event) => (
             <ChatMessage key={event.id} event={event} />
-          )}
+          ))}
           <div ref={bottomRef} />
         </Box>
       </ScrollArea>

@@ -30,12 +30,16 @@ defmodule Burn.Ingest do
     sarah_membership = Accounts.init_agent_membership(thread_id, "sarah", :producer)
     sarah_membership_key = Writer.operation_name(context, :sarah_thread_membership)
 
+    jerry_membership = Accounts.init_agent_membership(thread_id, "jerry", :comedian)
+    jerry_membership_key = Writer.operation_name(context, :jerry_thread_membership)
+
     frankie_membership = Accounts.init_agent_membership(thread_id, "frankie", :comedian)
     frankie_membership_key = Writer.operation_name(context, :frankie_thread_membership)
 
     multi
     |> Multi.insert(event_key, event)
     |> Multi.insert(sarah_membership_key, sarah_membership)
+    |> Multi.insert(jerry_membership_key, jerry_membership)
     |> Multi.insert(frankie_membership_key, frankie_membership)
   end
 

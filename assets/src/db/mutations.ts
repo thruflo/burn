@@ -17,7 +17,10 @@ function isElectricUtils(utils: UtilsRecord): utils is ElectricCollectionUtils {
   return 'awaitTxId' in utils && typeof (utils as any).awaitTxId === 'function'
 }
 
-function patchRelationMetadata(result: MutationData, collection: Collection): MutationData {
+function patchRelationMetadata(
+  result: MutationData,
+  collection: Collection
+): MutationData {
   // Set the sync metadata from the collection id, because the default
   // implementation looks for a `table` param which we don't use.
   const parts = collection.id.split(':')
@@ -39,7 +42,11 @@ function buildPayload(tx: Transaction) {
   return { mutations }
 }
 
-async function hasSyncedBack(tx: Transaction, txid: number, timeout: number = ONE_HOUR) {
+async function hasSyncedBack(
+  tx: Transaction,
+  txid: number,
+  timeout: number = ONE_HOUR
+) {
   const collections = new Set<Collection>(
     tx.mutations.map((mutation) => mutation.collection).filter(Boolean)
   )

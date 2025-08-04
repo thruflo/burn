@@ -77,7 +77,7 @@ function ThreadTopBar({ threadId, onEditClick }: Props) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const { collection: threadUsers } = useLiveQuery(
-    (query) => (
+    (query) =>
       query
         .from({ user: userCollection })
         .innerJoin(
@@ -90,8 +90,7 @@ function ThreadTopBar({ threadId, onEditClick }: Props) {
           name: user.name,
           type: user.type
         }))
-        .where(({ membership }) => eq(membership.thread_id, threadId))
-    ),
+        .where(({ membership }) => eq(membership.thread_id, threadId)),
     [threadId]
   )
 
@@ -100,7 +99,7 @@ function ThreadTopBar({ threadId, onEditClick }: Props) {
     query
       .from({ result: threadUsers })
       .where(({ result }) => eq(result.type, 'agent'))
-      .orderBy(({ result }) => result.name, 'asc')
+      .orderBy(({ result }) => result.name, 'desc')
   )
 
   const { data: users } = useLiveQuery((query) =>

@@ -19,6 +19,7 @@ defmodule Burn.Agents.Supervisor do
 
   @agents %{
     "frankie" => Agents.Frankie,
+    "jerry" => Agents.Jerry,
     "sarah" => Agents.Sarah,
     # ...
   }
@@ -103,14 +104,21 @@ defmodule Burn.Agents.Supervisor do
       restart: :permanent
     }
 
-    case DynamicSupervisor.start_child(supervisor, child_spec) do
-      {:ok, _pid} -> :ok
-      {:error, {:already_started, _pid}} -> :ok
-      {:error, reason} ->
-        Logger.error("Failed to start agent #{agent_name} for thread #{thread_id}: #{inspect(reason)}")
+    IO.inspect {:START_AGENT, agent_name, thread_id}
 
-        :error
-    end
+    result =
+      case DynamicSupervisor.start_child(supervisor, child_spec) do
+        {:ok, _pid} -> :ok
+        {:error, {:already_started, _pid}} -> :ok
+        {:error, reason} ->
+          Logger.error("Failed to start agent #{agent_name} for thread #{thread_id}: #{inspect(reason)}")
+
+          :error
+      end
+
+    IO.inspect {:WHICH_CHILDREN, DynamicSupervisor.which_children(supervisor)}
+
+    result
   end
 
   defp stop_agent(

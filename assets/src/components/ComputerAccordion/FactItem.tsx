@@ -40,17 +40,30 @@ const useStyles = makeStyles({
     gap: 'var(--space-1)',
     lineHeight: '1.4',
     paddingTop: 'var(--space-1)',
-    paddingBottom: 'var(--space-1)'
+    paddingBottom: 'var(--space-1)',
+    minWidth: 0,
+  },
+  icon: {
+    flexShrink: 0,
+    flexGrow: 0,
   },
   badge: {
     whiteSpace: 'normal',
     wordBreak: 'break-word',
+    minWidth: 0,
+  },
+  subject: {
+    flex: '0 0 auto',
+    minWidth: 0,
   },
   predicate: {
     color: 'var(--gray-12)',
+    flex: '0 1 auto'
   },
   object: {
-  }
+    flex: '0 2 auto',
+    minWidth: 0,
+  },
 })
 
 type Props = {
@@ -62,6 +75,7 @@ function FactItem({ fact }: Props) {
   const { color, fill, level } = confidenceConfig(fact.confidence)
   const tooltipContent = `${level} (${fact.confidence})`
 
+  const subjectClassName = mergeClasses(classes.badge, classes.subject)
   const predicateClassName = mergeClasses(classes.badge, classes.predicate)
   const objectClassName = mergeClasses(classes.badge, classes.object)
 
@@ -73,9 +87,14 @@ function FactItem({ fact }: Props) {
   return (
     <Box className={classes.factItem}>
       <Tooltip content={tooltipContent}>
-        <Lightbulb size={12} color={color} fill={fill} />
+        <Lightbulb
+          size={12}
+          color={color}
+          fill={fill}
+          className={classes.icon}
+        />
       </Tooltip>
-      <Badge size="1" variant="soft" color="blue" className={classes.badge}>
+      <Badge size="1" variant="soft" color="blue" className={subjectClassName}>
         {fact.subject}
       </Badge>
       <Text size="1" weight="medium" className={predicateClassName}>

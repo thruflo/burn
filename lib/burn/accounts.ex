@@ -174,6 +174,7 @@ defmodule Burn.Accounts do
          {:ok, _event} = Threads.create_user_created_thread_event(thread, user),
          {:ok, _user_membership} = Threads.create_membership(thread, user, :owner),
          {:ok, _sarah_membership} = add_agent_to_thread(thread, "sarah", :producer),
+         {:ok, _jerry_membership} = add_agent_to_thread(thread, "jerry", :comedian),
          {:ok, _frankie_membership} = add_agent_to_thread(thread, "frankie", :comedian) do
       {:ok, user}
     end

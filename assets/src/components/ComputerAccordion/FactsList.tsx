@@ -15,7 +15,10 @@ const useStyles = makeStyles({
   },
 })
 
-function matchesFilter({ subject, predicate, object }: FactResult, text: string): boolean {
+function matchesFilter(
+  { subject, predicate, object }: FactResult,
+  text: string
+): boolean {
   return (
     subject.toLowerCase().includes(text) ||
     predicate.toLowerCase().includes(text) ||
@@ -35,10 +38,12 @@ function FactsList({ threadId, filter }: Props) {
   // First filter the facts by threadId,
   // joining to users to get the subject name.
   const { collection: factResults } = useLiveQuery(
-    (query) => (
+    (query) =>
       query
         .from({ fact: factCollection })
-        .innerJoin({ user: userCollection }, ({ fact, user }) => eq(fact.subject_id, user.id))
+        .innerJoin({ user: userCollection }, ({ fact, user }) =>
+          eq(fact.subject_id, user.id)
+        )
         .select(({ fact, user }) => ({
           id: fact.id,
           subject: user.name,
@@ -47,10 +52,9 @@ function FactsList({ threadId, filter }: Props) {
           category: fact.category,
           confidence: fact.confidence,
           disputed: fact.disputed,
-          inserted_at: fact.inserted_at!
+          inserted_at: fact.inserted_at!,
         }))
-        .where(({ fact }) => eq(fact.thread_id, threadId))
-    ),
+        .where(({ fact }) => eq(fact.thread_id, threadId)),
     [threadId]
   )
 
@@ -59,10 +63,10 @@ function FactsList({ threadId, filter }: Props) {
     (query) => {
       const baseQuery = query
         .from({ result: factResults })
-        .orderBy(
-          ({ result }) => result.inserted_at,
-          { direction: 'asc', nulls: 'last' }
-        )
+        .orderBy(({ result }) => result.inserted_at, {
+          direction: 'asc',
+          nulls: 'last',
+        })
 
       return filterText
         ? baseQuery.fn.where(({ result }) => matchesFilter(result, filterText))

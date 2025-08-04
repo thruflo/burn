@@ -37,23 +37,22 @@ function SidebarThreads({ threadId }: Props) {
   const navigate = useNavigate()
 
   const { data: threads } = useLiveQuery(
-    (query) => (
+    (query) =>
       query
         .from({ thread: threadCollection })
         .innerJoin(
           { membership: membershipCollection },
           ({ thread, membership }) => eq(thread.id, membership.thread_id)
         )
-        .orderBy(
-          ({ thread }) => thread.inserted_at,
-          { direction: 'desc', nulls: 'first' }
-        )
+        .orderBy(({ thread }) => thread.inserted_at, {
+          direction: 'desc',
+          nulls: 'first',
+        })
         .select(({ thread }) => ({
           id: thread.id,
-          name: thread.name
+          name: thread.name,
         }))
-        .where(({ membership }) => eq(membership.user_id, currentUserId))
-    ),
+        .where(({ membership }) => eq(membership.user_id, currentUserId)),
     [currentUserId]
   )
 

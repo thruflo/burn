@@ -18,7 +18,7 @@ import {
   factCollection,
   membershipCollection,
   threadCollection,
-  userCollection
+  userCollection,
 } from '../../db/collections'
 
 const useClasses = makeStyles({
@@ -60,7 +60,7 @@ function ThreadPage() {
   const { toggleLeftSidebar, toggleRightSidebar } = useSidebar()
 
   const { data: threads } = useLiveQuery(
-    (query) => (
+    (query) =>
       query
         .from({ thread: threadCollection })
         .innerJoin(
@@ -69,11 +69,10 @@ function ThreadPage() {
         )
         .select(({ thread }) => ({
           id: thread.id,
-          name: thread.name
+          name: thread.name,
         }))
         .where(({ thread }) => eq(thread.id, threadId))
-        .where(({ membership }) => eq(membership.user_id, currentUserId))
-    ),
+        .where(({ membership }) => eq(membership.user_id, currentUserId)),
     [threadId, currentUserId]
   )
   const activeThread = threads.length === 1 ? threads[0] : undefined
@@ -135,7 +134,7 @@ export const Route = createFileRoute(`/threads/$threadId`)({
       factCollection.preload(),
       membershipCollection.preload(),
       threadCollection.preload(),
-      userCollection.preload()
+      userCollection.preload(),
     ])
-  }
+  },
 })

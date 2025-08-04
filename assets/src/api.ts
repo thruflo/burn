@@ -40,7 +40,9 @@ export async function signIn(
   }
 }
 
-export async function ingest(payload: IngestPayload): Promise<number | undefined> {
+export async function ingest(
+  payload: IngestPayload
+): Promise<number | undefined> {
   const headers = authHeaders()
 
   try {

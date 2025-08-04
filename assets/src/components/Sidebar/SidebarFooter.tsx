@@ -22,15 +22,14 @@ function SidebarFooter() {
   const { currentUserId } = useAuth()
 
   const { data: users } = useLiveQuery(
-    (query) => (
+    (query) =>
       query
         .from({ user: userCollection })
         .select(({ user }) => ({
           name: user.name,
-          avatarUrl: user.avatar_url
+          avatarUrl: user.avatar_url,
         }))
-        .where(({ user }) => eq(user.id, currentUserId))
-    ),
+        .where(({ user }) => eq(user.id, currentUserId)),
     [currentUserId]
   )
   const currentUser = users.length > 0 ? users[0] : undefined

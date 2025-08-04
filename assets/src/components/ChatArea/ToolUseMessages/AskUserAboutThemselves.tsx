@@ -1,6 +1,6 @@
 import type { EventResult } from '../../../types'
 
-import { useLiveQuery, eq } from '@tanstack/react-db'
+import { useLiveQuery, eq, lt } from '@tanstack/react-db'
 import { userCollection } from '../../../db/collections'
 
 interface Props {
@@ -8,19 +8,49 @@ interface Props {
 }
 
 function AskUserAboutThemselves({ event }: Props) {
+  const insertedAt = event.inserted_at
+  const threadId = event.thread_id
+
   const { question, subject } = event.data.input
+
+  console.log('threadId', threadId, insertedAt)
 
   const formattedQuestion =
     question.length > 0
-    ? question.charAt(0).toLowerCase() + question.slice(1)
-    : question
+      ? question.charAt(0).toLowerCase() + question.slice(1)
+      : question
 
-  const { data: users } = useLiveQuery((query) => (
+  // Figure out whether this is the first question asked of this user in
+  // this thread. If it is, we prefix the question test with "Hi, ".
+  const { data: previousEvents } = useLiveQuery(
+    (query) => (
+      query
+        .from({ event: eventCollection })
+        .select(({ event }) => ({
+          id: event.id
+        }))
+        .orderBy(({ event }) => event.inserted_at, 'asc')
+        .limit(1)
+        .where(({ event }) => eq(event.thread_id, threadId))
+        .where(({ event }) => eq(event.type, 'tool_use'))
+        .where(({ event }) => lt(event.inserted_at, insertedAt))
+        .fn.where(({ event }) => {
+          const { input, name } = event.data
+
+          return name === 'ask_user_about_themselves' && input.subject === subject
+        })
+    ),
+    [insertedAt, subject, threadId]
+  )
+  const isFirstQuestion = previousEvents.length === 0
+  const prefix = isFirstQuestion ? 'Hi ' : ''
+
+  const { data: users } = useLiveQuery(
+    (query) =>
       query
         .from({ user: userCollection })
         .where(({ user }) => eq(user.id, subject))
-        .select(({ user }) => ({ name: user.name }))
-    ),
+        .select(({ user }) => ({ name: user.name })),
     [subject]
   )
   const subjectUser = users.length > 0 ? users[0] : undefined
@@ -31,10 +61,9 @@ function AskUserAboutThemselves({ event }: Props) {
 
   return (
     <>
-      Hi{' '}
-      <span style={{'color': 'rgb(125, 184, 255)'}}>
-        @{subjectUser.name}</span>,
-      {' '}
+      {prefix}
+      <span style={{ color: 'rgb(125, 184, 255)' }}>@{subjectUser.name}</span>
+      {prefix ? ', ' : ' '}
       {formattedQuestion}
     </>
   )

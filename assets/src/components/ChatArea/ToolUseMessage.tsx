@@ -15,11 +15,11 @@ type ComponentMapping = Record<string, FC<ComponentProps>>
 
 const textMessageMapping: ComponentMapping = {
   ask_user_about_themselves: AskUserAboutThemselves,
-  roast_user: RoastUser
+  roast_user: RoastUser,
 }
 
 const systemMessageMapping: ComponentMapping = {
-  extract_facts: ExtractFacts
+  extract_facts: ExtractFacts,
 }
 
 interface Props {
@@ -34,8 +34,13 @@ function ToolUseMessage({ event, userName, userBadgeColor }: Props) {
   const TextMessageContents = textMessageMapping[tool_use]
   if (TextMessageContents !== undefined) {
     return (
-      <TextMessage event={event} label={tool_use} userName={userName} userBadgeColor={userBadgeColor}>
-        <TextMessageContents event={ event } />
+      <TextMessage
+        event={event}
+        label={tool_use}
+        userName={userName}
+        userBadgeColor={userBadgeColor}
+      >
+        <TextMessageContents event={event} />
       </TextMessage>
     )
   }
@@ -43,8 +48,12 @@ function ToolUseMessage({ event, userName, userBadgeColor }: Props) {
   const SystemMessageContents = systemMessageMapping[tool_use]
   if (SystemMessageContents !== undefined) {
     return (
-      <SystemMessage event={event} userName={userName} userBadgeColor={userBadgeColor}>
-        <SystemMessageContents event={ event } />
+      <SystemMessage
+        event={event}
+        userName={userName}
+        userBadgeColor={userBadgeColor}
+      >
+        <SystemMessageContents event={event} />
       </SystemMessage>
     )
   }

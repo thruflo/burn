@@ -1,6 +1,9 @@
 import { FetchError } from '@electric-sql/client'
 import { electricCollectionOptions } from '@tanstack/electric-db-collection'
-import { createCollection, localStorageCollectionOptions } from '@tanstack/react-db'
+import {
+  createCollection,
+  localStorageCollectionOptions,
+} from '@tanstack/react-db'
 import { ingestMutations } from './mutations'
 import {
   authSchema,
@@ -13,7 +16,11 @@ import {
 
 import type { Value } from '@electric-sql/client'
 import type { ElectricCollectionUtils } from '@tanstack/electric-db-collection'
-import type { InsertMutationFn, UpdateMutationFn, DeleteMutationFn } from '@tanstack/react-db'
+import type {
+  InsertMutationFn,
+  UpdateMutationFn,
+  DeleteMutationFn,
+} from '@tanstack/react-db'
 import type { Auth, Event, Fact, Membership, Thread, User } from './schema'
 
 type CollectionKey = string | number
@@ -37,15 +44,11 @@ const headers = {
   },
 }
 
-async function onError (error: Error) {
-  if (error instanceof FetchError) {
-    const status = error.status
+async function onError(error: Error) {
+  if (error.status === 401 && authCollection.has('current')) {
+    await authCollection.delete('current')
 
-    if (status === 401 && authCollection.has('current')) {
-      authCollection.delete('current')
-
-      return { headers }
-    }
+    return { headers }
   }
 
   throw error
@@ -67,7 +70,7 @@ const parser = {
 const baseShapeOptions = {
   headers,
   onError,
-  parser
+  parser,
 }
 
 function operationHandlers<Type extends object>() {
@@ -91,7 +94,7 @@ export const eventCollection = createCollection<
     id: `events`,
     shapeOptions: {
       url: relativeUrl('/sync/events'),
-      ...baseShapeOptions
+      ...baseShapeOptions,
     },
     getKey: (item: Event) => item.id as string,
     schema: eventSchema,
@@ -108,7 +111,7 @@ export const factCollection = createCollection<
     id: `facts`,
     shapeOptions: {
       url: relativeUrl('/sync/facts'),
-      ...baseShapeOptions
+      ...baseShapeOptions,
     },
     getKey: (item: Fact) => item.id as string,
     schema: factSchema,
@@ -125,7 +128,7 @@ export const membershipCollection = createCollection<
     id: `memberships`,
     shapeOptions: {
       url: relativeUrl('/sync/memberships'),
-      ...baseShapeOptions
+      ...baseShapeOptions,
     },
     getKey: (item: Membership) => item.id as string,
     schema: membershipSchema,
@@ -142,7 +145,7 @@ export const threadCollection = createCollection<
     id: `threads`,
     shapeOptions: {
       url: relativeUrl('/sync/threads'),
-      ...baseShapeOptions
+      ...baseShapeOptions,
     },
     getKey: (item: Thread) => item.id as string,
     schema: threadSchema,
@@ -159,7 +162,7 @@ export const userCollection = createCollection<
     id: `users`,
     shapeOptions: {
       url: relativeUrl('/sync/users'),
-      ...baseShapeOptions
+      ...baseShapeOptions,
     },
     getKey: (item: User) => item.id as string,
     schema: userSchema,

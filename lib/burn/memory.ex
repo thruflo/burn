@@ -82,6 +82,17 @@ defmodule Burn.Memory do
     Repo.exists?(query)
   end
 
+  def has_enough_facts_for(%Threads.Thread{id: thread_id}, subject_id, threshold \\ 3) do
+    count =
+      from(f in Fact,
+        where: f.thread_id == ^thread_id,
+        where: f.subject_id == ^subject_id
+      )
+      |> Repo.aggregate(:count, :id)
+
+    count >= threshold
+  end
+
   @doc """
   Creates a fact.
 

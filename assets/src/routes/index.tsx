@@ -10,21 +10,20 @@ function Index() {
   const { currentUserId, isAuthenticated } = useAuth()
 
   const { data: threads } = useLiveQuery(
-    (query) => (
+    (query) =>
       query
         .from({ thread: threadCollection })
         .innerJoin(
           { membership: membershipCollection },
           ({ thread, membership }) => eq(thread.id, membership.thread_id)
         )
-        .orderBy(
-          ({ thread }) => thread.inserted_at,
-          { direction: 'desc', nulls: 'first' }
-        )
+        .orderBy(({ thread }) => thread.inserted_at, {
+          direction: 'desc',
+          nulls: 'first',
+        })
         .limit(1)
         .select(({ thread }) => ({ id: thread.id }))
-        .where(({ membership }) => eq(membership.user_id, currentUserId))
-    ),
+        .where(({ membership }) => eq(membership.user_id, currentUserId)),
     [currentUserId]
   )
   const latestThreadId = threads.length > 0 ? threads[0].id : undefined
@@ -45,7 +44,7 @@ export const Route = createFileRoute(`/`)({
   loader: async () => {
     await Promise.all([
       membershipCollection.preload(),
-      threadCollection.preload()
+      threadCollection.preload(),
     ])
-  }
+  },
 })

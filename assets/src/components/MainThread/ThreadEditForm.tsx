@@ -60,11 +60,10 @@ function ThreadEditForm({ threadId }: Props) {
   const { currentUserId } = useAuth()
 
   const { data: threads } = useLiveQuery(
-    (query) => (
+    (query) =>
       query
         .from({ thread: threadCollection })
-        .where(({ thread }) => eq(thread.id, threadId))
-    ),
+        .where(({ thread }) => eq(thread.id, threadId)),
     [threadId]
   )
   const thread = threads[0]!
@@ -76,7 +75,7 @@ function ThreadEditForm({ threadId }: Props) {
   const [threadNameSaved, setThreadNameSaved] = useState(false)
 
   const { data: users } = useLiveQuery(
-    (query) => (
+    (query) =>
       query
         .from({ user: userCollection })
         .innerJoin(
@@ -87,10 +86,9 @@ function ThreadEditForm({ threadId }: Props) {
         .select(({ user, membership }) => ({
           id: user.id,
           name: user.name,
-          membership_id: membership.id
+          membership_id: membership.id,
         }))
-        .where(({ membership }) => eq(membership.thread_id, threadId))
-    ),
+        .where(({ membership }) => eq(membership.thread_id, threadId)),
     [threadId]
   )
 

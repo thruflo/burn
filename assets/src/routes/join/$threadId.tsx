@@ -12,13 +12,12 @@ function JoinPage() {
   const { threadId } = useParams({ from: '/join/$threadId' })
 
   const { data: memberships } = useLiveQuery(
-    (query) => (
+    (query) =>
       query
         .from({ membership: membershipCollection })
         .select(({ membership }) => ({ id: membership.id }))
         .where(({ membership }) => eq(membership.thread_id, threadId))
-        .where(({ membership }) => eq(membership.user_id, currentUserId))
-    ),
+        .where(({ membership }) => eq(membership.user_id, currentUserId)),
     [threadId, currentUserId]
   )
   const hasMembership = memberships.length > 0
@@ -46,5 +45,5 @@ export const Route = createFileRoute(`/join/$threadId`)({
   component: JoinPage,
   loader: async () => {
     await membershipCollection.preload()
-  }
+  },
 })

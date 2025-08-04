@@ -5,10 +5,11 @@ export type EventResult = Pick<
   | 'id'
   | 'type'
   | 'data'
+  | 'thread_id'
   | 'inserted_at'
 > & {
   user_id: User['id']
-  user_avatar: User['avatar_url'],
+  user_avatar: User['avatar_url']
   user_name: User['name']
   user_type: User['type']
 }

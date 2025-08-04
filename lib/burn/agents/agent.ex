@@ -162,6 +162,46 @@ defmodule Burn.Agents.Agent do
       def handle_call(:get_state, _from, state) do
         {:reply, state, state}
       end
+
+      # Utilities
+
+      defp joke_has_been_told(events) do
+       Enum.any?(events, &is_tool_use(&1, "roast_user"))
+      end
+
+      defp contains_fact_extraction_since(reversed_events, last_joke_event) do
+        with %Threads.Event{id: event_id} <- last_joke_event,
+             index when not is_nil(index) <- Enum.find_index(reversed_events, fn %{id: id} -> id == event_id end) do
+          reversed_events
+          |> Enum.split(index)
+          |> elem(0)
+        else
+          _ ->
+            reversed_events
+        end
+        |> Enum.any?(&is_tool_use(&1, "extract_facts"))
+      end
+
+      defp did_not_tell_the_last_joke(reversed_events, %{id: agent_id, name: agent_name}) do
+        # IO.inspect {:did_not_tell_the_last_joke, agent_name}
+
+        reversed_events
+        |> Enum.find(&is_tool_use(&1, "roast_user"))
+        |> case do
+          %{user_id: ^agent_id} = last_joke_event ->
+            # IO.inspect {:did_not_tell_the_last_joke, false, last_joke_event}
+
+            {false, last_joke_event}
+
+          last_joke_event ->
+            # IO.inspect {:did_not_tell_the_last_joke, true, last_joke_event}
+
+            {true, last_joke_event}
+        end
+      end
+
+      defp is_tool_use(%{type: :tool_use, data: %{"name" => a}}, b) when a == b, do: true
+      defp is_tool_use(_, _), do: false
     end
   end
 end

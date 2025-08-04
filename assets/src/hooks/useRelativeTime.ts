@@ -9,18 +9,18 @@ type TimeOpts = {
   hour: '2-digit'
   minute: '2-digit'
   second: undefined
-};
+}
 
 type DateOpts = TimeOpts & {
   year: 'numeric'
   month: 'short'
   day: 'numeric'
-};
+}
 
 const timeOpts: TimeOpts = {
   hour: '2-digit',
   minute: '2-digit',
-  second: undefined
+  second: undefined,
 }
 
 const dateOpts: DateOpts = {

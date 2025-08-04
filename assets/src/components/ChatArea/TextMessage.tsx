@@ -47,7 +47,13 @@ interface Props {
   label?: string
 }
 
-function TextMessage({ children, event, label, userBadgeColor, userName }: Props) {
+function TextMessage({
+  children,
+  event,
+  label,
+  userBadgeColor,
+  userName,
+}: Props) {
   const classes = useStyles()
   const timeStr = useRelativeTime(event.inserted_at)
 
@@ -76,7 +82,8 @@ function TextMessage({ children, event, label, userBadgeColor, userName }: Props
               size="1"
               variant="soft"
               color={'yellow'}
-              className={classes.timestamp}>
+              className={classes.timestamp}
+            >
               {label}
             </Badge>
           )}
