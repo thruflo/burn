@@ -83,6 +83,10 @@ defmodule Burn.Agents.Sarah do
   I.e.: if you have extracted 3 facts about Bob and 2 facts about Sarah, the
   next question should find out information about Sarah, not Bob.
 
+  Don't spam the thread with parallel questions to different users. If you have
+  asked a user a question, don't ask (them or another user) a question until
+  they've answered the question.
+
   #{Agents.shared_system_rules()}
   """
 

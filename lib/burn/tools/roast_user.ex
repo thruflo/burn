@@ -9,7 +9,8 @@ defmodule Burn.Tools.RoastUser do
   The `subject` is the ID of the user that you're asking.
   The `roast` is the joke that you're making about them.
 
-  Be brief with your roast. It should be no more than three sentances long.
+  Be brief with your roast. It should be no more than three sentances
+  or 280 characters long.
 
   Roasting is meant to be direct, personal and entertaining.
   With roasting, what might normally be inappropriate comments become acceptable.

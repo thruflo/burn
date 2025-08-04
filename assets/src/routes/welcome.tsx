@@ -73,20 +73,20 @@ function Welcome() {
         flexGrow="1"
       >
         <Box maxWidth="512px" width="100%" p="0 16px">
-          <Heading size="6" mb="5" mt="5" align="center" weight="medium">
+          <Heading size="6" mb="5" mt="5" align="left" weight="medium">
             <Text className={classes.fireIcon}>🔥</Text>
-            Welcome to Burn
+            Burn
           </Heading>
           <form onSubmit={signInUser}>
             <Flex direction="column" gap="4" width="100%">
               <Box>
-                <Text as="label" size="2" weight="medium">
+                <Text as="label" size="3" weight="medium">
                   Enter your username
                 </Text>
                 <Box>
                   <Text size="1" color="gray">
-                    Using your GitHub username will automatically pull in your
-                    avatar.
+                    Using your GitHub username (and pausing for a moment) will
+                    pull&nbsp;in your&nbsp;avatar.
                   </Text>
                 </Box>
               </Box>
