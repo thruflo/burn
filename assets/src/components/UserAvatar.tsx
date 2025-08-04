@@ -66,7 +66,7 @@ const useClasses = makeStyles({
     position: `relative`,
     boxSizing: `border-box`,
     fontSize: `var(--font-size-2)`,
-    overflow: 'hidden',
+    overflow: 'hidden'
   },
   image: {
     width: '100%',
@@ -89,13 +89,13 @@ const useClasses = makeStyles({
     fontSize: `14px`,
   },
   'small.overlap': {
-    marginLeft: `-${Math.floor(parseInt(`20px`) * 0.35)}px`,
+    marginLeft: `-${Math.floor(parseInt(`10px`) * 0.35)}px`,
   },
   'medium.overlap': {
-    marginLeft: `-${Math.floor(parseInt(`30px`) * 0.25)}px`,
+    marginLeft: `-${Math.floor(parseInt(`20px`) * 0.25)}px`,
   },
   'large.overlap': {
-    marginLeft: `-${Math.floor(parseInt(`40px`) * 0.35)}px`,
+    marginLeft: `-${Math.floor(parseInt(`30px`) * 0.35)}px`,
   },
 })
 

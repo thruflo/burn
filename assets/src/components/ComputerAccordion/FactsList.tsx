@@ -72,7 +72,7 @@ function FactsList({ threadId, filter }: Props) {
         ? baseQuery.fn.where(({ result }) => matchesFilter(result, filterText))
         : baseQuery
     },
-    [filterText]
+    [factResults, filterText]
   )
 
   return (

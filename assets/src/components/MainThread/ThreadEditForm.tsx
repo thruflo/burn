@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useLiveQuery, eq } from '@tanstack/react-db'
+import { useLiveQuery, eq, not } from '@tanstack/react-db'
 import {
   Box,
   Flex,
@@ -23,18 +23,6 @@ import {
 } from '../../db/collections'
 import type { Membership, User } from '../../db/schema'
 
-type UserResult = Pick<User, 'id' | 'name'> & {
-  membership_id: Membership['id']
-}
-
-// XXX
-type Agent = {
-  name: string
-  imageUrl: string | undefined
-  isEnabled: boolean
-  isProducer: boolean
-}
-
 const useClasses = makeStyles({
   listItem: {
     borderRadius: 'var(--radius-2)',
@@ -50,6 +38,16 @@ const useClasses = makeStyles({
     },
   },
 })
+
+type UserResult = Pick<
+  User,
+  | 'id'
+  | 'name'
+  | 'avatar_url'
+> & {
+  membership_id: Membership['id'],
+  membership_role: Membership['role']
+}
 
 type Props = {
   threadId: string
@@ -74,43 +72,88 @@ function ThreadEditForm({ threadId }: Props) {
   const [inviteCopied, setInviteCopied] = useState(false)
   const [threadNameSaved, setThreadNameSaved] = useState(false)
 
-  const { data: users } = useLiveQuery(
-    (query) =>
+  // All the users and agents in the thread.
+
+  const { collection: memberResults } = useLiveQuery(
+    (query) => (
       query
         .from({ user: userCollection })
         .innerJoin(
           { membership: membershipCollection },
           ({ user, membership }) => eq(user.id, membership.user_id)
         )
-        .orderBy(({ user }) => user.name, 'asc')
         .select(({ user, membership }) => ({
           id: user.id,
           name: user.name,
+          type: user.type,
+          avatar_url: user.avatar_url,
           membership_id: membership.id,
+          membership_role: membership.role,
         }))
-        .where(({ membership }) => eq(membership.thread_id, threadId)),
+        .where(({ membership }) => eq(membership.thread_id, threadId))
+    ),
     [threadId]
   )
 
-  const currentUser = users.find((user) => user.id === currentUserId)!
-  const otherUsers = users.filter((user) => user.id !== currentUserId)
+  // Just the humans.
+
+  const { collection: userResults } = useLiveQuery(
+    (query) => (
+      query
+        .from({ result: memberResults })
+        .where(({ result }) => eq(result.type, 'human'))
+    ),
+    [memberResults]
+  )
+  const { data: currentUsers } = useLiveQuery(
+    (query) => (
+      query
+        .from({ result: userResults })
+        .where(({ result }) => eq(result.id, currentUserId))
+    ),
+    [userResults, currentUserId]
+  )
+  const { data: otherUsers } = useLiveQuery(
+    (query) => (
+      query
+        .from({ result: userResults })
+        .orderBy(({ result }) => result.name, 'asc')
+        .where(({ result }) => not(eq(result.id, currentUserId)))
+    ),
+    [userResults, currentUserId]
+  )
+  const currentUser = currentUsers[0]!
   const threadUsers = [currentUser, ...otherUsers]
 
-  // XXX
-  const [allAgents, setAllAgents] = useState<Agent[]>([
-    {
-      name: 'sarah',
-      imageUrl: 'https://i.pravatar.cc/150?u=sarah',
-      isEnabled: true,
-      isProducer: true,
-    },
-    {
-      name: 'frankie',
-      imageUrl: 'https://i.pravatar.cc/150?u=frankie',
-      isEnabled: false,
-      isProducer: false,
-    },
-  ])
+  // Just the agents.
+
+  const { collection: agentResults } = useLiveQuery(
+    (query) => (
+      query
+        .from({ result: memberResults })
+        .where(({ result }) => eq(result.type, 'agent'))
+    ),
+    [memberResults]
+  )
+  const { data: producers } = useLiveQuery(
+    (query) => (
+      query
+        .from({ result: agentResults })
+        .orderBy(({ result }) => result.name, 'asc')
+        .where(({ result }) => eq(result.membership_role, 'producer'))
+    ),
+    [agentResults]
+  )
+  const { data: comedians } = useLiveQuery(
+    (query) => (
+      query
+        .from({ result: agentResults })
+        .orderBy(({ result }) => result.name, 'asc')
+        .where(({ result }) => eq(result.membership_role, 'comedian'))
+    ),
+    [agentResults]
+  )
+  const threadAgents = [...producers, ...comedians]
 
   const handleSaveThreadName = (e: React.FormEvent) => {
     e.preventDefault()
@@ -204,6 +247,7 @@ function ThreadEditForm({ threadId }: Props) {
             </Text>
           </Box>
           <Flex direction="column">
+            {console.log(threadUsers)}
             {threadUsers.map((user, index) => (
               <Flex
                 align="center"
@@ -217,7 +261,7 @@ function ThreadEditForm({ threadId }: Props) {
                 onClick={() => handleUserRowClick(user)}
               >
                 <Flex align="center" gap="2">
-                  <UserAvatar username={user.name} size="medium" />
+                  <UserAvatar username={user.name} imageUrl={user.avatar_url} size="medium" />
                   <Text size="2">{user.name}</Text>
                   {index === 0 && (
                     <Text size="1" color="gray">
@@ -266,7 +310,6 @@ function ThreadEditForm({ threadId }: Props) {
             </Flex>
           </Box>
         </Box>
-        {/* Manage agents */}
         <Box>
           <Box mb="2">
             <Text size="3" weight="medium">
@@ -274,39 +317,38 @@ function ThreadEditForm({ threadId }: Props) {
             </Text>
           </Box>
           <Flex direction="column">
-            {allAgents.map((agent) => (
+            {threadAgents.map((agent, index) => (
               <Flex
                 align="center"
                 justify="between"
                 pb="1"
-                key={agent.name}
                 className={mergeClasses(
                   classes.listItem,
-                  !agent.isProducer && classes.clickableRow
+                  index !== 0 && classes.clickableRow
                 )}
-                onClick={() => handleAgentRowClick(agent)}
+                key={agent.name}
+                onClick={() => handleUserRowClick(agent)}
               >
                 <Flex align="center" gap="2">
-                  <UserAvatar
-                    username={agent.name}
-                    imageUrl={agent.imageUrl}
-                    size="medium"
-                  />
+                  <UserAvatar username={agent.name} imageUrl={agent.avatar_url} size="medium" />
                   <Text size="2">{agent.name}</Text>
-                  {agent.isProducer && (
-                    <Text size="1" color="gray">
-                      (producer)
-                    </Text>
-                  )}
+                  <Text size="1" color="gray">
+                    ({agent.membership_role})
+                  </Text>
                 </Flex>
-                <Checkbox
-                  checked={agent.isEnabled}
-                  disabled={agent.isProducer}
-                  onCheckedChange={(checked) =>
-                    handleAgentToggle(agent.name, checked === true)
-                  }
-                  onClick={(e) => e.stopPropagation()}
-                />
+                {agent.membership_role !== 'producer' && (
+                  <IconButton
+                    variant="ghost"
+                    size="1"
+                    color="red"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleRemoveUser(agent)
+                    }}
+                  >
+                    <CloseIcon size={14} />
+                  </IconButton>
+                )}
               </Flex>
             ))}
           </Flex>

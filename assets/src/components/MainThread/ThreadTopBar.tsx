@@ -76,6 +76,8 @@ function ThreadTopBar({ threadId, onEditClick }: Props) {
   const [showTooltip, setShowTooltip] = useState(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  console.log('ThreadTopBar render', threadId)
+
   const { collection: threadUsers } = useLiveQuery(
     (query) =>
       query
@@ -95,18 +97,24 @@ function ThreadTopBar({ threadId, onEditClick }: Props) {
   )
 
   // XXX seperate producer from comedians
-  const { data: agents } = useLiveQuery((query) =>
-    query
-      .from({ result: threadUsers })
-      .where(({ result }) => eq(result.type, 'agent'))
-      .orderBy(({ result }) => result.name, 'desc')
+  const { data: agents } = useLiveQuery(
+    (query) => (
+      query
+        .from({ result: threadUsers })
+        .where(({ result }) => eq(result.type, 'agent'))
+        .orderBy(({ result }) => result.name, 'desc')
+    ),
+    [threadUsers]
   )
 
-  const { data: users } = useLiveQuery((query) =>
-    query
-      .from({ result: threadUsers })
-      .where(({ result }) => eq(result.type, 'human'))
-      .orderBy(({ result }) => result.name, 'asc')
+  const { data: users } = useLiveQuery(
+    (query) => (
+      query
+        .from({ result: threadUsers })
+        .where(({ result }) => eq(result.type, 'human'))
+        .orderBy(({ result }) => result.name, 'asc')
+    ),
+    [threadUsers]
   )
 
   const handleInviteClick = useCallback(() => {

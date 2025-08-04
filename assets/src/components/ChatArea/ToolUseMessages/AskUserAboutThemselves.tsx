@@ -13,8 +13,6 @@ function AskUserAboutThemselves({ event }: Props) {
 
   const { question, subject } = event.data.input
 
-  console.log('threadId', threadId, insertedAt)
-
   const formattedQuestion =
     question.length > 0
       ? question.charAt(0).toLowerCase() + question.slice(1)

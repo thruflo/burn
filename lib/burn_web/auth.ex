@@ -18,9 +18,17 @@ defmodule BurnWeb.Auth do
     if conn.assigns[:current_user] do
       conn
     else
+      status =
+        case get_req_header(conn, "authorization") do
+          ["Bearer " <> _user_id] ->
+            :forbidden
+
+          _missing ->
+            :unauthorized
+        end
+
       conn
-      |> put_status(401)
-      |> send_resp(:unauthorized, "")
+      |> send_resp(status, "")
       |> halt()
     end
   end

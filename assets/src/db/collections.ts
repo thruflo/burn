@@ -45,8 +45,14 @@ const headers = {
 }
 
 async function onError(error: Error) {
-  if (error.status === 401 && authCollection.has('current')) {
+  if (error.status === 403 && authCollection.has('current')) {
     await authCollection.delete('current')
+
+    return { headers }
+  }
+
+  if (error.status === 401) {
+    await new Promise((resolve) => authCollection.subscribeChanges(resolve))
 
     return { headers }
   }

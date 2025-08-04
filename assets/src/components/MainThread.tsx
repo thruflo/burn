@@ -23,6 +23,8 @@ function MainThread({ threadId }: Props) {
   const classes = useClasses()
   const [isEditing, setIsEditing] = useState(false)
 
+  console.log('MainThread render', threadId)
+
   return (
     <Flex direction="column" height="100%">
       {isEditing ? (
@@ -31,14 +33,13 @@ function MainThread({ threadId }: Props) {
             <ThreadEditTopBar onClose={() => setIsEditing(false)} />
           </Box>
           <Box className={classes.content}>
-            <ThreadEditForm key={threadId} threadId={threadId} />
+            <ThreadEditForm threadId={threadId} />
           </Box>
         </>
       ) : (
         <>
           <Box>
             <ThreadTopBar
-              key={threadId}
               threadId={threadId}
               onEditClick={() => setIsEditing(true)}
             />

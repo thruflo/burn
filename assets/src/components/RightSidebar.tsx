@@ -93,7 +93,7 @@ function RightSidebar({ threadId }: Props) {
         <RightSidebarHeader />
         <ScrollArea className={classes.scrollArea}>
           <Flex direction="column">
-            <ComputerAccordion key={threadId} threadId={threadId} />
+            <ComputerAccordion threadId={threadId} />
           </Flex>
         </ScrollArea>
       </Box>

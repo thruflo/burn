@@ -117,7 +117,7 @@ function ThreadPage() {
             </Flex>
           </Box>
           <Box style={{ flex: 1, overflow: 'hidden' }}>
-            <MainThread key={activeThread.id} threadId={activeThread.id} />
+            <MainThread threadId={activeThread.id} />
           </Box>
         </Flex>
       </Flex>

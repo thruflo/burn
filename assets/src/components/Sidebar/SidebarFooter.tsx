@@ -65,7 +65,11 @@ function SidebarFooter() {
   function handleLogout() {
     authSignOut()
 
-    navigate({ to: '/welcome', search: { next: undefined } })
+    navigate({
+      to: '/welcome',
+      search: { next: undefined },
+      reloadDocument: true
+    })
   }
 
   if (currentUser === undefined) {
