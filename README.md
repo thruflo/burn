@@ -145,9 +145,8 @@ Some aspects of the demo app are simplified or not-yet implemented.
 
 1. the app syncs all data to the client. It doesn't filter or construct dynamic shapes based on the auth context
 2. auth tokens are just usernames accepted at face value (they're not signed or validated)
-3. write-path authorization is not-yet implemented (all writes are accepted)
-4. there is some hardcoded control flow in the agent `should_instruct` functions. More complex or sophisticated apps may want to implement multi-layered routing or more autonomous/agentic control flow
-5. the agents are not always that funny; that said Frankie does sometimes deliver a good burn!
+3. there is some hardcoded control flow in the agent `should_instruct` functions. More complex or sophisticated apps may want to implement multi-layered routing or more autonomous/agentic control flow
+4. the agents are not always that funny; that said Frankie does sometimes deliver a good burn!
 
 ## Run
 

@@ -95,6 +95,14 @@ function ThreadEditForm({ threadId }: Props) {
     ),
     [memberResults]
   )
+  const { data: ownerUsers } = useLiveQuery(
+    (query) => (
+      query
+        .from({ result: userResults })
+        .where(({ result }) => eq(result.membership_role, 'owner'))
+    ),
+    [userResults]
+  )
   const { data: currentUsers } = useLiveQuery(
     (query) => (
       query
@@ -114,6 +122,9 @@ function ThreadEditForm({ threadId }: Props) {
   )
   const currentUser = currentUsers[0]!
   const threadUsers = [currentUser, ...otherUsers]
+
+  const ownerUser = ownerUsers[0]!
+  const isOwner = currentUser.id === ownerUser.id
 
   // Just the agents.
 
@@ -245,7 +256,7 @@ function ThreadEditForm({ threadId }: Props) {
                     </Text>
                   )}
                 </Flex>
-                {index !== 0 && (
+                {index !== 0 && isOwner && (
                   <IconButton
                     variant="ghost"
                     size="1"
@@ -312,7 +323,7 @@ function ThreadEditForm({ threadId }: Props) {
                     ({agent.membership_role})
                   </Text>
                 </Flex>
-                {agent.membership_role !== 'producer' && (
+                {agent.membership_role !== 'producer' && isOwner && (
                   <IconButton
                     variant="ghost"
                     size="1"

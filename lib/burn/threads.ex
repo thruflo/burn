@@ -44,6 +44,22 @@ defmodule Burn.Threads do
   """
   def get_thread!(id), do: Repo.get!(Thread, id)
 
+  @doc """
+  Gets a single thread.
+
+  Returns `nil` if the Thread does not exist.
+
+  ## Examples
+
+      iex> get_thread(123)
+      %Thread{}
+
+      iex> get_thread(456)
+      nil
+
+  """
+  def get_thread(id), do: Repo.get(Thread, id)
+
   def init_thread(attrs \\ %{}) do
     %Thread{}
     |> Thread.changeset(attrs)
@@ -321,6 +337,22 @@ defmodule Burn.Threads do
   def get_membership!(id), do: Repo.get!(Membership, id)
 
   @doc """
+  Gets a single membership.
+
+  Returns `nil` if the Membership does not exist.
+
+  ## Examples
+
+      iex> get_membership(123)
+      %Membership{}
+
+      iex> get_membership(456)
+      nil
+
+  """
+  def get_membership(id), do: Repo.get(Membership, id)
+
+  @doc """
   Get a membership for a specific thread and agent name.
   Returns the membership preloaded with thread and user, or nil if not found.
   """
@@ -344,6 +376,19 @@ defmodule Burn.Threads do
         where:
           m.thread_id == ^thread_id and
             m.user_id == ^user_id
+      )
+
+    Repo.exists?(query)
+  end
+
+  def is_owner?(thread_id, user_id) do
+    query =
+      from(
+        m in Membership,
+        where:
+          m.thread_id == ^thread_id and
+            m.user_id == ^user_id and
+            m.role == :owner
       )
 
     Repo.exists?(query)
