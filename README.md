@@ -100,14 +100,14 @@ Users and agents all see and respond to the same state in real-time. There is no
 
 ### Front-end
 
-The TanStack DB collections are defined in [assets/src/db/collections](assets/src/db/collections). The React components in `assets/src/components` use a variety of [live queries](https://tanstack.com/db/latest/docs/guides/live-queries). For example:
+The TanStack DB collections are defined in [assets/src/db/collections.ts](assets/src/db/collections.ts). The React components in `assets/src/components` use a variety of [live queries](https://tanstack.com/db/latest/docs/guides/live-queries). For example:
 
 - [ChatArea.tsx](assets/src/components/ChatArea.tsx) queries the messages for the main chat UI
 - [ComputerAccordion/EventsList.tsx](assets/src/components/ComputerAccordion/EventsList.tsx) and [ComputerAccordion/FactsList.tsx](assets/src/components/ComputerAccordion/FactsList.tsx) show a two stage live query with typeahead
 - [MainThread/ThreadEditForm.tsx](assets/src/components/MainThread/ThreadEditForm.tsx) has quite a few nested queries and shows interplay between React state and collection insert/update/delete methods for handling form-based updates
 - [Sidebar/SidebarThreads.tsx](assets/src/components/Sidebar/SidebarThreads.tsx) shows an optimistic transactional mutation (inserting a new thread and the owner's membership of it within the same transaction)
 
-Writes are all handled by the same generic "write-path sync" handler in [assets/src/db/mutations](assets/src/db/mutations). This POSTs them to the backend ingest controller.
+Writes are all handled by the same generic "write-path sync" handler in [assets/src/db/mutations.ts](assets/src/db/mutations.ts). This POSTs them to the backend ingest controller.
 
 ### Backend
 
