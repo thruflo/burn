@@ -111,8 +111,9 @@ Writes are all handled by the same generic "write-path sync" handler in [assets/
 
 ### Backend
 
-Sync is exposed through the `sync` macros in [lib/burn_web/router.ex](lib/burn_web/router.ex).
 Writes are ingested via [lib/burn_web/controllers/ingest_controller.ex](lib/burn_web/controllers/ingest_controller.ex).
+
+Sync is exposed through the `sync` macros in [lib/burn_web/router.ex](lib/burn_web/router.ex).
 
 The agents themselves are defined in [lib/burn/agents](lib/burn/agents). For example:
 
