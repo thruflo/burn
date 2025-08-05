@@ -17,7 +17,7 @@ defmodule Burn.Ingest do
 
   # When a new thread is created:
   # - record the user created event
-  # - add Sarah and Frankie to the thread
+  # - add the agents to the thread
   def on_insert_thread(
         %Multi{} = multi,
         %Changeset{changes: %{id: thread_id}},

@@ -1,7 +1,9 @@
 
 # 🔥 Burn
 
-Burn is a multi-user, multi-agent demo app built on [TanStack DB](https://tanstack.com/db) and [Phoenix.Sync](https://hexdocs.pm/phoenix_sync). It shows how to build an agentic system on real-time sync, where:
+Burn is a multi-user, multi-agent demo app built on [TanStack DB](https://tanstack.com/db) and [Phoenix.Sync](https://hexdocs.pm/phoenix_sync).
+
+It shows how to build an agentic system on real-time sync, where:
 
 - users and agents are automatically kept in sync
 - memory means rows in a Postgres database
@@ -26,7 +28,9 @@ The database is standard Postgres. Agentic memory and shared state are both [jus
 
 ## Demo
 
-Burn shows how to build an agentic system on an end-to-end local-first sync stack using TanStack DB and Phoenix.Sync. It's useful as a reference of all of these aspects combined or any of them individually:
+Burn shows how to build an agentic system on an end-to-end local-first sync stack using TanStack DB and Phoenix.Sync.
+
+It's useful as a reference of all of these aspects combined or any of them individually:
 
 1. how to build a real-world app using TanStack DB
 2. how to integrate TanStack DB with Phoenix.Sync for an end-to-end local-first sync stack
@@ -34,7 +38,9 @@ Burn shows how to build an agentic system on an end-to-end local-first sync stac
 
 ## App
 
-The Burn app is a multi-user, multi-agent "roast-me" / "dad-jokes" app. It supports realtime collaboration between users and agents in the same thread/session.
+The Burn app is a multi-user, multi-agent "roast-me" / "dad-jokes" app.
+
+It supports realtime collaboration between users and agents in the same thread/session.
 
 [![Screenshot of the Burn app](priv/static/images/docs/screenshot.sm.jpg)](priv/static/images/docs/screenshot.jpg)
 
@@ -49,7 +55,9 @@ As you play the game, you'll see facts and events build up in the "Computer" on 
 
 [![UI as a functional representation of state](priv/static/images/docs/functional-representation.sm.jpg)](priv/static/images/docs/functional-representation.jpg)
 
-Both of these are just functions of the database state. The image above shows two parts of the UI representing the same state. If you also look at the terminal output of the Phoenix server, you'll see it print out the context that it sends to the LLM:
+Both of these are just functions of the database state. The image above shows two parts of the UI representing the same state.
+
+If you also look at the terminal output of the Phoenix server, you'll see it print out the context that it sends to the LLM:
 
 ```
 <ask_user_about_themselves>
@@ -100,44 +108,54 @@ Users and agents all see and respond to the same state in real-time. There is no
 
 ### Front-end
 
-The TanStack DB collections are defined in [assets/src/db/collections.ts](assets/src/db/collections.ts). The React components in `assets/src/components` use a variety of [live queries](https://tanstack.com/db/latest/docs/guides/live-queries). For example:
+The TanStack DB collections are defined in [assets/src/db/collections.ts](assets/src/db/collections.ts).
+
+The React components in `assets/src/components` use a variety of [live queries](https://tanstack.com/db/latest/docs/guides/live-queries).
+
+For example:
 
 - [ChatArea.tsx](assets/src/components/ChatArea.tsx) queries the messages for the main chat UI
 - [ComputerAccordion/EventsList.tsx](assets/src/components/ComputerAccordion/EventsList.tsx) and [ComputerAccordion/FactsList.tsx](assets/src/components/ComputerAccordion/FactsList.tsx) show a two stage live query with typeahead
 - [MainThread/ThreadEditForm.tsx](assets/src/components/MainThread/ThreadEditForm.tsx) has quite a few nested queries and shows interplay between React state and collection insert/update/delete methods for handling form-based updates
 - [Sidebar/SidebarThreads.tsx](assets/src/components/Sidebar/SidebarThreads.tsx) shows an optimistic transactional mutation (inserting a new thread and the owner's membership of it within the same transaction)
 
-Writes are all handled by the same generic "write-path sync" handler in [assets/src/db/mutations.ts](assets/src/db/mutations.ts). This POSTs them to the backend ingest controller.
+Writes are all handled by the same `mutationFn` in [assets/src/db/mutations.ts](assets/src/db/mutations.ts). This sends them to the backend to ingest.
 
 ### Backend
 
-Writes are ingested via [lib/burn_web/controllers/ingest_controller.ex](lib/burn_web/controllers/ingest_controller.ex).
+Sync is exposed through the `sync` macros in [lib/burn_web/router.ex](lib/burn_web/router.ex). Writes are ingested via [lib/burn_web/controllers/ingest_controller.ex](lib/burn_web/controllers/ingest_controller.ex).
 
-Sync is exposed through the `sync` macros in [lib/burn_web/router.ex](lib/burn_web/router.ex).
+The agents themselves are defined in [lib/burn/agents](lib/burn/agents).
 
-The agents themselves are defined in [lib/burn/agents](lib/burn/agents). For example:
+For example:
 
 - [Sarah](lib/burn/agents/sarah.ex) is the "producer" agent reponsible for quizzing users and extracting facts
 - [Jerry Seinfeld](lib/burn/agents/jerry.ex) and [Frankie Boyle](lib/burn/agents/frankie.ex) are "comedian" agents responsible for roasting users
 
-As you can see, each agent [constructs their own prompts](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-02-own-your-prompts.md). LLM responses are contrained to tool calls. These are defined (and validated and performed) by the modules in [lib/burn/tools](lib/burn/tools). For example:
+As you can see, each agent [constructs their own prompts](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-02-own-your-prompts.md). LLM responses are contrained to tool calls. These are defined (and validated and performed) by the modules in [lib/burn/tools](lib/burn/tools).
+
+For example:
 
 - [`extract_facts`](lib/burn/tools/extract_facts.ex) to store facts in the database
 - [`roast_user`](lib/burn/tools/roast_user.ex) to roast the user
 
 ### Demo limitations
 
-This is just a demo, so some aspects are simplified / stubbed.
+Some aspects of the demo app are simplified or not-yet implemented.
 
-1. the app syncs all data to the client. It doesn't filter or construct dynamic shapes based on the auth context. Neither does it validate auth tokens.
-2. there is some hardcoded control flow in the agent `should_instruct` functions. More complex or sophisticated apps may want to implement multi-layered routing or more autonomous/agentic control flow
-3. the agents are not always that funny; that said Frankie does sometimes deliver a good burn!
+1. the app syncs all data to the client. It doesn't filter or construct dynamic shapes based on the auth context
+2. auth tokens are just usernames accepted at face value (they're not signed or validated)
+3. write-path authorization is not-yet implemented (all writes are accepted)
+4. there is some hardcoded control flow in the agent `should_instruct` functions. More complex or sophisticated apps may want to implement multi-layered routing or more autonomous/agentic control flow
+5. the agents are not always that funny; that said Frankie does sometimes deliver a good burn!
 
 ## Run
 
 ### Pre-reqs
 
-You need Postgres running and to have Elixir and NodeJS installed. In development you'll also want Caddy (as per [this troubleshooting guide](https://electric-sql.com/docs/guides/troubleshooting#slow-shapes-mdash-why-are-my-shapes-slow-in-the-browser-in-local-development)).
+You need Postgres running and to have Elixir and NodeJS installed. You'll also need an Anthropic API key.
+
+In development you'll also want Caddy (as per [this troubleshooting guide](https://electric-sql.com/docs/guides/troubleshooting#slow-shapes-mdash-why-are-my-shapes-slow-in-the-browser-in-local-development)).
 
 You can install the right versions using [asdf](https://asdf-vm.com):
 
@@ -147,19 +165,13 @@ You can install the right versions using [asdf](https://asdf-vm.com):
 asdf install
 ```
 
-Start Caddy:
-
-```sh
-caddy start
-```
-
-Then (in a different terminal) install and setup the dependencies:
+Install and setup the dependencies:
 
 ```sh
 mix setup
 ```
 
-You'll need an Anthropic API key. Get one, copy `.env.template` to `.env` (see the [Dotenvy docs](https://hexdocs.pm/dotenvy/readme.html) for more options) and set the `ANTHROPIC_KEY`:
+Copy `envs/.env.template` to `envs/.env` (see the [Dotenvy docs](https://hexdocs.pm/dotenvy/readme.html) for context) and set the `ANTHROPIC_KEY` value manually:
 
 ```sh
 cp envs/.env.template envs/.env
@@ -176,6 +188,12 @@ Start the Phoenix server:
 
 ```sh
 mix phx.server
+```
+
+In a different terminal start Caddy (this proxies port `4001` to Phoenix running on `4000`):
+
+```sh
+caddy start
 ```
 
 Open [localhost:4001](http://localhost:4001) in your web browser.
