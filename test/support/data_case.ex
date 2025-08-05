@@ -37,16 +37,9 @@ defmodule Burn.DataCase do
   """
   def setup_sandbox(tags) do
     pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Burn.Repo, shared: not tags[:async])
-    on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
     Phoenix.Sync.Sandbox.start!(Burn.Repo, pid, shared: not tags[:async])
 
-    # {:ok, sup_pid} = Burn.Agents.Supervisor.start_link()
-
     on_exit(fn ->
-      # if Process.alive?(sup_pid) do
-      #   Supervisor.stop(sup_pid, :normal)
-      # end
-
       Ecto.Adapters.SQL.Sandbox.stop_owner(pid)
     end)
   end
