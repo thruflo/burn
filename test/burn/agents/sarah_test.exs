@@ -26,7 +26,11 @@ defmodule Burn.Agents.SarahTest do
       agent = agent_fixture()
       agent_membership = membership_fixture(thread, agent, :producer)
 
-      {:ok, _pid} = Sarah.start_link(thread, agent, :manual)
+      {:ok, agent_pid} = Sarah.start_link(thread, agent, :manual)
+
+      on_exit(fn ->
+        Process.exit(agent_pid, :shutdown)
+      end)
 
       %{
         agent: agent,
@@ -64,7 +68,9 @@ defmodule Burn.Agents.SarahTest do
 
     test "subscribes to memberships", %{thread: thread, user: %{id: user_id}} do
       assert_eventually(fn ->
-        assert %State{users: [%{id: ^user_id} | _rest]} = Sarah.get_state(thread)
+        %State{users: users} = Sarah.get_state(thread)
+
+        assert Enum.any?(users, fn user -> user.id == user_id end)
       end)
     end
 

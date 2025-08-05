@@ -1,5 +1,5 @@
 defmodule BurnWeb.AuthTest do
-  use BurnWeb.ConnCase, async: true
+  use BurnWeb.ConnCase
 
   import Plug.Conn
   import Burn.AccountsFixtures

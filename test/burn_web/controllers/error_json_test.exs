@@ -1,5 +1,5 @@
 defmodule BurnWeb.ErrorJSONTest do
-  use BurnWeb.ConnCase, async: true
+  use BurnWeb.ConnCase
 
   test "renders 404" do
     assert BurnWeb.ErrorJSON.render("404.json", %{}) == %{errors: %{detail: "Not Found"}}
