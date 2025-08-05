@@ -12,19 +12,8 @@ defmodule Burn.Tools.AskUserAboutThemselves do
   - be no more than two sentances long
   - elicit information that you can (later) convert into facts
 
-  The facts you elicit will be used (later) by other agents to
-  base jokes on. Try to draw out information that will be good for this, e.g.
-  - personal facts about who the user is and what kind of life they're leading
-  - unique things about the user that make them different or special
-  - things the user has done, are proud of, or might be embarassed by
-
-  Try and get the user talking. Open questions are better than closed
-  questions. Asking users to elaborate on or be more specific about their
-  previous answers is fine. Bland is bad! You need to drill down until
-  you get some grit in the oyster!
-
-  Note that, when using this `ask_user_about_themselves` tool, you must
-  only ask the user for information about themselves, not about other users.
+  When using this `ask_user_about_themselves` tool, you must only ask
+  the user for information about themselves, not about other users.
   """
 
   @primary_key false

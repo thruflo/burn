@@ -25,9 +25,10 @@ defmodule Burn.Tools.ExtractFacts do
   of the confirmation message, i.e.: the latest message where the user is
   confirming (or denying!) facts about them posted by another user.
 
-  Note that
-  - you can extract multiple facts from the same user message
-  - all facts extracted in the same tool call must be from the same user message
+  Note that, in a single tool call, you can extract:
+  - multiple facts from the same user message
+  - facts from different user messages
+  - facts from different users
 
   Confidence must be a decimal number (with exactly one decimal place)
   between `0.1` and `1.0`. Lower means less confident, higher means
